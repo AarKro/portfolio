@@ -1,0 +1,92 @@
+.bubble {
+  --animation-curve: cubic-bezier(0.11,0.77,0.39,0.93);
+  --animation-duration: 2s;
+
+  border-radius: 50%;
+  width: 100px;
+  height: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  
+  background-color: #a4e5ff;
+
+
+  &-container {
+
+  }
+
+  &.top {
+    z-index: 1;
+    animation: 
+      bubble-split-right var(--animation-duration) forwards var(--animation-curve), 
+      move-left var(--animation-duration) forwards var(--animation-curve);
+  }
+
+  &.bottom {
+    z-index: 0;
+    position: absolute;
+    top: 0;
+
+    animation: 
+      bubble-split-left var(--animation-duration) forwards var(--animation-curve), 
+      move-right var(--animation-duration) forwards var(--animation-curve);
+  }
+}
+
+@keyframes bubble-split-right {
+  0% {
+    border-top-right-radius: 50%;
+    border-bottom-right-radius: 50%;
+  }
+  20% {
+    border-top-right-radius: 35% 10%;
+    border-bottom-right-radius: 35% 10%;
+  }
+  40% {
+    border-top-right-radius: 40% 20%;
+    border-bottom-right-radius: 40% 20%;
+  }
+  100% {
+    border-top-right-radius: 50% 50%;
+    border-bottom-right-radius: 50% 50%;
+  }
+}
+
+@keyframes bubble-split-left {
+  0% {
+    border-top-left-radius: 50%;
+    border-bottom-left-radius: 50%;
+  }
+  20% {
+    border-top-left-radius: 35% 10%;
+    border-bottom-left-radius: 35% 10%;
+  }
+  40% {
+    border-top-left-radius: 40% 20%;
+    border-bottom-left-radius: 40% 20%;
+  }
+  100% {
+    border-top-left-radius: 50% 50%;
+    border-bottom-left-radius: 50% 50%;
+  }
+
+}
+
+@keyframes move-right {
+  from {
+    transform: translateX(0);
+  } 
+  to {
+    transform: translateX(60px);
+  } 
+}
+
+@keyframes move-left {
+  from {
+    transform: translateX(0);
+  } 
+  to {
+    transform: translateX(-60px);
+  } 
+}
