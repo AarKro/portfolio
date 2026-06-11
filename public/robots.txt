@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://aarkro.github.io/portfolio/sitemap.xml

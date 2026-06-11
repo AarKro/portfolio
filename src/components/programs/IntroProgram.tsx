@@ -24,7 +24,7 @@ export function IntroProgram({ tuneTo }: IntroProgramProps) {
       <p className="intro__greeting">{greeting} You’re tuned in to</p>
       <h1 className="intro__title">Aaron Kromer</h1>
       <p className="intro__subtitle">
-        Frontend developer &amp; interaction designer.
+        Frontend developer &amp; interaction designer, Zürich.
         <br />
         {program}: my projects, on every channel.
       </p>

@@ -93,6 +93,29 @@ names, importing tokens via `@use '../styles/tokens' as *;`.
 - `vite.config.ts` uses `base: './'` so the build deploys to any subpath
   (e.g. GitHub Pages) without changes.
 
+## SEO
+
+Aaron shares his name with a well-known American football coach, so the site
+is optimized to win **qualified** queries ("aaron kromer developer / frontend
+/ portfolio / zürich") and to register as a distinct entity with search
+engines — not to outrank ESPN for the bare name.
+
+- `index.html` holds the SEO title ("Aaron Kromer — Frontend Developer &
+  Interaction Designer, Zürich"), keyword-rich meta description, canonical
+  URL, and two JSON-LD blocks: a `Person` (with `disambiguatingDescription`,
+  `sameAs` GitHub/LinkedIn, Zürich address) and a `WebSite`. Keep the runtime
+  default `document.title` in `Screen.tsx` in sync with the HTML title.
+- `App.tsx` renders an `.sr-only` crawlable section generated from
+  `projects.ts` — project channels are only reachable by interaction, which
+  crawlers don't do. It must mirror on-screen content only (no extra
+  keywords), otherwise it risks being treated as cloaking.
+- `public/robots.txt` + `public/sitemap.xml` — bump the sitemap `lastmod`
+  on significant content changes.
+- A `<noscript>` fallback with name/title/links lives in `index.html`.
+- The strongest levers are off-site and belong to Aaron: GitHub profile
+  name/bio/website field, LinkedIn website link, repo About-links back to
+  the portfolio, and Google Search Console registration.
+
 ## Deployment & social previews
 
 - Canonical URL: https://aarkro.github.io/portfolio/ — hardcoded (absolute,

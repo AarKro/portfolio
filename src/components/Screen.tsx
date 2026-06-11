@@ -43,7 +43,8 @@ export function Screen({ tv }: ScreenProps) {
     } else if (project) {
       document.title = `CH ${String(channel).padStart(2, '0')} · ${project.title} — Aaron Kromer`;
     } else {
-      document.title = 'Aaron Kromer — Portfolio';
+      // keep in sync with the SEO title in index.html
+      document.title = 'Aaron Kromer — Frontend Developer & Interaction Designer, Zürich';
     }
   }, [channel, poweredOn, project]);
 

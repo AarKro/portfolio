@@ -3,19 +3,62 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Aaron Kromer — frontend developer & interaction designer. Tune in: every channel on this retro TV is one of my projects." />
-    <title>Aaron Kromer — Portfolio</title>
+    <meta name="description" content="Portfolio of Aaron Kromer, frontend developer & interaction designer in Zürich, Switzerland. TypeScript, React, type design and playful web experiments — broadcast on a retro TV." />
+    <title>Aaron Kromer — Frontend Developer & Interaction Designer, Zürich</title>
+    <link rel="canonical" href="https://aarkro.github.io/portfolio/" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 
     <!-- social previews (og:url/og:image must stay absolute; update on domain change) -->
     <meta property="og:type" content="website" />
-    <meta property="og:title" content="Aaron Kromer — Portfolio" />
-    <meta property="og:description" content="Frontend developer & interaction designer. Tune in: every channel on this retro TV is one of my projects." />
+    <meta property="og:site_name" content="Aaron Kromer — Portfolio" />
+    <meta property="og:title" content="Aaron Kromer — Frontend Developer & Interaction Designer" />
+    <meta property="og:description" content="Frontend developer & interaction designer in Zürich. Tune in: every channel on this retro TV is one of my projects." />
     <meta property="og:url" content="https://aarkro.github.io/portfolio/" />
     <meta property="og:image" content="https://aarkro.github.io/portfolio/og-image.png" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
+    <meta property="og:locale" content="en_US" />
     <meta name="twitter:card" content="summary_large_image" />
+
+    <!-- entity disambiguation: tells search engines which Aaron Kromer this is -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "Person",
+        "name": "Aaron Kromer",
+        "alternateName": "AarKro",
+        "jobTitle": "Frontend Developer & Interaction Designer",
+        "disambiguatingDescription": "Frontend developer and interaction designer based in Zürich, Switzerland. Not affiliated with the American football coach of the same name.",
+        "url": "https://aarkro.github.io/portfolio/",
+        "email": "mailto:kromer.aaron@gmail.com",
+        "address": {
+          "@type": "PostalAddress",
+          "addressLocality": "Zürich",
+          "addressCountry": "CH"
+        },
+        "sameAs": [
+          "https://github.com/AarKro",
+          "https://www.linkedin.com/in/aaron-kromer-a3026b193/"
+        ],
+        "knowsAbout": [
+          "Frontend development",
+          "TypeScript",
+          "React",
+          "Interaction design",
+          "Type design",
+          "Creative coding"
+        ]
+      }
+    </script>
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "name": "Aaron Kromer — Portfolio",
+        "url": "https://aarkro.github.io/portfolio/",
+        "author": { "@type": "Person", "name": "Aaron Kromer" }
+      }
+    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -25,6 +68,14 @@
   </head>
   <body>
     <div id="root"></div>
+    <noscript>
+      <h1>Aaron Kromer — Frontend Developer &amp; Interaction Designer, Zürich</h1>
+      <p>
+        This portfolio is an interactive retro TV and needs JavaScript. The channels are all on
+        <a href="https://github.com/AarKro">github.com/AarKro</a> — or find me on
+        <a href="https://www.linkedin.com/in/aaron-kromer-a3026b193/">LinkedIn</a>.
+      </p>
+    </noscript>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
