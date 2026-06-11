@@ -134,7 +134,10 @@ export function Scene({ mode, onArrivedInRoom, onArrivedAtTV, onTVClicked, child
       const cabinetWidth = cabinet.offsetWidth * WORLD_PER_PX;
       const cabinetHeight = cabinet.offsetHeight * WORLD_PER_PX;
       const cabinetCenterY = tvTop - (cabinet.offsetTop + cabinet.offsetHeight / 2) * WORLD_PER_PX;
-      tvBody.scale.set(cabinetWidth, cabinetHeight, 0.5);
+      // inset the box so its sharp corners stay hidden behind the DOM
+      // cabinet's 22px rounded corners (need ≥ r·(1−1/√2) ≈ 7px)
+      const cornerInset = 10 * WORLD_PER_PX;
+      tvBody.scale.set(cabinetWidth - 2 * cornerInset, cabinetHeight - 2 * cornerInset, 0.5);
       tvBody.position.set(0, cabinetCenterY, TV_FRONT_Z - 0.251);
 
       // closeup framing: cabinet fills FIT_HEIGHT/FIT_WIDTH of the viewport

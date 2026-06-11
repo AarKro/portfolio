@@ -31,21 +31,13 @@ export function ControlPanel({ tv }: ControlPanelProps) {
         aria-hidden="true"
       />
 
+      {/* channel buttons stay clickable when the TV is off — like a real
+          set, pressing them just does nothing (useTV guards the power) */}
       <div className="controls__buttons">
-        <button
-          className="controls__button"
-          onClick={channelDown}
-          disabled={!poweredOn}
-          aria-label="Previous channel"
-        >
+        <button className="controls__button" onClick={channelDown} aria-label="Previous channel">
           CH ▼
         </button>
-        <button
-          className="controls__button"
-          onClick={channelUp}
-          disabled={!poweredOn}
-          aria-label="Next channel"
-        >
+        <button className="controls__button" onClick={channelUp} aria-label="Next channel">
           CH ▲
         </button>
         <button
@@ -53,7 +45,7 @@ export function ControlPanel({ tv }: ControlPanelProps) {
           onClick={togglePower}
           aria-label={poweredOn ? 'Turn TV off' : 'Turn TV on'}
         >
-          PWR
+          PWR <span className="controls__power-icon" aria-hidden="true">⏻</span>
         </button>
       </div>
 

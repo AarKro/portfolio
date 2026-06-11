@@ -76,10 +76,10 @@ body. "Website mode" is just the camera parked in front of the TV.
 start of that pull-back** (the PWR click's user activation is still fresh),
 so mouselook is already live when the flight lands — no extra click. In the
 room: WASD walking, ambient control hints in the lower corners (WASD keycaps
-left, mouse glyph right — no explainer text by design), ESC frees the mouse
-and any click re-locks it; clicking the TV (within 4m, crosshair turns
-amber) flies the camera back to the website framing, where the TV sits in
-standby (PWR resumes).
+left, mouse glyph right — iconic only, no explainer text by design), ESC
+frees the mouse and any click re-locks it; clicking the TV (within 4m,
+crosshair turns amber) flies the camera back to the website framing, where
+the TV sits in standby (PWR resumes).
 
 Things to know:
 - **`Scene.tsx` syncs the 3D world to the DOM** (`syncWorldToDOM`): it
@@ -108,6 +108,11 @@ Things to know:
 - Known CSS3D limitation: the DOM TV ignores WebGL depth, so meshes between
   the camera and the TV won't occlude it (mostly invisible in practice;
   `backface-visibility: hidden` handles viewing from behind).
+- **No CSS `border` on rounded elements inside the TV.** Under the CSS3D
+  3D transform, Chrome renders border + border-radius with square corner
+  artifacts ("little squares" at the corners). Use box-shadow or background
+  layers for edge definition instead. (Found by Aaron in devtools, June
+  2026 — cabinet/button/antenna borders were removed for this reason.)
 
 Each component lives in its own folder bundling its `.tsx` and `.scss` (same
 name as the folder, no barrel `index.ts` files), BEM-style class names,
