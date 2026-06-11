@@ -118,6 +118,9 @@ engines — not to outrank ESPN for the bare name.
 
 ## Deployment & social previews
 
+- Auto-deploy: `.github/workflows/deploy.yml` builds and publishes to GitHub
+  Pages on every push to `main` (Pages source must be set to "GitHub Actions"
+  in the repo settings — one-time manual step).
 - Canonical URL: https://aarkro.github.io/portfolio/ — hardcoded (absolute,
   as required) in the `og:url` / `og:image` meta tags in `index.html`.
   Update those if the domain ever changes.
