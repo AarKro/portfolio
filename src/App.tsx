@@ -18,7 +18,7 @@ const Room3D = lazy(() =>
 type ViewMode = 'tv' | 'to-room' | 'room' | 'to-tv';
 
 export function App() {
-  const [mode, setMode] = useState<ViewMode>('room');
+  const [mode, setMode] = useState<ViewMode>('tv');
   // counts trips to the room; keys the TVSet so it remounts in standby
   const [roomVisits, setRoomVisits] = useState(0);
 

@@ -81,9 +81,18 @@ Things to know:
   TV_SCREEN_CENTER, EYE_HEIGHT) — a GLTF version must keep that contract.
 - The 3D TV screen plays the same `fillNoise()` static as the 2D screen,
   via a CanvasTexture updated every other frame.
-- Transition timings: camera pull-back 1.9s / fly-in 1.15s (Room3D.tsx),
-  2D fade 1.1s (`tv-depart`, App.scss), CRT collapse handoff 700ms
-  (POWER_OFF_DELAY, TVSet.tsx). Tune them together.
+- **The zoom is a matched-frame crossfade, not a morph.** The 3D TV mirrors
+  the 2D set's design (4:3 screen, cream control strip, feet, antenna), and
+  the camera starts/ends at `CLOSEUP_POSITION` looking at `TV_FRAME_TARGET`
+  (buildRoom.ts) — a framing computed so the 3D cabinet has the same
+  apparent size as the 2D TV. The camera *holds* that framing for
+  `ENTER_HOLD` (0.55s) while the DOM layer fades (0.5s `tv-depart`), then
+  pulls back with an FOV ramp (CLOSEUP_FOV 55° → WALKING_FOV 70°). The 2D
+  fades must stay pure opacity (no scaling) and shorter than ENTER_HOLD,
+  and resizing the 3D TV means recomputing CLOSEUP_POSITION (see comment).
+- Transition timings: pull-back 1.9s / fly-in 1.15s (Room3D.tsx), 2D fades
+  0.5s/0.45s (App.scss), CRT collapse handoff 700ms (POWER_OFF_DELAY,
+  TVSet.tsx). Tune them together.
 - Walkable area is clamped to `BOUNDS` (no collision with furniture yet).
 
 Each component lives in its own folder bundling its `.tsx` and `.scss` (same

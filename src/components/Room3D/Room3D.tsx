@@ -2,18 +2,31 @@ import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
 import { fillNoise } from '../../utils/noise';
-import { BOUNDS, EYE_HEIGHT, STANDING_SPOT, TV_SCREEN_CENTER, buildRoom } from './buildRoom';
+import {
+  BOUNDS,
+  CLOSEUP_FOV,
+  CLOSEUP_POSITION,
+  EYE_HEIGHT,
+  STANDING_SPOT,
+  TV_FRAME_TARGET,
+  WALKING_FOV,
+  buildRoom,
+} from './buildRoom';
 import './Room3D.scss';
 
 /** Camera pull-back when leaving the 2D portfolio (seconds) */
 const ENTER_DURATION = 1.9;
+/**
+ * The camera holds the 2D-matching framing this long before pulling back,
+ * so the DOM→canvas crossfade happens between two identical-looking TVs.
+ * Keep slightly above the `tv-depart` fade duration in App.scss.
+ */
+const ENTER_HOLD = 0.55;
 /** Camera fly-in when clicking the 3D TV (seconds) */
 const LEAVE_DURATION = 1.15;
 const WALK_SPEED = 3;
 /** Max distance (m) from which the TV can be clicked */
 const TV_REACH = 4;
-/** Camera offset in front of the 3D screen for the zoom endpoints */
-const CLOSEUP_OFFSET = 0.62;
 const NOISE_WIDTH = 128;
 const NOISE_HEIGHT = 96;
 
@@ -31,6 +44,9 @@ interface CameraFlight {
   toPos: THREE.Vector3;
   fromQuat: THREE.Quaternion;
   toQuat: THREE.Quaternion;
+  fromFov: number;
+  toFov: number;
+  /** Negative elapsed = hold the start framing before moving */
   elapsed: number;
   duration: number;
   onDone: () => void;
@@ -72,7 +88,7 @@ export function Room3D({ phase, onEnterComplete, onLeaveComplete, onTVClick }: R
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x0b0805);
     const camera = new THREE.PerspectiveCamera(
-      70,
+      CLOSEUP_FOV,
       container.clientWidth / container.clientHeight,
       0.05,
       50,
@@ -99,16 +115,18 @@ export function Room3D({ phase, onEnterComplete, onLeaveComplete, onTVClick }: R
     const showCrosshair = (visible: boolean) =>
       crosshairRef.current?.classList.toggle('room3d__crosshair--visible', visible);
 
-    // zoom out: start with the glass filling the view, pull back to standing
-    const closeup = TV_SCREEN_CENTER.clone().add(new THREE.Vector3(0, 0, CLOSEUP_OFFSET));
-    camera.position.copy(closeup);
-    camera.quaternion.copy(quaternionLookingAt(closeup, TV_SCREEN_CENTER));
+    // zoom out: hold the framing that matches the 2D TV while the DOM layer
+    // fades, then pull back to standing (FOV widens along the way)
+    camera.position.copy(CLOSEUP_POSITION);
+    camera.quaternion.copy(quaternionLookingAt(CLOSEUP_POSITION, TV_FRAME_TARGET));
     flight = {
-      fromPos: closeup.clone(),
+      fromPos: CLOSEUP_POSITION.clone(),
       toPos: STANDING_SPOT.clone(),
       fromQuat: camera.quaternion.clone(),
-      toQuat: quaternionLookingAt(STANDING_SPOT, TV_SCREEN_CENTER),
-      elapsed: 0,
+      toQuat: quaternionLookingAt(STANDING_SPOT, TV_FRAME_TARGET),
+      fromFov: CLOSEUP_FOV,
+      toFov: WALKING_FOV,
+      elapsed: -ENTER_HOLD,
       duration: ENTER_DURATION,
       onDone: () => {
         showOverlay(true);
@@ -121,9 +139,11 @@ export function Room3D({ phase, onEnterComplete, onLeaveComplete, onTVClick }: R
         // set the flight before unlocking so the unlock handler stays quiet
         flight = {
           fromPos: camera.position.clone(),
-          toPos: closeup.clone(),
+          toPos: CLOSEUP_POSITION.clone(),
           fromQuat: camera.quaternion.clone(),
-          toQuat: quaternionLookingAt(closeup, TV_SCREEN_CENTER),
+          toQuat: quaternionLookingAt(CLOSEUP_POSITION, TV_FRAME_TARGET),
+          fromFov: camera.fov,
+          toFov: CLOSEUP_FOV,
           elapsed: 0,
           duration: LEAVE_DURATION,
           onDone: () => callbacksRef.current.onLeaveComplete(),
@@ -185,10 +205,12 @@ export function Room3D({ phase, onEnterComplete, onLeaveComplete, onTVClick }: R
 
       if (flight) {
         flight.elapsed += delta;
-        const t = Math.min(flight.elapsed / flight.duration, 1);
+        const t = THREE.MathUtils.clamp(flight.elapsed / flight.duration, 0, 1);
         const eased = easeInOut(t);
         camera.position.lerpVectors(flight.fromPos, flight.toPos, eased);
         camera.quaternion.slerpQuaternions(flight.fromQuat, flight.toQuat, eased);
+        camera.fov = THREE.MathUtils.lerp(flight.fromFov, flight.toFov, eased);
+        camera.updateProjectionMatrix();
         if (t >= 1) {
           const { onDone } = flight;
           flight = null;

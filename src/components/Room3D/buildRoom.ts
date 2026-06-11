@@ -16,8 +16,20 @@ export const EYE_HEIGHT = 1.6;
 
 /** Where the camera ends up after "getting off the couch" */
 export const STANDING_SPOT = new THREE.Vector3(0, EYE_HEIGHT, 1.7);
-/** Center of the 3D TV's glass, world space (zoom transitions aim here) */
-export const TV_SCREEN_CENTER = new THREE.Vector3(0, 1.045, -3.31);
+/** Center of the 3D TV's glass, world space (the screen-glow light sits here) */
+export const TV_SCREEN_CENTER = new THREE.Vector3(0, 1.13, -3.349);
+/**
+ * Zoom transition endpoints: the camera starts/ends here, looking at
+ * TV_FRAME_TARGET, framing the 3D cabinet at the same apparent size as the
+ * 2D TV — that's what makes the crossfade read as one continuous zoom.
+ * Derived from the cabinet (1.1 × 0.92, front at z=-3.35, center y=1.04)
+ * filling ~78% of a 55° vertical FOV. Recompute if the TV is resized.
+ */
+export const TV_FRAME_TARGET = new THREE.Vector3(0, 1.04, -3.35);
+export const CLOSEUP_POSITION = new THREE.Vector3(0, 1.04, -2.22);
+/** FOV used at the closeup endpoints (walking FOV is wider) */
+export const CLOSEUP_FOV = 55;
+export const WALKING_FOV = 70;
 
 const WOOD_DARK = 0x3a2515;
 const WOOD_MID = 0x5b3a22;
@@ -39,6 +51,11 @@ function box(
   return mesh;
 }
 
+/**
+ * Mirrors the 2D TVSet's design so the zoom transition reads as the same
+ * object: 4:3 screen in the upper cabinet, cream control strip below it
+ * (badge · green channel display · buttons · knobs), two feet, rabbit ears.
+ */
 function buildTV(noiseTexture: THREE.Texture): { tvGroup: THREE.Group; screenMesh: THREE.Mesh } {
   const tvGroup = new THREE.Group();
 
@@ -46,38 +63,69 @@ function buildTV(noiseTexture: THREE.Texture): { tvGroup: THREE.Group; screenMes
   stand.position.y = 0.25;
   tvGroup.add(stand);
 
-  const cabinet = box(1.25, 0.95, 0.55, WOOD_MID);
-  cabinet.position.y = 0.975;
+  // two feet, like the 2D set (stand top is at y=0.5)
+  for (const x of [-0.38, 0.38]) {
+    const foot = box(0.12, 0.08, 0.42, WOOD_DARK);
+    foot.position.set(x, 0.54, 0);
+    tvGroup.add(foot);
+  }
+
+  // cabinet: 1.1 × 0.92 — same width:height feel as the 2D cabinet
+  const cabinet = box(1.1, 0.92, 0.5, WOOD_MID);
+  cabinet.position.y = 1.04;
   tvGroup.add(cabinet);
 
-  // the glass, showing animated static (same noise code as the 2D screen)
+  // the glass: 4:3 like the 2D tube, upper part of the cabinet
   const screenMesh = new THREE.Mesh(
-    new THREE.PlaneGeometry(0.92, 0.66),
-    new THREE.MeshBasicMaterial({ map: noiseTexture, color: 0x8fae8f }),
+    new THREE.PlaneGeometry(0.82, 0.615),
+    new THREE.MeshBasicMaterial({ map: noiseTexture, color: 0xa8b2a8 }),
   );
-  screenMesh.position.set(0, 1.045, 0.281);
+  screenMesh.position.set(0, 1.13, 0.251);
   tvGroup.add(screenMesh);
 
-  const panel = box(1.15, 0.16, 0.03, PANEL_CREAM);
-  panel.position.set(0, 0.6, 0.27);
+  // cream control strip below the screen, like the 2D panel
+  const panel = box(0.95, 0.14, 0.02, PANEL_CREAM);
+  panel.position.set(0, 0.69, 0.252);
   tvGroup.add(panel);
 
-  for (const x of [-0.45, 0.45]) {
+  // panel details, left to right: dark badge, green channel display, knobs
+  const badge = box(0.12, 0.05, 0.012, 0x4a3b28);
+  badge.position.set(-0.36, 0.69, 0.263);
+  tvGroup.add(badge);
+
+  const display = new THREE.Mesh(
+    new THREE.BoxGeometry(0.07, 0.06, 0.012),
+    new THREE.MeshStandardMaterial({
+      color: 0x0c120c,
+      emissive: 0x4dff88,
+      emissiveIntensity: 0.7,
+    }),
+  );
+  display.position.set(-0.12, 0.69, 0.263);
+  tvGroup.add(display);
+
+  for (const x of [0.04, 0.14]) {
+    const button = box(0.07, 0.045, 0.014, 0xf6ecd6);
+    button.position.set(x, 0.69, 0.263);
+    tvGroup.add(button);
+  }
+
+  for (const x of [0.29, 0.39]) {
     const knob = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.03, 0.03, 0.04, 16),
+      new THREE.CylinderGeometry(0.028, 0.028, 0.035, 16),
       new THREE.MeshStandardMaterial({ color: 0x2e2e2a, roughness: 0.4, metalness: 0.5 }),
     );
     knob.rotation.x = Math.PI / 2;
-    knob.position.set(x, 0.6, 0.29);
+    knob.position.set(x, 0.69, 0.262);
     tvGroup.add(knob);
   }
 
-  // rabbit ears
+  // rabbit ears (cabinet top is at y=1.5)
   const antennaBase = new THREE.Mesh(
     new THREE.SphereGeometry(0.045, 12, 12),
     new THREE.MeshStandardMaterial({ color: 0x2e2e2a, roughness: 0.5 }),
   );
-  antennaBase.position.set(0, 1.48, 0);
+  antennaBase.position.set(0, 1.5, 0);
   tvGroup.add(antennaBase);
   for (const tilt of [-0.5, 0.42]) {
     const rod = new THREE.Mesh(
@@ -86,7 +134,7 @@ function buildTV(noiseTexture: THREE.Texture): { tvGroup: THREE.Group; screenMes
     );
     rod.position.y = 0.28;
     const pivot = new THREE.Group();
-    pivot.position.set(0, 1.48, 0);
+    pivot.position.set(0, 1.5, 0);
     pivot.rotation.z = tilt;
     pivot.add(rod);
     tvGroup.add(pivot);
@@ -193,7 +241,7 @@ export function buildRoom(
   lampLight.shadow.mapSize.set(1024, 1024);
   scene.add(lampLight);
 
-  const screenGlow = new THREE.PointLight(0x66ff99, 4, 6, 2);
+  const screenGlow = new THREE.PointLight(0x66ff99, 2, 5, 2);
   screenGlow.position.set(TV_SCREEN_CENTER.x, TV_SCREEN_CENTER.y, TV_SCREEN_CENTER.z + 0.4);
   scene.add(screenGlow);
 
