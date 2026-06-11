@@ -29,6 +29,46 @@
     line-height: 1.35;
   }
 
+  &__behind {
+    max-width: 52ch;
+    font-size: clamp(0.95rem, 1.8vw, 1.15rem);
+    line-height: 1.35;
+    color: $phosphor-dim;
+  }
+
+  &__behind-label {
+    color: $phosphor-green;
+    letter-spacing: 0.12em;
+  }
+
+  // SMPTE-style color bars for channels without a live feed
+  &__testcard {
+    margin-bottom: clamp(0.2rem, 1vh, 0.6rem);
+  }
+
+  &__testcard-bars {
+    height: clamp(28px, 6vh, 48px);
+    max-width: 52ch;
+    background: linear-gradient(
+      90deg,
+      #b7b7a8 0 14.28%,
+      #b7b425 14.28% 28.57%,
+      #2bb7b4 28.57% 42.85%,
+      #28b428 42.85% 57.14%,
+      #b42bb1 57.14% 71.42%,
+      #b42525 71.42% 85.71%,
+      #2528b4 85.71% 100%
+    );
+    opacity: 0.85;
+  }
+
+  &__testcard-caption {
+    margin-top: 0.3rem;
+    font-size: clamp(0.85rem, 1.6vw, 1rem);
+    letter-spacing: 0.18em;
+    color: $phosphor-dim;
+  }
+
   &__tech {
     list-style: none;
     display: flex;

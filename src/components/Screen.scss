@@ -44,6 +44,33 @@
     letter-spacing: 0.08em;
   }
 
+  // faint hint so a powered-off TV doesn't look like a broken site
+  &__standby {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    z-index: 4;
+    font-size: clamp(0.95rem, 1.8vw, 1.2rem);
+    letter-spacing: 0.25em;
+    color: rgba(217, 232, 212, 0.35);
+    opacity: 0;
+    animation: standby-fade 1.2s ease 2.2s forwards;
+  }
+
+  // one-time hint for visitors who deep-link past the intro channel
+  &__keys-hint {
+    position: absolute;
+    bottom: 5%;
+    left: 6%;
+    z-index: 6;
+    font-size: clamp(0.9rem, 1.7vw, 1.1rem);
+    color: $phosphor-green;
+    text-shadow: 0 0 8px rgba(77, 255, 136, 0.6);
+    letter-spacing: 0.08em;
+    animation: standby-fade 0.4s ease both;
+  }
+
   &__scanlines {
     position: absolute;
     inset: 0;
@@ -118,6 +145,12 @@
   100% {
     transform: scaleY(0.002) scaleX(0);
     opacity: 0;
+  }
+}
+
+@keyframes standby-fade {
+  to {
+    opacity: 1;
   }
 }
 

@@ -27,6 +27,11 @@ Per project:
 - `embedUrl` enables the "TUNE IN LIVE" button, which renders the demo in an
   iframe inside the TV screen. Only set it for URLs that allow framing
   (GitHub Pages and Netlify do). Verify with a quick manual check before adding.
+- `behindTheScenes` (optional): one sentence on the interesting technical or
+  design decision — written for hiring managers. Must be factually grounded
+  in the repo (check its README/package.json), never invented.
+- Projects *without* `embedUrl` automatically get an SMPTE test-card graphic
+  ("no live feed on this channel") so they don't look flat next to live ones.
 - Write `description` like a TV program blurb: one short paragraph, a bit of
   personality.
 
@@ -60,11 +65,23 @@ names, importing tokens via `@use '../styles/tokens' as *;`.
 - A green `CH 05` OSD shows for 2s after every switch.
 - Power off plays a CRT collapse animation (`tv-off` keyframes in
   `Screen.scss`) and disables the channel buttons; power on bursts static.
+  After ~2s off, a faint "PRESS PWR TO RESUME BROADCAST" hint fades in, and
+  the panel LED turns red (green while on) so the site never looks broken.
 - Current channel is mirrored to the URL hash (`#ch-5`), read once on load,
-  so channels are shareable links.
+  so channels are shareable links. Deep-linked visitors (initial channel ≠ 1)
+  get a one-time arrow-keys hint on screen for ~6s.
+- `document.title` mirrors the broadcast ("CH 03 · WoW Graveyard 3D — Aaron
+  Kromer"; "Standby — …" when off).
+- Tuning in/out of a live demo fires the same static burst as a channel
+  switch (`tv.staticBurst`), and the iframe stays covered in noise until its
+  `load` event (6s safety timeout).
+- The live-demo iframe carries `allow="camera; microphone; fullscreen;
+  xr-spatial-tracking"` — Wine Me's webcam and A-Frame VR need it. Don't drop it.
 - Leaving a channel always exits "tuned in" iframe mode.
 - Decorative CRT layers (scanlines/vignette/glare) are `pointer-events: none`
   and sit *above* the iframe so embedded demos still look like a broadcast.
+- The intro channel greets by time of day (morning/afternoon/evening/up-late)
+  — `broadcastSlot()` in `IntroProgram.tsx`.
 
 ## Conventions
 
@@ -75,3 +92,14 @@ names, importing tokens via `@use '../styles/tokens' as *;`.
   brand badge. Loaded from Google Fonts in `index.html`.
 - `vite.config.ts` uses `base: './'` so the build deploys to any subpath
   (e.g. GitHub Pages) without changes.
+
+## Deployment & social previews
+
+- Canonical URL: https://aarkro.github.io/portfolio/ — hardcoded (absolute,
+  as required) in the `og:url` / `og:image` meta tags in `index.html`.
+  Update those if the domain ever changes.
+- `public/og-image.png` (1200×630) is a screenshot of the intro channel.
+  Regenerate after visual changes: build + preview, then capture at 1800×945
+  with headless Chrome, center-crop to 1560×819 and resize to 1200×630
+  (`sips -c 819 1560 og-image.png && sips -z 630 1200 og-image.png`).
+- `public/favicon.svg` is a hand-drawn mini TV matching the site's palette.

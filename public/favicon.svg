@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <!-- antenna -->
+  <line x1="50" y1="28" x2="30" y2="6" stroke="#9a9a9a" stroke-width="5" stroke-linecap="round"/>
+  <line x1="50" y1="28" x2="72" y2="8" stroke="#9a9a9a" stroke-width="5" stroke-linecap="round"/>
+  <!-- cabinet -->
+  <rect x="6" y="26" width="88" height="66" rx="12" fill="#5b3a22" stroke="#241507" stroke-width="4"/>
+  <!-- screen -->
+  <rect x="14" y="34" width="56" height="50" rx="8" fill="#0a0d0a"/>
+  <text x="42" y="68" font-family="monospace" font-size="26" fill="#4dff88" text-anchor="middle">CH</text>
+  <!-- controls -->
+  <circle cx="82" cy="46" r="5" fill="#ece0c8"/>
+  <circle cx="82" cy="62" r="5" fill="#ece0c8"/>
+  <circle cx="82" cy="78" r="3" fill="#ff4b3a"/>
+</svg>

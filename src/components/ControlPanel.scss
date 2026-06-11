@@ -60,6 +60,25 @@
     text-shadow: 0 0 6px rgba(77, 255, 136, 0.8);
   }
 
+  // power LED: green on air, red on standby (like the real thing)
+  &__led {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.4);
+
+    &--on {
+      background: #2fbf4a;
+      box-shadow: 0 0 6px rgba(47, 191, 74, 0.9);
+    }
+
+    &--standby {
+      background: #ff4b3a;
+      box-shadow: 0 0 6px rgba(255, 75, 58, 0.9);
+      animation: led-pulse 2.4s ease-in-out infinite;
+    }
+  }
+
   &__buttons {
     display: flex;
     gap: clamp(0.4rem, 1vw, 0.7rem);
@@ -133,6 +152,16 @@
       transform: translateX(-50%) rotate(40deg);
       transform-origin: bottom center;
     }
+  }
+}
+
+@keyframes led-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.55;
   }
 }
 

@@ -14,14 +14,15 @@
     letter-spacing: 0.25em;
   }
 
+  &__greeting {
+    font-size: clamp(1.05rem, 2.2vw, 1.5rem);
+    color: $phosphor-text;
+  }
+
   &__title {
     font-size: clamp(2rem, 5.5vw, 4rem);
     font-weight: normal;
     line-height: 1;
-    text-shadow: 0 0 12px rgba(217, 232, 212, 0.35);
-  }
-
-  &__name {
     color: $phosphor-amber;
     text-shadow:
       0 0 10px rgba(255, 180, 84, 0.7),

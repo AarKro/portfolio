@@ -26,6 +26,11 @@ export function ControlPanel({ tv }: ControlPanelProps) {
         {poweredOn ? String(channel).padStart(2, '0') : '--'}
       </div>
 
+      <span
+        className={`controls__led ${poweredOn ? 'controls__led--on' : 'controls__led--standby'}`}
+        aria-hidden="true"
+      />
+
       <div className="controls__buttons">
         <button
           className="controls__button"
@@ -48,7 +53,7 @@ export function ControlPanel({ tv }: ControlPanelProps) {
           onClick={togglePower}
           aria-label={poweredOn ? 'Turn TV off' : 'Turn TV on'}
         >
-          ⏻
+          PWR
         </button>
       </div>
 

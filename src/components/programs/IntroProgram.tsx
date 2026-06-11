@@ -5,16 +5,28 @@ interface IntroProgramProps {
   tuneTo: (channel: number) => void;
 }
 
+/** News-anchor greeting matching the viewer's clock. */
+function broadcastSlot(): { greeting: string; program: string } {
+  const hour = new Date().getHours();
+  if (hour < 5) return { greeting: 'Up late?', program: 'Tonight’s program' };
+  if (hour < 12) return { greeting: 'Good morning.', program: 'This morning’s program' };
+  if (hour < 18) return { greeting: 'Good afternoon.', program: 'This afternoon’s program' };
+  return { greeting: 'Good evening.', program: 'Tonight’s program' };
+}
+
 /** Channel 1 — the station ident: who is broadcasting, and how to watch. */
 export function IntroProgram({ tuneTo }: IntroProgramProps) {
+  const { greeting, program } = broadcastSlot();
+
   return (
     <div className="intro">
-      <p className="intro__pretitle">*** NOW BROADCASTING ***</p>
-      <h1 className="intro__title">
-        Hey, it&apos;s <span className="intro__name">Aaron</span>
-      </h1>
+      <p className="intro__pretitle">*** LIVE ***</p>
+      <p className="intro__greeting">{greeting} You’re tuned in to</p>
+      <h1 className="intro__title">Aaron Kromer</h1>
       <p className="intro__subtitle">
-        Welcome to my portfolio. Every channel on this set is one of my projects.
+        Frontend developer &amp; interaction designer.
+        <br />
+        {program}: my projects, on every channel.
       </p>
 
       <p className="intro__hint">
@@ -43,7 +55,15 @@ export function IntroProgram({ tuneTo }: IntroProgramProps) {
 
       <p className="intro__contact">
         <a href="https://github.com/AarKro" target="_blank" rel="noreferrer">
-          github.com/AarKro
+          GitHub
+        </a>
+        <span aria-hidden="true"> · </span>
+        <a
+          href="https://www.linkedin.com/in/aaron-kromer-a3026b193/"
+          target="_blank"
+          rel="noreferrer"
+        >
+          LinkedIn
         </a>
         <span aria-hidden="true"> · </span>
         <a href="mailto:kromer.aaron@gmail.com">kromer.aaron@gmail.com</a>
