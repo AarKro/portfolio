@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
-import { useTV } from '../hooks/useTV';
-import { ControlPanel } from './ControlPanel';
-import { Screen } from './Screen';
+import { useTV } from '../../hooks/useTV';
+import { ControlPanel } from '../ControlPanel/ControlPanel';
+import { Screen } from '../Screen/Screen';
 import './TVSet.scss';
 
 /** The whole television: cabinet, screen, controls, feet and antenna. */

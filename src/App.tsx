@@ -1,5 +1,5 @@
 import { PROJECTS } from './data/projects';
-import { TVSet } from './components/TVSet';
+import { TVSet } from './components/TVSet/TVSet';
 import './App.scss';
 
 export function App() {

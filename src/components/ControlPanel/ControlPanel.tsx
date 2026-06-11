@@ -1,4 +1,4 @@
-import type { TVState } from '../hooks/useTV';
+import type { TVState } from '../../hooks/useTV';
 import './ControlPanel.scss';
 
 interface ControlPanelProps {

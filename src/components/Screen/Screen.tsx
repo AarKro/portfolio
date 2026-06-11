@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
-import { FIRST_PROJECT_CHANNEL, PROJECTS } from '../data/projects';
-import type { TVState } from '../hooks/useTV';
-import { IntroProgram } from './programs/IntroProgram';
-import { ProjectProgram } from './programs/ProjectProgram';
-import { StaticNoise } from './StaticNoise';
+import { FIRST_PROJECT_CHANNEL, PROJECTS } from '../../data/projects';
+import type { TVState } from '../../hooks/useTV';
+import { IntroProgram } from '../programs/IntroProgram/IntroProgram';
+import { ProjectProgram } from '../programs/ProjectProgram/ProjectProgram';
+import { StaticNoise } from '../StaticNoise/StaticNoise';
 import './Screen.scss';
 
 /** How long the one-time arrow-keys hint stays up for deep-linked visitors */

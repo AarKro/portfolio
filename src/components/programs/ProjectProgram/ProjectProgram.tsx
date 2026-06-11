@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
-import type { Project } from '../../data/projects';
-import { StaticNoise } from '../StaticNoise';
+import type { Project } from '../../../data/projects';
+import { StaticNoise } from '../../StaticNoise/StaticNoise';
 import './ProjectProgram.scss';
 
 /** Safety net: never show loading noise forever if the iframe never fires `load` */

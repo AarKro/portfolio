@@ -42,20 +42,21 @@ src/
   data/projects.ts          ← content (see above)
   hooks/useTV.ts            ← all TV behavior: channel state, static burst,
                               OSD timing, power, URL hash sync (#ch-N)
-  components/
-    TVSet.tsx               ← cabinet, antenna, feet; binds ← → arrow keys
-    Screen.tsx              ← CRT tube: picks the program, layers noise/OSD/
+  components/               ← one folder per component: Name/Name.tsx + Name.scss
+    TVSet/                  ← cabinet, antenna, feet; binds ← → arrow keys
+    Screen/                 ← CRT tube: picks the program, layers noise/OSD/
                               scanlines/vignette/glare on top
-    ControlPanel.tsx        ← physical buttons strip (CH ▼/▲, power, decor)
-    StaticNoise.tsx         ← canvas noise; animates only while `active`
-    programs/IntroProgram.tsx    ← channel 1 (intro + clickable TV guide)
-    programs/ProjectProgram.tsx  ← project channels (info card / live iframe)
+    ControlPanel/           ← physical buttons strip (CH ▼/▲, power, decor)
+    StaticNoise/            ← canvas noise; animates only while `active`
+    programs/IntroProgram/      ← channel 1 (intro + clickable TV guide)
+    programs/ProjectProgram/    ← project channels (info card / live iframe)
   styles/_tokens.scss       ← ALL colors and fonts; theme changes happen here
   styles/global.scss        ← reset + base
 ```
 
-Each component has a sibling `.scss` file with the same name, BEM-style class
-names, importing tokens via `@use '../styles/tokens' as *;`.
+Each component lives in its own folder bundling its `.tsx` and `.scss` (same
+name as the folder, no barrel `index.ts` files), BEM-style class names,
+importing tokens via a relative `@use '../../styles/tokens' as *;`.
 
 ## How the TV behaves (don't accidentally break these)
 

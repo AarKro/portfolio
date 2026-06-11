@@ -1,4 +1,4 @@
-import { FIRST_PROJECT_CHANNEL, PROJECTS } from '../../data/projects';
+import { FIRST_PROJECT_CHANNEL, PROJECTS } from '../../../data/projects';
 import './IntroProgram.scss';
 
 interface IntroProgramProps {
