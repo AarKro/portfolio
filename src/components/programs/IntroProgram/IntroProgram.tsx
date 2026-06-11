@@ -30,8 +30,7 @@ export function IntroProgram({ tuneTo }: IntroProgramProps) {
       </p>
 
       <p className="intro__hint">
-        Use the <strong>CH ▲ / CH ▼</strong> buttons on the TV (or the{' '}
-        <strong>← →</strong> arrow keys) to flip through the channels.
+        Use the <strong>CH ▲ / CH ▼</strong> buttons on the TV to flip through the channels.
       </p>
 
       <div className="intro__guide">
