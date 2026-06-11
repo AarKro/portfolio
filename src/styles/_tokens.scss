@@ -1,0 +1,30 @@
+// Design tokens. Every component pulls colors/fonts from here,
+// so re-theming the set means editing this file only.
+
+// The living room
+$room-dark: #14100d;
+$room-warm: #2a1f16;
+$lamp-glow: rgba(255, 184, 110, 0.14);
+
+// The wooden cabinet
+$wood-light: #7a5232;
+$wood-mid: #5b3a22;
+$wood-dark: #36210f;
+$wood-edge: #241507;
+
+// The cream control panel
+$panel-light: #ece0c8;
+$panel-mid: #d9c9a8;
+$panel-dark: #b3a17e;
+$panel-text: #4a3b28;
+
+// The CRT screen
+$phosphor-bg: #0a0d0a;
+$phosphor-text: #d9e8d4;
+$phosphor-green: #4dff88;
+$phosphor-amber: #ffb454;
+$phosphor-dim: #8aa388;
+
+// Fonts
+$font-screen: 'VT323', monospace;
+$font-brand: 'Bungee', sans-serif;

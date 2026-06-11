@@ -1,0 +1,16 @@
+.static-noise {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  image-rendering: pixelated;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s ease-out;
+  z-index: 5;
+
+  &--active {
+    opacity: 1;
+    transition: none;
+  }
+}

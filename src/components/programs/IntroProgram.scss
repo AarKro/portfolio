@@ -1,0 +1,104 @@
+@use '../../styles/tokens' as *;
+
+.intro {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  text-align: center;
+  gap: clamp(0.5rem, 1.8vh, 1rem);
+
+  &__pretitle {
+    color: $phosphor-dim;
+    font-size: clamp(0.85rem, 1.6vw, 1.1rem);
+    letter-spacing: 0.25em;
+  }
+
+  &__title {
+    font-size: clamp(2rem, 5.5vw, 4rem);
+    font-weight: normal;
+    line-height: 1;
+    text-shadow: 0 0 12px rgba(217, 232, 212, 0.35);
+  }
+
+  &__name {
+    color: $phosphor-amber;
+    text-shadow:
+      0 0 10px rgba(255, 180, 84, 0.7),
+      0 0 30px rgba(255, 180, 84, 0.35);
+  }
+
+  &__subtitle {
+    font-size: clamp(1rem, 2vw, 1.35rem);
+    color: $phosphor-text;
+  }
+
+  &__hint {
+    font-size: clamp(0.95rem, 1.8vw, 1.2rem);
+    color: $phosphor-dim;
+
+    strong {
+      color: $phosphor-green;
+      font-weight: normal;
+    }
+  }
+
+  &__guide-title {
+    margin-top: clamp(0.3rem, 1vh, 0.8rem);
+    color: $phosphor-dim;
+    letter-spacing: 0.25em;
+    font-size: clamp(0.85rem, 1.6vw, 1.05rem);
+  }
+
+  &__guide-list {
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0 clamp(0.8rem, 3vw, 2.2rem);
+    text-align: left;
+    width: fit-content;
+    max-width: 100%;
+    margin: 0 auto;
+  }
+
+  &__guide-entry {
+    font-size: clamp(0.9rem, 1.7vw, 1.15rem);
+    padding: 0.05em 0.3em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+
+    &:hover,
+    &:focus-visible {
+      background: $phosphor-text;
+      color: $phosphor-bg;
+      outline: none;
+    }
+  }
+
+  &__guide-channel {
+    color: $phosphor-green;
+  }
+
+  &__guide-entry:hover &__guide-channel,
+  &__guide-entry:focus-visible &__guide-channel {
+    color: $phosphor-bg;
+  }
+
+  &__contact {
+    margin-top: clamp(0.3rem, 1vh, 0.8rem);
+    font-size: clamp(0.9rem, 1.7vw, 1.15rem);
+
+    a {
+      color: $phosphor-green;
+      text-decoration: none;
+      border-bottom: 1px dashed rgba(77, 255, 136, 0.5);
+
+      &:hover {
+        background: $phosphor-green;
+        color: $phosphor-bg;
+      }
+    }
+  }
+}

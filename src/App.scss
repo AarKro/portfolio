@@ -1,0 +1,22 @@
+@use 'styles/tokens' as *;
+
+// The living room the TV stands in: warm lamp glow from above,
+// faint wallpaper pattern, darker floor at the bottom.
+.room {
+  height: 100dvh;
+  display: grid;
+  place-items: center;
+  background:
+    radial-gradient(ellipse 70% 45% at 50% -5%, $lamp-glow, transparent 70%),
+    repeating-linear-gradient(
+      45deg,
+      rgba(255, 200, 140, 0.025) 0 2px,
+      transparent 2px 14px
+    ),
+    repeating-linear-gradient(
+      -45deg,
+      rgba(255, 200, 140, 0.025) 0 2px,
+      transparent 2px 14px
+    ),
+    linear-gradient(180deg, $room-warm 0%, $room-dark 55%, #0b0805 100%);
+}
