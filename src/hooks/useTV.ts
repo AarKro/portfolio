@@ -29,9 +29,9 @@ function channelFromHash(): number {
   return parsed >= 1 && parsed <= CHANNEL_COUNT ? parsed : 1;
 }
 
-export function useTV(): TVState {
+export function useTV(initialPoweredOn = true): TVState {
   const [channel, setChannel] = useState(channelFromHash);
-  const [poweredOn, setPoweredOn] = useState(true);
+  const [poweredOn, setPoweredOn] = useState(initialPoweredOn);
   const [staticVisible, setStaticVisible] = useState(false);
   const [osdVisible, setOsdVisible] = useState(false);
 

@@ -5,6 +5,9 @@ my projects — flip through them with the channel buttons on the set (or the
 `←` `→` arrow keys), and "tune in live" to watch the hosted demos right on
 the TV screen. Yes, the power knob works. Yes, there is static.
 
+And if you turn the TV off… you might find out where you've been sitting
+this whole time. (WASD to walk, mouse to look, click the TV to sit back down.)
+
 https://aarkro.github.io/portfolio/
 
 ## Stack

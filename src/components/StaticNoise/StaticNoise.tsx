@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { fillNoise } from '../../utils/noise';
 import './StaticNoise.scss';
 
 /** Internal resolution of the noise; scaled up with pixelated rendering */
@@ -24,17 +25,10 @@ export function StaticNoise({ active }: StaticNoiseProps) {
     if (!canvas || !ctx) return;
 
     const image = ctx.createImageData(NOISE_WIDTH, NOISE_HEIGHT);
-    const pixels = image.data;
     let frame = 0;
 
     const draw = () => {
-      for (let i = 0; i < pixels.length; i += 4) {
-        const value = Math.random() * 255;
-        pixels[i] = value;
-        pixels[i + 1] = value;
-        pixels[i + 2] = value;
-        pixels[i + 3] = 255;
-      }
+      fillNoise(image.data);
       ctx.putImageData(image, 0, 0);
       frame = requestAnimationFrame(draw);
     };

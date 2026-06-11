@@ -12,8 +12,9 @@ Desktop-first; mobile only needs to not break.
 
 ## Stack
 
-React 19 + TypeScript + Vite + SCSS. No router, no state library, no other
-runtime dependencies — keep it that way unless there is a strong reason.
+React 19 + TypeScript + Vite + SCSS, plus **three.js** (the only other
+runtime dependency, used exclusively by the lazy-loaded 3D room). No router,
+no state library — keep it that way unless there is a strong reason.
 
 ## The one file that matters for content
 
@@ -43,16 +44,47 @@ src/
   hooks/useTV.ts            ← all TV behavior: channel state, static burst,
                               OSD timing, power, URL hash sync (#ch-N)
   components/               ← one folder per component: Name/Name.tsx + Name.scss
-    TVSet/                  ← cabinet, antenna, feet; binds ← → arrow keys
+    TVSet/                  ← cabinet, antenna, feet; binds ← → arrow keys;
+                              reports power-off to App (onPoweredOff)
     Screen/                 ← CRT tube: picks the program, layers noise/OSD/
                               scanlines/vignette/glare on top
     ControlPanel/           ← physical buttons strip (CH ▼/▲, power, decor)
     StaticNoise/            ← canvas noise; animates only while `active`
+    Room3D/                 ← lazy-loaded first-person 3D living room
+      Room3D.tsx            ← renderer, pointer lock, WASD, zoom flights
+      buildRoom.ts          ← ALL scene geometry (placeholder primitives,
+                              to be replaced by a GLTF model later)
     programs/IntroProgram/      ← channel 1 (intro + clickable TV guide)
     programs/ProjectProgram/    ← project channels (info card / live iframe)
+  utils/noise.ts            ← shared static-noise pixel fill (2D + 3D screens)
   styles/_tokens.scss       ← ALL colors and fonts; theme changes happen here
   styles/global.scss        ← reset + base
 ```
+
+## The 3D room (power-off easter egg)
+
+`App.tsx` runs a view-mode state machine: `tv → to-room → room → to-tv → tv`.
+Powering the TV off plays the CRT collapse, then the 2D layer shrinks/fades
+(`tv-depart` animation) while the 3D camera pulls back from the 3D TV's
+glass — revealing the visitor was "sitting" in a living room. Pointer-lock
+mouselook + WASD walking; clicking the 3D TV (within 4m reach, crosshair
+turns amber) flies the camera back into the glass and remounts the 2D TV in
+standby (PWR turns it back on).
+
+Things to know:
+- `Room3D` is lazy-loaded (`React.lazy`) so three.js (~132 kB gz) never
+  blocks the portfolio's first paint; the chunk is prefetched in an idle
+  effect. Keep three.js imports out of eagerly-loaded modules.
+- **`buildRoom.ts` is placeholder geometry by design.** The plan is to swap
+  it for an imported GLTF model. Everything outside that file depends only
+  on its exports ({ tvGroup, screenMesh }, BOUNDS, STANDING_SPOT,
+  TV_SCREEN_CENTER, EYE_HEIGHT) — a GLTF version must keep that contract.
+- The 3D TV screen plays the same `fillNoise()` static as the 2D screen,
+  via a CanvasTexture updated every other frame.
+- Transition timings: camera pull-back 1.9s / fly-in 1.15s (Room3D.tsx),
+  2D fade 1.1s (`tv-depart`, App.scss), CRT collapse handoff 700ms
+  (POWER_OFF_DELAY, TVSet.tsx). Tune them together.
+- Walkable area is clamped to `BOUNDS` (no collision with furniture yet).
 
 Each component lives in its own folder bundling its `.tsx` and `.scss` (same
 name as the folder, no barrel `index.ts` files), BEM-style class names,
