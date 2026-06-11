@@ -1,0 +1,162 @@
+@use '../../styles/tokens' as *;
+
+.scene {
+  position: absolute;
+  inset: 0;
+  background: #0b0805;
+
+  &__canvas {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    display: block;
+  }
+
+  // CSS3DRenderer layer carrying the DOM TV; never intercepts clicks itself
+  &__css3d {
+    position: absolute !important;
+    inset: 0;
+    z-index: 2;
+    pointer-events: none;
+  }
+
+  // the DOM TV inside the CSS3D layer; pointer-events toggled by mode.
+  // backface-visibility keeps it from showing mirrored from behind.
+  &__tv-host {
+    backface-visibility: hidden;
+  }
+
+  &__crosshair {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    z-index: 10;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: rgba(77, 255, 136, 0.85);
+    box-shadow: 0 0 8px rgba(77, 255, 136, 0.7);
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    display: none;
+
+    &--visible {
+      display: block;
+    }
+
+    // the TV is in reach: go amber and grow a touch
+    &--target {
+      background: $phosphor-amber;
+      box-shadow: 0 0 10px rgba(255, 180, 84, 0.9);
+      transform: translate(-50%, -50%) scale(1.5);
+    }
+  }
+
+  // ambient control hints in the lower corners, shown only while walking
+  &__hints {
+    position: absolute;
+    inset: 0;
+    z-index: 10;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.5s ease;
+  }
+
+  &--walking &__hints {
+    opacity: 1;
+  }
+
+  &__hint {
+    position: absolute;
+    bottom: 30px;
+    display: flex;
+    align-items: center;
+
+    &--keys {
+      left: 36px;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    &--mouse {
+      right: 36px;
+      gap: 10px;
+    }
+  }
+
+  &__key-row {
+    display: flex;
+    gap: 5px;
+  }
+
+  &__key {
+    display: grid;
+    place-items: center;
+    width: 38px;
+    height: 38px;
+    border: 2px solid rgba(77, 255, 136, 0.7);
+    border-radius: 6px;
+    background: rgba(10, 13, 10, 0.65);
+    color: $phosphor-green;
+    font-size: 1.3rem;
+    text-shadow: 0 0 6px rgba(77, 255, 136, 0.6);
+    box-shadow: 0 0 10px rgba(77, 255, 136, 0.15);
+  }
+
+  // a little CSS mouse: body, split line and scroll wheel
+  &__mouse {
+    position: relative;
+    width: 30px;
+    height: 46px;
+    border: 2px solid rgba(77, 255, 136, 0.7);
+    border-radius: 15px;
+    background: rgba(10, 13, 10, 0.65);
+    box-shadow: 0 0 10px rgba(77, 255, 136, 0.15);
+
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 50%;
+      width: 2px;
+      height: 14px;
+      background: rgba(77, 255, 136, 0.5);
+      transform: translateX(-50%);
+    }
+
+    &::after {
+      content: '';
+      position: absolute;
+      top: 16px;
+      left: 50%;
+      width: 4px;
+      height: 8px;
+      border-radius: 2px;
+      background: $phosphor-green;
+      transform: translateX(-50%);
+      box-shadow: 0 0 6px rgba(77, 255, 136, 0.8);
+    }
+  }
+
+  &__mouse-arrow {
+    color: $phosphor-green;
+    font-size: 1.6rem;
+    line-height: 1;
+    text-shadow: 0 0 6px rgba(77, 255, 136, 0.6);
+    animation: mouse-nudge 1.8s ease-in-out infinite;
+
+    &:last-child {
+      animation-delay: 0.9s;
+    }
+  }
+}
+
+@keyframes mouse-nudge {
+  0%,
+  100% {
+    opacity: 0.45;
+  }
+  50% {
+    opacity: 1;
+  }
+}

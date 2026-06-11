@@ -44,56 +44,70 @@ src/
   hooks/useTV.ts            ← all TV behavior: channel state, static burst,
                               OSD timing, power, URL hash sync (#ch-N)
   components/               ← one folder per component: Name/Name.tsx + Name.scss
-    TVSet/                  ← cabinet, antenna, feet; binds ← → arrow keys;
-                              reports power-off to App (onPoweredOff)
+    Scene/                  ← THE view: 3D room + camera + the DOM TV in 3D
+      Scene.tsx             ← WebGL+CSS3D renderers, pointer lock, WASD,
+                              camera flights, DOM↔world size sync
+      buildRoom.ts          ← WebGL geometry (placeholder primitives,
+                              to be replaced by a GLTF model later)
+    TVSet/                  ← the DOM TV (cabinet, screen, controls, antenna,
+                              feet) at a FIXED 920px design size; binds ← →
+                              arrow keys; reports power-off (onPoweredOff)
     Screen/                 ← CRT tube: picks the program, layers noise/OSD/
                               scanlines/vignette/glare on top
     ControlPanel/           ← physical buttons strip (CH ▼/▲, power, decor)
     StaticNoise/            ← canvas noise; animates only while `active`
-    Room3D/                 ← lazy-loaded first-person 3D living room
-      Room3D.tsx            ← renderer, pointer lock, WASD, zoom flights
-      buildRoom.ts          ← ALL scene geometry (placeholder primitives,
-                              to be replaced by a GLTF model later)
     programs/IntroProgram/      ← channel 1 (intro + clickable TV guide)
     programs/ProjectProgram/    ← project channels (info card / live iframe)
-  utils/noise.ts            ← shared static-noise pixel fill (2D + 3D screens)
+  utils/noise.ts            ← static-noise pixel fill (used by StaticNoise)
   styles/_tokens.scss       ← ALL colors and fonts; theme changes happen here
   styles/global.scss        ← reset + base
 ```
 
-## The 3D room (power-off easter egg)
+## One scene, one TV (the core architecture)
 
-`App.tsx` runs a view-mode state machine: `tv → to-room → room → to-tv → tv`.
-Powering the TV off plays the CRT collapse, then the 2D layer shrinks/fades
-(`tv-depart` animation) while the 3D camera pulls back from the 3D TV's
-glass — revealing the visitor was "sitting" in a living room. Pointer-lock
-mouselook + WASD walking; clicking the 3D TV (within 4m reach, crosshair
-turns amber) flies the camera back into the glass and remounts the 2D TV in
-standby (PWR turns it back on).
+There is no separate "2D site" — the whole page is a single three.js scene.
+The DOM TV (`TVSet`, fully interactive React: buttons, iframes, programs) is
+placed in 3D space with **CSS3DRenderer** as the front face of the WebGL TV
+body. "Website mode" is just the camera parked in front of the TV.
+
+`App.tsx` tracks the camera as a mode machine: `tv → to-room → room → to-tv
+→ tv`. Powering off plays the CRT collapse, then the camera pulls back
+(seamless — it's literally the same TV). **Pointer lock is requested at the
+start of that pull-back** (the PWR click's user activation is still fresh),
+so mouselook is already live when the flight lands — no extra click. In the
+room: WASD walking, ambient control hints in the lower corners (WASD keycaps
+left, mouse glyph right — no explainer text by design), ESC frees the mouse
+and any click re-locks it; clicking the TV (within 4m, crosshair turns
+amber) flies the camera back to the website framing, where the TV sits in
+standby (PWR resumes).
 
 Things to know:
-- `Room3D` is lazy-loaded (`React.lazy`) so three.js (~132 kB gz) never
-  blocks the portfolio's first paint; the chunk is prefetched in an idle
-  effect. Keep three.js imports out of eagerly-loaded modules.
-- **`buildRoom.ts` is placeholder geometry by design.** The plan is to swap
-  it for an imported GLTF model. Everything outside that file depends only
-  on its exports ({ tvGroup, screenMesh }, BOUNDS, STANDING_SPOT,
-  TV_SCREEN_CENTER, EYE_HEIGHT) — a GLTF version must keep that contract.
-- The 3D TV screen plays the same `fillNoise()` static as the 2D screen,
-  via a CanvasTexture updated every other frame.
-- **The zoom is a matched-frame crossfade, not a morph.** The 3D TV mirrors
-  the 2D set's design (4:3 screen, cream control strip, feet, antenna), and
-  the camera starts/ends at `CLOSEUP_POSITION` looking at `TV_FRAME_TARGET`
-  (buildRoom.ts) — a framing computed so the 3D cabinet has the same
-  apparent size as the 2D TV. The camera *holds* that framing for
-  `ENTER_HOLD` (0.55s) while the DOM layer fades (0.5s `tv-depart`), then
-  pulls back with an FOV ramp (CLOSEUP_FOV 55° → WALKING_FOV 70°). The 2D
-  fades must stay pure opacity (no scaling) and shorter than ENTER_HOLD,
-  and resizing the 3D TV means recomputing CLOSEUP_POSITION (see comment).
-- Transition timings: pull-back 1.9s / fly-in 1.15s (Room3D.tsx), 2D fades
-  0.5s/0.45s (App.scss), CRT collapse handoff 700ms (POWER_OFF_DELAY,
-  TVSet.tsx). Tune them together.
+- **`Scene.tsx` syncs the 3D world to the DOM** (`syncWorldToDOM`): it
+  measures the TVSet element, scales/positions the WebGL body box behind
+  the cabinet, and computes the closeup camera framing (cabinet fills
+  FIT_HEIGHT/FIT_WIDTH of the viewport). Runs on resize and via a
+  ResizeObserver (fonts loading shift the layout). `WORLD_PER_PX` in
+  buildRoom.ts maps the 920px cabinet to ~1.1m — if the cabinet's CSS width
+  changes, change WORLD_PER_PX with it.
+- **TVSet must stay fixed-size** (920px cabinet, no viewport units for its
+  width) — apparent size is controlled by camera distance, not CSS.
+- TVSet renders into a detached host div via `createPortal`; CSS3DRenderer
+  adopts that div. Pointer events on it are enabled only in `tv` mode.
+- **`buildRoom.ts` is placeholder geometry by design**, to be swapped for a
+  GLTF model later. Outside code relies only on its exports
+  ({ tvGroup, tvBody }, BOUNDS, STANDING_SPOT, STAND_TOP_Y, TV_FRONT_Z,
+  WORLD_PER_PX, EYE_HEIGHT, CLOSEUP_FOV, WALKING_FOV) — a GLTF version
+  must keep that contract. The TV body has no front face: the DOM is the
+  front face.
+- Camera flights lerp position/quaternion/FOV (CLOSEUP_FOV 55° ↔
+  WALKING_FOV 70°); durations at the top of Scene.tsx; the CRT collapse
+  handoff is POWER_OFF_DELAY (700ms) in TVSet.tsx.
+- three.js is in the main bundle now (~200 kB gz total) — it can't be
+  lazy-loaded since the scene IS the page.
 - Walkable area is clamped to `BOUNDS` (no collision with furniture yet).
+- Known CSS3D limitation: the DOM TV ignores WebGL depth, so meshes between
+  the camera and the TV won't occlude it (mostly invisible in practice;
+  `backface-visibility: hidden` handles viewing from behind).
 
 Each component lives in its own folder bundling its `.tsx` and `.scss` (same
 name as the folder, no barrel `index.ts` files), BEM-style class names,

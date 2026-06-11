@@ -1,67 +1,31 @@
-import { Suspense, lazy, useEffect, useState } from 'react';
+import { useState } from 'react';
 import { PROJECTS } from './data/projects';
+import { Scene, type ViewMode } from './components/Scene/Scene';
 import { TVSet } from './components/TVSet/TVSet';
 import './App.scss';
 
-// three.js only loads when (or just before) someone powers the TV off
-const Room3D = lazy(() =>
-  import('./components/Room3D/Room3D').then((module) => ({ default: module.Room3D })),
-);
-
 /**
- * tv      → the 2D portfolio, TV filling the page
- * to-room → user powered off: 2D layer shrinks away while the 3D camera
- *           pulls back from the TV's glass
- * room    → first-person 3D living room (WASD + pointer lock)
- * to-tv   → user clicked the 3D TV: camera flies into the glass
+ * There is only one view: the 3D living room (Scene), with the DOM TV
+ * projected onto the 3D TV body. The modes just describe the camera:
+ *
+ * tv      → parked in front of the TV: the portfolio, fully interactive
+ * to-room → user powered off: camera pulls back from the glass
+ * room    → first-person walking (WASD + pointer lock)
+ * to-tv   → user clicked the TV: camera flies back to the website framing
  */
-type ViewMode = 'tv' | 'to-room' | 'room' | 'to-tv';
-
 export function App() {
   const [mode, setMode] = useState<ViewMode>('tv');
-  // counts trips to the room; keys the TVSet so it remounts in standby
-  const [roomVisits, setRoomVisits] = useState(0);
-
-  const showTV = mode === 'tv' || mode === 'to-room';
-  const show3D = mode !== 'tv';
-
-  // warm up the 3D chunk in the background so powering off feels instant
-  useEffect(() => {
-    void import('./components/Room3D/Room3D');
-  }, []);
-
-  const tvLayerClass = [
-    'tv-layer',
-    roomVisits > 0 ? 'tv-layer--arriving' : '',
-    mode === 'to-room' ? 'tv-layer--leaving' : '',
-  ]
-    .filter(Boolean)
-    .join(' ');
 
   return (
     <main className="app">
-      {show3D && (
-        <Suspense fallback={null}>
-          <Room3D
-            phase={mode === 'to-room' ? 'enter' : mode === 'room' ? 'idle' : 'leave'}
-            onEnterComplete={() => setMode('room')}
-            onLeaveComplete={() => {
-              setRoomVisits((visits) => visits + 1);
-              setMode('tv');
-            }}
-            onTVClick={() => setMode('to-tv')}
-          />
-        </Suspense>
-      )}
-
-      {showTV && (
-        <div key={roomVisits} className={tvLayerClass}>
-          <TVSet
-            initialPoweredOn={roomVisits === 0}
-            onPoweredOff={() => setMode('to-room')}
-          />
-        </div>
-      )}
+      <Scene
+        mode={mode}
+        onArrivedInRoom={() => setMode('room')}
+        onArrivedAtTV={() => setMode('tv')}
+        onTVClicked={() => setMode('to-tv')}
+      >
+        <TVSet onPoweredOff={() => setMode('to-room')} />
+      </Scene>
 
       {/*
         Crawlable text version of the broadcast. Project content only appears

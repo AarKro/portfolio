@@ -8,15 +8,17 @@ import './TVSet.scss';
 const POWER_OFF_DELAY = 700;
 
 interface TVSetProps {
-  /** False when remounting after a trip to the 3D room: TV starts in standby */
-  initialPoweredOn?: boolean;
   /** Called shortly after the user powers off, once the collapse has played */
   onPoweredOff?: () => void;
 }
 
-/** The whole television: cabinet, screen, controls, feet and antenna. */
-export function TVSet({ initialPoweredOn = true, onPoweredOff }: TVSetProps) {
-  const tv = useTV(initialPoweredOn);
+/**
+ * The whole television: cabinet, screen, controls, feet and antenna.
+ * Renders at a fixed pixel size — it lives on the front of the 3D TV body
+ * (via Scene's CSS3D layer), so apparent size is the camera's job.
+ */
+export function TVSet({ onPoweredOff }: TVSetProps) {
+  const tv = useTV();
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -27,8 +29,7 @@ export function TVSet({ initialPoweredOn = true, onPoweredOff }: TVSetProps) {
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [tv.channelUp, tv.channelDown]);
 
-  // Notify the app when the user powers off (true -> false transition only,
-  // so mounting in standby after a room visit doesn't re-trigger the zoom).
+  // Notify the app when the user powers off (true -> false transition only).
   // Pressing PWR again within the delay cancels via the effect cleanup.
   const wasPoweredOn = useRef(tv.poweredOn);
   useEffect(() => {

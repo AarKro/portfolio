@@ -1,58 +1,6 @@
-@use 'styles/tokens' as *;
-
 .app {
   position: relative;
   height: 100dvh;
   overflow: hidden;
-  background: #0b0805; // matches the 3D scene so fades never flash
-}
-
-// The 2D living room the TV stands in: warm lamp glow from above,
-// faint wallpaper pattern, darker floor at the bottom.
-.tv-layer {
-  position: absolute;
-  inset: 0;
-  z-index: 2;
-  display: grid;
-  place-items: center;
-  background:
-    radial-gradient(ellipse 70% 45% at 50% -5%, $lamp-glow, transparent 70%),
-    repeating-linear-gradient(
-      45deg,
-      rgba(255, 200, 140, 0.025) 0 2px,
-      transparent 2px 14px
-    ),
-    repeating-linear-gradient(
-      -45deg,
-      rgba(255, 200, 140, 0.025) 0 2px,
-      transparent 2px 14px
-    ),
-    linear-gradient(180deg, $room-warm 0%, $room-dark 55%, #0b0805 100%);
-
-  // Both transitions are pure fades: the 3D camera starts/ends at a framing
-  // that matches the 2D TV's size on screen, so any scaling here would
-  // break the "same TV" illusion. Keep durations below Room3D's ENTER_HOLD.
-
-  // returning from the 3D room: the camera "lands" back in front of the set
-  &--arriving {
-    animation: tv-arrive 0.45s ease-out both;
-  }
-
-  // powering off: the 3D twin is already holding the same frame underneath
-  &--leaving {
-    animation: tv-depart 0.5s ease-out forwards;
-    pointer-events: none;
-  }
-}
-
-@keyframes tv-depart {
-  to {
-    opacity: 0;
-  }
-}
-
-@keyframes tv-arrive {
-  from {
-    opacity: 0;
-  }
+  background: #0b0805; // matches the 3D scene so nothing ever flashes
 }

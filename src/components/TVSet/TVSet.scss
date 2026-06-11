@@ -6,9 +6,10 @@
   align-items: center;
 
   &__cabinet {
-    // Sized so screen + controls always fit the viewport, screen stays 4:3
-    width: min(92vw, calc((100dvh - 13rem) * 4 / 3));
-    min-width: 320px;
+    // Fixed design size: the TV lives in 3D space (Scene's CSS3D layer) and
+    // the closeup camera distance — not CSS — controls its apparent size.
+    // If this width changes, WORLD_PER_PX in Scene/buildRoom.ts must follow.
+    width: 920px;
     padding: clamp(0.9rem, 2vw, 1.6rem);
     border-radius: 22px;
     background:
