@@ -39,8 +39,8 @@ Per project:
 - **Every project channel shares one "broadcast" layout** (so channels look
   like one consistent building block): a full-bleed *backdrop* — the `videoUrl`
   teaser, or a full-bleed SMPTE test card ("NO LIVE FEED ON THIS CHANNEL") when
-  there's none — with a lower-third *bug* over it (CH · NOW SHOWING, title, tech
-  tags, action links, and a `▤ TELETEXT` button). The `description` +
+  there's none — with a lower-third *bug* over it (title, tech tags, action
+  links, and a `▤ TELETEXT` button). The `description` +
   `behindTheScenes` live on a **teletext page** that slides up over the bug when
   TELETEXT is pressed. So those two fields are revealed on demand on *all*
   channels, not shown up front. The teletext page repeats the source/demo links

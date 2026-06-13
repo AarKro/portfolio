@@ -84,7 +84,6 @@ export function ProjectProgram({ project, channel }: ProjectProgramProps) {
         <div className="program__deck-track">
           <div className="program__page program__page--bug">
             <div className="program__bug">
-              <p className="program__pretitle">CH {channelLabel} · NOW SHOWING</p>
               <h2 className="program__title">{project.title}</h2>
               <ul className="program__tech">
                 {project.tech.map((tag) => (
