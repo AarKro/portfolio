@@ -5,10 +5,13 @@
  * To add a project: append (or insert) an object here. Done.
  * To remove one: delete its entry. Channel numbers renumber automatically.
  *
- * embedUrl: set it to render the live demo inside the TV screen ("tune in").
- * Only use URLs that allow being iframed (GitHub Pages and Netlify do).
- * Leave it out for repos without a hosted demo.
+ * videoUrl: import a teaser clip from ../assets and set it here. The channel
+ * then autoplays the clip as its program backdrop (muted loop); channels
+ * without one fall back to a full-bleed SMPTE test card. Import the file so
+ * Vite bundles + fingerprints it.
  */
+
+import scholarsMateVideo from '../assets/scholars_mate.mp4';
 
 export interface Project {
   /** Stable identifier, used as React key */
@@ -28,8 +31,12 @@ export interface Project {
   githubUrl: string;
   /** Link to a hosted demo, opens in a new tab */
   demoUrl?: string;
-  /** Demo URL to render inside the TV screen via iframe */
-  embedUrl?: string;
+  /**
+   * Teaser clip that autoplays as this channel's program backdrop (muted,
+   * looping). When omitted, the channel shows a full-bleed SMPTE test card.
+   * Import the asset from ../assets so Vite bundles it.
+   */
+  videoUrl?: string;
 }
 
 export const PROJECTS: Project[] = [
@@ -43,7 +50,6 @@ export const PROJECTS: Project[] = [
       'Hand tracking runs on MediaPipe vision tasks — the work was turning noisy webcam landmarks into controls that feel deliberate.',
     githubUrl: 'https://github.com/AarKro/wine-me',
     demoUrl: 'https://aarkro.github.io/wine-me/',
-    embedUrl: 'https://aarkro.github.io/wine-me/',
   },
   {
     id: 'wow-graveyard-3d',
@@ -55,7 +61,6 @@ export const PROJECTS: Project[] = [
       'three.js with a full postprocessing pipeline: volumetric godrays and simplex-noise terrain set the graveyard mood.',
     githubUrl: 'https://github.com/AarKro/wow-graveyard-3d',
     demoUrl: 'https://aarkro.github.io/wow-graveyard-3d/',
-    embedUrl: 'https://aarkro.github.io/wow-graveyard-3d/',
   },
   {
     id: 'neural-network-exploration',
@@ -67,7 +72,6 @@ export const PROJECTS: Project[] = [
       'The network is built and trained right in the browser with Brain.js — your canvas drawing becomes the input layer.',
     githubUrl: 'https://github.com/AarKro/neural-network-exploration',
     demoUrl: 'https://aarkro.github.io/neural-network-exploration/',
-    embedUrl: 'https://aarkro.github.io/neural-network-exploration/',
   },
   {
     id: 'scholars-mate',
@@ -79,7 +83,7 @@ export const PROJECTS: Project[] = [
       'Scrolling drives the story: each section advances the same four-move sequence one step at a time.',
     githubUrl: 'https://github.com/AarKro/scholars-mate',
     demoUrl: 'https://aarkro.github.io/scholars-mate/',
-    embedUrl: 'https://aarkro.github.io/scholars-mate/',
+    videoUrl: scholarsMateVideo,
   },
   {
     id: 'zephir-flex',
@@ -91,7 +95,6 @@ export const PROJECTS: Project[] = [
       'The font is mine too, not just the site — this page is its official specimen.',
     githubUrl: 'https://github.com/AarKro/zephir-flex',
     demoUrl: 'https://aarkro.github.io/zephir-flex/',
-    embedUrl: 'https://aarkro.github.io/zephir-flex/',
   },
   {
     id: 'prompt-assistant',
@@ -103,7 +106,6 @@ export const PROJECTS: Project[] = [
       'A lean React app with no backend — prompts are assembled entirely client-side.',
     githubUrl: 'https://github.com/AarKro/prompt-assistant',
     demoUrl: 'https://aarkro.github.io/prompt-assistant/dist/',
-    embedUrl: 'https://aarkro.github.io/prompt-assistant/dist/',
   },
   {
     id: 'typography-sandbox',
@@ -115,7 +117,6 @@ export const PROJECTS: Project[] = [
       'Built for my own workflow: comparing font candidates across breakpoints without rebuilding a page every time.',
     githubUrl: 'https://github.com/AarKro/typography-sandbox',
     demoUrl: 'https://aarkro.github.io/typography-sandbox/',
-    embedUrl: 'https://aarkro.github.io/typography-sandbox/',
   },
   {
     id: 'wow-graveyard',
@@ -127,7 +128,6 @@ export const PROJECTS: Project[] = [
       'The original experiment that later earned a full 3D remake — also broadcasting on this TV.',
     githubUrl: 'https://github.com/AarKro/wow-graveyard',
     demoUrl: 'https://aarkro.github.io/wow-graveyard/',
-    embedUrl: 'https://aarkro.github.io/wow-graveyard/',
   },
   {
     id: 'aframe-virtual-reality',
@@ -139,7 +139,6 @@ export const PROJECTS: Project[] = [
       'The whole VR scene is declarative HTML — A-Frame’s entity-component system on top of three.js.',
     githubUrl: 'https://github.com/AarKro/aframe-virtual-reality',
     demoUrl: 'https://aarkro.github.io/aframe-virtual-reality/',
-    embedUrl: 'https://aarkro.github.io/aframe-virtual-reality/',
   },
   {
     id: 'hera',
@@ -171,7 +170,6 @@ export const PROJECTS: Project[] = [
       'Talks to Blizzard\'s community API and works offline as an installable PWA.',
     githubUrl: 'https://github.com/AarKro/Diablo-Companion',
     demoUrl: 'https://festive-agnesi-223011.netlify.app/',
-    embedUrl: 'https://festive-agnesi-223011.netlify.app/',
   },
   {
     id: 'toggle-game',
@@ -183,7 +181,6 @@ export const PROJECTS: Project[] = [
       'Small enough to read the code in one sitting, hard enough to lose an afternoon to.',
     githubUrl: 'https://github.com/AarKro/Toggle-Game',
     demoUrl: 'https://silly-rosalind-93c29a.netlify.app/',
-    embedUrl: 'https://silly-rosalind-93c29a.netlify.app/',
   },
 ];
 

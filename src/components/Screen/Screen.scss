@@ -61,7 +61,7 @@
   // one-time hint for visitors who deep-link past the intro channel
   &__keys-hint {
     position: absolute;
-    bottom: 5%;
+    top: 5%;
     left: 6%;
     z-index: 6;
     font-size: clamp(0.9rem, 1.7vw, 1.1rem);

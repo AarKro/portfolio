@@ -18,8 +18,6 @@ export interface TVState {
   channelUp: () => void;
   channelDown: () => void;
   togglePower: () => void;
-  /** Fire the static noise burst without changing channel (e.g. tuning into a live feed) */
-  staticBurst: () => void;
 }
 
 /** Channels are shareable links: #ch-5 opens the TV on channel 5. */
@@ -92,6 +90,5 @@ export function useTV(): TVState {
     channelUp,
     channelDown,
     togglePower,
-    staticBurst: burst,
   };
 }

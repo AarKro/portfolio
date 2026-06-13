@@ -24,17 +24,50 @@ this file.** Channel numbers are derived from array position (projects start
 at channel 2), so they renumber automatically.
 
 Per project:
-- `githubUrl` is required; `demoUrl` (new-tab link) and `embedUrl` are optional.
-- `embedUrl` enables the "TUNE IN LIVE" button, which renders the demo in an
-  iframe inside the TV screen. Only set it for URLs that allow framing
-  (GitHub Pages and Netlify do). Verify with a quick manual check before adding.
+- `githubUrl` is required; `demoUrl`, `videoUrl` and `behindTheScenes` are optional.
+- `demoUrl` (optional) is the hosted demo; it becomes the "OPEN DEMO ↗"
+  new-tab link (there is no in-screen iframe — demos are never framed).
+- `videoUrl` (optional) gives the channel a short teaser clip that autoplays
+  (muted, looping) full-bleed as the program backdrop. Import the file
+  from `../assets` so Vite bundles + fingerprints it (`import clip from
+  '../assets/foo.mp4'; … videoUrl: clip`), don't hand-write a path. Compress
+  before adding (see "Adding a teaser clip").
 - `behindTheScenes` (optional): one sentence on the interesting technical or
   design decision — written for hiring managers. Must be factually grounded
-  in the repo (check its README/package.json), never invented.
-- Projects *without* `embedUrl` automatically get an SMPTE test-card graphic
-  ("no live feed on this channel") so they don't look flat next to live ones.
+  in the repo (check its README/package.json), never invented. Shown on the
+  teletext page (see below), not on the front bug.
+- **Every project channel shares one "broadcast" layout** (so channels look
+  like one consistent building block): a full-bleed *backdrop* — the `videoUrl`
+  teaser, or a full-bleed SMPTE test card ("NO LIVE FEED ON THIS CHANNEL") when
+  there's none — with a lower-third *bug* over it (CH · NOW SHOWING, title, tech
+  tags, action links, and a `▤ TELETEXT` button). The `description` +
+  `behindTheScenes` live on a **teletext page** that slides up over the bug when
+  TELETEXT is pressed. So those two fields are revealed on demand on *all*
+  channels, not shown up front. The teletext page repeats the source/demo links
+  in a bottom row that mirrors the bug's action row — same screen position in
+  both states, so the links don't jump; only the toggle morphs `▤ TELETEXT` ↔
+  `▾ CLOSE TELETEXT`. Teletext has its own colour voice — `$phosphor-purple`
+  (the TELETEXT/CLOSE buttons, the teletext header rule, the BEHIND THE SCENES
+  label) — to set it apart from the green broadcast UI and the neutral
+  external-link buttons.
 - Write `description` like a TV program blurb: one short paragraph, a bit of
   personality.
+
+## Adding a teaser clip
+
+Clips live in `src/assets/*.mp4` (imported, bundled, fingerprinted — not in
+`public/`). Always compress before committing — raw screen recordings are
+huge (the source for Scholar's Mate was 2360×1594 @ 120fps, 9.7 MB; the
+shipped clip is 1066×720 @ 30fps, no audio, 1.3 MB). Recipe with ffmpeg:
+
+```
+ffmpeg -i raw.mov -vf "scale=-2:720,fps=30" -c:v libx264 -preset slow \
+  -crf 28 -profile:v high -pix_fmt yuv420p -movflags +faststart -an out.mp4
+```
+
+`-an` strips audio (clips play muted — see behaviour notes), `+faststart`
+lets it start before fully downloaded, 720p is plenty for the small CRT
+screen. Drop `crf` toward 30 / `scale` to 540 for an even smaller file.
 
 ## Architecture
 
@@ -57,7 +90,9 @@ src/
     ControlPanel/           ← physical buttons strip (CH ▼/▲, power, decor)
     StaticNoise/            ← canvas noise; animates only while `active`
     programs/IntroProgram/      ← channel 1 (intro + clickable TV guide)
-    programs/ProjectProgram/    ← project channels (info card / live iframe)
+    programs/ProjectProgram/    ← project channels: one "broadcast" layout
+                                  (teaser-or-testcard backdrop + bug +
+                                  slide-up teletext page)
   utils/noise.ts            ← static-noise pixel fill (used by StaticNoise)
   styles/_tokens.scss       ← ALL colors and fonts; theme changes happen here
   styles/global.scss        ← reset + base
@@ -66,7 +101,7 @@ src/
 ## One scene, one TV (the core architecture)
 
 There is no separate "2D site" — the whole page is a single three.js scene.
-The DOM TV (`TVSet`, fully interactive React: buttons, iframes, programs) is
+The DOM TV (`TVSet`, fully interactive React: buttons, programs) is
 placed in 3D space with **CSS3DRenderer** as the front face of the WebGL TV
 body. "Website mode" is just the camera parked in front of the TV.
 
@@ -133,14 +168,21 @@ importing tokens via a relative `@use '../../styles/tokens' as *;`.
   get a one-time arrow-keys hint on screen for ~6s.
 - `document.title` mirrors the broadcast ("CH 03 · WoW Graveyard 3D — Aaron
   Kromer"; "Standby — …" when off).
-- Tuning in/out of a live demo fires the same static burst as a channel
-  switch (`tv.staticBurst`), and the iframe stays covered in noise until its
-  `load` event (6s safety timeout).
-- The live-demo iframe carries `allow="camera; microphone; fullscreen;
-  xr-spatial-tracking"` — Wine Me's webcam and A-Frame VR need it. Don't drop it.
-- Leaving a channel always exits "tuned in" iframe mode.
+- A `videoUrl` channel autoplays its teaser the moment you land on it. The clip
+  stays covered by static until the `<video>` fires `playing` (6s safety
+  timeout), so there's no black-frame flash. The video is
+  `muted loop autoplay playsInline` — muted is mandatory for browsers to allow
+  autoplay (and teasers have no audio anyway). Don't drop those attributes.
+- The `▤ TELETEXT` button reveals the detailed info. The bug and the teletext
+  page are two stacked pages in a `program__deck-track` (200% tall); toggling
+  `is-teletext` slides the track up by one page (CSS transform, ~520ms), so the
+  bug scrolls up and the teletext page scrolls into view. The CLOSE button uses
+  a `▾` glyph because closing slides the page back *down*. Teletext closes on
+  that button and resets on channel change.
+- There is **no in-screen live demo / iframe** — that feature was removed.
+  Demos are external new-tab links only (`demoUrl` → "OPEN DEMO ↗").
 - Decorative CRT layers (scanlines/vignette/glare) are `pointer-events: none`
-  and sit *above* the iframe so embedded demos still look like a broadcast.
+  and sit *above* the program so the teaser still looks like a broadcast.
 - The intro channel greets by time of day (morning/afternoon/evening/up-late)
   — `broadcastSlot()` in `IntroProgram.tsx`.
 

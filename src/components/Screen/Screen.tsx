@@ -54,7 +54,7 @@ export function Screen({ tv }: ScreenProps) {
         <div className="screen__content">
           {poweredOn &&
             (project ? (
-              <ProjectProgram project={project} channel={channel} onStatic={tv.staticBurst} />
+              <ProjectProgram project={project} channel={channel} />
             ) : (
               <IntroProgram tuneTo={tv.tuneTo} />
             ))}

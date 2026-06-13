@@ -1,109 +1,143 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { Project } from '../../../data/projects';
 import { StaticNoise } from '../../StaticNoise/StaticNoise';
 import './ProjectProgram.scss';
 
-/** Safety net: never show loading noise forever if the iframe never fires `load` */
-const FEED_LOAD_TIMEOUT = 6000;
+/** Safety net: never show loading noise forever if the teaser never starts */
+const VIDEO_LOAD_TIMEOUT = 6000;
 
 interface ProjectProgramProps {
   project: Project;
   channel: number;
-  /** Fires the TV's static burst, so tuning in/out feels like a channel change */
-  onStatic: () => void;
 }
 
-/** A project channel: program info card, or the live demo when tuned in. */
-export function ProjectProgram({ project, channel, onStatic }: ProjectProgramProps) {
-  const [watching, setWatching] = useState(false);
-  const [feedLoading, setFeedLoading] = useState(false);
-  const loadTimeout = useRef<number | undefined>(undefined);
+/**
+ * A project channel. Every channel shares one "broadcast" layout: a full-bleed
+ * backdrop (autoplay teaser if the project has a `videoUrl`, else an SMPTE test
+ * card) with a lower-third "bug" over it (title, tech, links, teletext toggle).
+ * Pressing TELETEXT slides the bug up and a teletext page of detailed project
+ * info — description, behind-the-scenes, and the same action links — into view.
+ */
+export function ProjectProgram({ project, channel }: ProjectProgramProps) {
+  // Cover the teaser with static until the clip actually plays
+  const [videoLoading, setVideoLoading] = useState(true);
+  // Teletext page revealed over the broadcast
+  const [teletextOpen, setTeletextOpen] = useState(false);
 
-  // Leaving the channel always stops the live feed
+  // Leaving the channel closes teletext
   useEffect(() => {
-    setWatching(false);
-    setFeedLoading(false);
+    setTeletextOpen(false);
   }, [project.id]);
 
-  useEffect(() => () => window.clearTimeout(loadTimeout.current), []);
+  // Each time we land on a video channel, show static until it plays (with a
+  // safety timeout so a clip that never fires `playing` doesn't stay covered).
+  useEffect(() => {
+    if (!project.videoUrl) return;
+    setVideoLoading(true);
+    const timer = window.setTimeout(() => setVideoLoading(false), VIDEO_LOAD_TIMEOUT);
+    return () => window.clearTimeout(timer);
+  }, [project.id, project.videoUrl]);
 
-  const tuneIn = () => {
-    setWatching(true);
-    setFeedLoading(true);
-    onStatic();
-    window.clearTimeout(loadTimeout.current);
-    loadTimeout.current = window.setTimeout(() => setFeedLoading(false), FEED_LOAD_TIMEOUT);
-  };
+  const channelLabel = String(channel).padStart(2, '0');
 
-  const tuneOut = () => {
-    setWatching(false);
-    setFeedLoading(false);
-    onStatic();
-  };
-
-  if (watching && project.embedUrl) {
-    return (
-      <div className="program program--live">
-        <iframe
-          className="program__feed"
-          src={project.embedUrl}
-          title={`Live demo of ${project.title}`}
-          allow="camera; microphone; fullscreen; xr-spatial-tracking"
-          onLoad={() => setFeedLoading(false)}
-        />
-        {/* the demo stays "static" until its feed has actually loaded */}
-        <StaticNoise active={feedLoading} />
-        <button className="program__stop" onClick={tuneOut}>
-          ◼ BACK TO INFO
-        </button>
-      </div>
-    );
-  }
+  // The same source/demo links live on the bug and at the top of teletext, so
+  // they're reachable whether or not the teletext page is open.
+  const actionLinks = (
+    <>
+      <a className="program__action" href={project.githubUrl} target="_blank" rel="noreferrer">
+        VIEW CODE ↗
+      </a>
+      {project.demoUrl && (
+        <a className="program__action" href={project.demoUrl} target="_blank" rel="noreferrer">
+          OPEN DEMO ↗
+        </a>
+      )}
+    </>
+  );
 
   return (
-    <div className="program">
-      {!project.embedUrl && (
+    <div className={`program program--broadcast ${teletextOpen ? 'is-teletext' : ''}`}>
+      {/* Backdrop: the teaser clip, or a full-bleed test card when there's none */}
+      {project.videoUrl ? (
+        <>
+          <video
+            className="program__video"
+            src={project.videoUrl}
+            muted
+            loop
+            autoPlay
+            playsInline
+            preload="auto"
+            onPlaying={() => setVideoLoading(false)}
+          />
+          <StaticNoise active={videoLoading} />
+        </>
+      ) : (
         <div className="program__testcard" aria-hidden="true">
           <div className="program__testcard-bars" />
           <p className="program__testcard-caption">NO LIVE FEED ON THIS CHANNEL</p>
         </div>
       )}
 
-      <p className="program__pretitle">
-        CH {String(channel).padStart(2, '0')} · NOW SHOWING
-      </p>
-      <h2 className="program__title">{project.title}</h2>
-      <p className="program__description">{project.description}</p>
+      {/* Sliding deck: the bug page, with the teletext page stacked below it */}
+      <div className="program__deck">
+        <div className="program__deck-track">
+          <div className="program__page program__page--bug">
+            <div className="program__bug">
+              <p className="program__pretitle">CH {channelLabel} · NOW SHOWING</p>
+              <h2 className="program__title">{project.title}</h2>
+              <ul className="program__tech">
+                {project.tech.map((tag) => (
+                  <li key={tag} className="program__tag">
+                    {tag}
+                  </li>
+                ))}
+              </ul>
+              <div className="program__actions">
+                {actionLinks}
+                <button
+                  className="program__action program__action--teletext"
+                  onClick={() => setTeletextOpen(true)}
+                  aria-expanded={teletextOpen}
+                >
+                  ▤ TELETEXT
+                </button>
+              </div>
+            </div>
+          </div>
 
-      {project.behindTheScenes && (
-        <p className="program__behind">
-          <span className="program__behind-label">BEHIND THE SCENES:</span>{' '}
-          {project.behindTheScenes}
-        </p>
-      )}
-
-      <ul className="program__tech">
-        {project.tech.map((tag) => (
-          <li key={tag} className="program__tag">
-            {tag}
-          </li>
-        ))}
-      </ul>
-
-      <div className="program__actions">
-        {project.embedUrl && (
-          <button className="program__action program__action--primary" onClick={tuneIn}>
-            ▶ TUNE IN LIVE
-          </button>
-        )}
-        <a className="program__action" href={project.githubUrl} target="_blank" rel="noreferrer">
-          VIEW CODE ↗
-        </a>
-        {project.demoUrl && (
-          <a className="program__action" href={project.demoUrl} target="_blank" rel="noreferrer">
-            OPEN DEMO ↗
-          </a>
-        )}
+          <div
+            className="program__page program__page--teletext"
+            aria-hidden={!teletextOpen}
+          >
+            <article className="program__teletext">
+              <header className="program__teletext-head">
+                <span>P1{channelLabel}</span>
+                <span className="program__teletext-brand">AARKRO TV</span>
+                <span>CH {channelLabel}</span>
+              </header>
+              <h3 className="program__teletext-title">{project.title}</h3>
+              <p className="program__teletext-body">{project.description}</p>
+              {project.behindTheScenes && (
+                <p className="program__teletext-behind">
+                  <span className="program__behind-label">BEHIND THE SCENES</span>
+                  {project.behindTheScenes}
+                </p>
+              )}
+              {/* same row, same screen position as the bug's actions — the
+                  links don't move, the toggle just morphs TELETEXT → CLOSE */}
+              <div className="program__actions program__teletext-actions">
+                {actionLinks}
+                <button
+                  className="program__action program__action--teletext"
+                  onClick={() => setTeletextOpen(false)}
+                >
+                  ▾ CLOSE TELETEXT
+                </button>
+              </div>
+            </article>
+          </div>
+        </div>
       </div>
     </div>
   );
