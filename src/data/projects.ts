@@ -12,6 +12,7 @@
  */
 
 import scholarsMateVideo from '../assets/scholars_mate.mp4';
+import wowGraveyard3dVideo from '../assets/wow_graveyard_3d.mp4';
 
 export interface Project {
   /** Stable identifier, used as React key */
@@ -61,6 +62,7 @@ export const PROJECTS: Project[] = [
       'three.js with a full postprocessing pipeline: volumetric godrays and simplex-noise terrain set the graveyard mood.',
     githubUrl: 'https://github.com/AarKro/wow-graveyard-3d',
     demoUrl: 'https://aarkro.github.io/wow-graveyard-3d/',
+    videoUrl: wowGraveyard3dVideo,
   },
   {
     id: 'neural-network-exploration',
