@@ -45,11 +45,13 @@ export function ProjectProgram({ project, channel }: ProjectProgramProps) {
   const actionLinks = (
     <>
       <a className="program__action" href={project.githubUrl} target="_blank" rel="noreferrer">
-        VIEW CODE ↗
+        VIEW CODE
+        <span className="program__action-icon" aria-hidden="true">↗</span>
       </a>
       {project.demoUrl && (
         <a className="program__action" href={project.demoUrl} target="_blank" rel="noreferrer">
-          OPEN DEMO ↗
+          OPEN DEMO
+          <span className="program__action-icon" aria-hidden="true">↗</span>
         </a>
       )}
     </>
@@ -99,7 +101,8 @@ export function ProjectProgram({ project, channel }: ProjectProgramProps) {
                   onClick={() => setTeletextOpen(true)}
                   aria-expanded={teletextOpen}
                 >
-                  ▤ TELETEXT
+                  TELETEXT
+                  <span className="program__action-icon" aria-hidden="true">▤</span>
                 </button>
               </div>
             </div>
@@ -131,7 +134,8 @@ export function ProjectProgram({ project, channel }: ProjectProgramProps) {
                   className="program__action program__action--teletext"
                   onClick={() => setTeletextOpen(false)}
                 >
-                  ▾ CLOSE TELETEXT
+                  CLOSE TELETEXT
+                  <span className="program__action-icon" aria-hidden="true">▾</span>
                 </button>
               </div>
             </article>

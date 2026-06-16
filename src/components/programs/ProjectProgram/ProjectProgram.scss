@@ -36,6 +36,10 @@
   }
 
   &__action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4em;
     padding: 0.2em 0.9em;
     border: 2px solid $phosphor-text;
     color: $phosphor-text;
@@ -66,6 +70,12 @@
         text-shadow: none;
       }
     }
+  }
+
+  // Trailing glyph (↗ / ▤ / ▾) — flex-centred against the label so it stays
+  // vertically aligned at any font size
+  &__action-icon {
+    line-height: 1;
   }
 
   // ─── The unified broadcast view ──────────────────────────────────────────
