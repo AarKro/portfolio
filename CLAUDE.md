@@ -45,6 +45,12 @@ Per project:
   design decision — written for hiring managers. Must be factually grounded
   in the repo (check its README/package.json), never invented. Shown on the
   teletext page (see below), not on the front bug.
+- `description` and `behindTheScenes` support inline `[label](url)` links
+  (markdown-style). On the teletext page they render via the `InlineLink`
+  component (purple, with a trailing ↗ "leaves the site" glyph); in the SEO
+  `.sr-only` block they're flattened to plain `label` text. Used e.g. to link
+  WoW Graveyard 3D back to its original 2D repo from inside the text, so the two
+  projects share one channel instead of two. Keep links grounded, same as copy.
 - **Every project channel shares one "broadcast" layout** (so channels look
   like one consistent building block): a full-bleed *backdrop* — the `videoUrl`
   teaser, or a full-bleed SMPTE test card ("NO LIVE FEED ON THIS CHANNEL") when

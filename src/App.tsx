@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { PROJECTS } from './data/projects';
 import { Scene, type ViewMode } from './components/Scene/Scene';
 import { TVSet } from './components/TVSet/TVSet';
+import { stripInlineLinks } from './components/InlineLink/InlineLink';
 import './App.scss';
 
 /**
@@ -46,7 +47,8 @@ export function App() {
             <li key={project.id}>
               <h3>{project.title}</h3>
               <p>
-                {project.description} {project.behindTheScenes ?? ''}
+                {stripInlineLinks(project.description)}{' '}
+                {project.behindTheScenes ? stripInlineLinks(project.behindTheScenes) : ''}
               </p>
               {project.githubUrl && <a href={project.githubUrl}>{project.title} source code</a>}
               {project.repos?.map((repo) => (

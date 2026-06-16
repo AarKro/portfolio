@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { Project } from '../../../data/projects';
+import { renderInlineLinks } from '../../InlineLink/InlineLink';
 import { StaticNoise } from '../../StaticNoise/StaticNoise';
 import './ProjectProgram.scss';
 
@@ -140,11 +141,11 @@ export function ProjectProgram({ project, channel }: ProjectProgramProps) {
                 <span>CH {channelLabel}</span>
               </header>
               <h3 className="program__teletext-title">{project.title}</h3>
-              <p className="program__teletext-body">{project.description}</p>
+              <p className="program__teletext-body">{renderInlineLinks(project.description)}</p>
               {project.behindTheScenes && (
                 <p className="program__teletext-behind">
                   <span className="program__behind-label">BEHIND THE SCENES</span>
-                  {project.behindTheScenes}
+                  {renderInlineLinks(project.behindTheScenes)}
                 </p>
               )}
               {/* same row, same screen position as the bug's actions — the

@@ -62,22 +62,11 @@ export const PROJECTS: Project[] = [
       'A 3D graveyard for retired World of Warcraft characters, built with three.js. Every tombstone is a character laid to rest.',
     tech: ['TypeScript', 'three.js', '3D'],
     behindTheScenes:
-      'three.js with a full postprocessing pipeline: volumetric godrays and simplex-noise terrain set the graveyard mood.',
+      'A 3D remake of my original [2D graveyard](https://github.com/AarKro/wow-graveyard) — three.js this time, with a postprocessing pipeline of volumetric godrays and simplex-noise terrain to set the mood.',
     githubUrl: 'https://github.com/AarKro/wow-graveyard-3d',
     demoUrl: 'https://aarkro.github.io/wow-graveyard-3d/',
     videoUrl: wowGraveyard3dVideo,
   },
-  // {
-  //   id: 'wow-graveyard',
-  //   title: 'WoW Graveyard',
-  //   description:
-  //     'The original 2D version of the WoW character graveyard — where the idea for the 3D remake on the earlier channel started.',
-  //   tech: ['JavaScript', 'CSS'],
-  //   behindTheScenes:
-  //     'The original experiment that later earned a full 3D remake — also broadcasting on this TV.',
-  //   githubUrl: 'https://github.com/AarKro/wow-graveyard',
-  //   demoUrl: 'https://aarkro.github.io/wow-graveyard/',
-  // },
   {
     id: 'scholars-mate',
     title: "Scholar's Mate",

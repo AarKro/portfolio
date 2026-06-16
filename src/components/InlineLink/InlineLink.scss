@@ -1,0 +1,21 @@
+@use '../../styles/tokens' as *;
+
+// Inline text link (used inside the teletext page) — purple to match the
+// teletext voice, underlined, with the label + ↗ kept on one line.
+.inline-link {
+  color: $phosphor-purple;
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+  white-space: nowrap;
+
+  &:hover,
+  &:focus-visible {
+    color: $phosphor-text;
+    outline: none;
+  }
+
+  &__icon {
+    margin-left: 0.1em;
+    font-size: 0.85em;
+  }
+}
