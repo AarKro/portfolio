@@ -14,6 +14,14 @@
 import scholarsMateVideo from '../assets/scholars_mate.mp4';
 import wowGraveyard3dVideo from '../assets/wow_graveyard_3d.mp4';
 
+/** A named source-code link, for channels that bundle several repos. */
+export interface RepoLink {
+  /** Short label shown on the source chip (e.g. the bot's name) */
+  name: string;
+  /** Repository URL */
+  url: string;
+}
+
 export interface Project {
   /** Stable identifier, used as React key */
   id: string;
@@ -28,8 +36,14 @@ export interface Project {
    * decision behind the project, aimed at hiring managers. One sentence.
    */
   behindTheScenes?: string;
-  /** Link to the repository */
-  githubUrl: string;
+  /** Link to the repository (single-repo channels). Use `repos` for bundles. */
+  githubUrl?: string;
+  /**
+   * Several source repos for one bundled channel (e.g. the Discord bots).
+   * Rendered as a compact labelled cluster of source links in place of the
+   * single VIEW CODE button. Set this OR `githubUrl`, not both.
+   */
+  repos?: RepoLink[];
   /** Link to a hosted demo, opens in a new tab */
   demoUrl?: string;
   /**
@@ -42,17 +56,6 @@ export interface Project {
 
 export const PROJECTS: Project[] = [
   {
-    id: 'wine-me',
-    title: 'Wine Me',
-    description:
-      'A gesture-controlled interactive image viewer. No mouse, no keyboard — you browse with hand gestures through your webcam.',
-    tech: ['TypeScript', 'Gesture Recognition', 'Webcam'],
-    behindTheScenes:
-      'Hand tracking runs on MediaPipe vision tasks — the work was turning noisy webcam landmarks into controls that feel deliberate.',
-    githubUrl: 'https://github.com/AarKro/wine-me',
-    demoUrl: 'https://aarkro.github.io/wine-me/',
-  },
-  {
     id: 'wow-graveyard-3d',
     title: 'WoW Graveyard 3D',
     description:
@@ -64,17 +67,17 @@ export const PROJECTS: Project[] = [
     demoUrl: 'https://aarkro.github.io/wow-graveyard-3d/',
     videoUrl: wowGraveyard3dVideo,
   },
-  {
-    id: 'neural-network-exploration',
-    title: 'Neural Network Exploration',
-    description:
-      'A playground for learning how neural networks work, using Brain.js. Draw a capital letter and the network guesses which one you wrote.',
-    tech: ['TypeScript', 'Brain.js', 'Machine Learning'],
-    behindTheScenes:
-      'The network is built and trained right in the browser with Brain.js — your canvas drawing becomes the input layer.',
-    githubUrl: 'https://github.com/AarKro/neural-network-exploration',
-    demoUrl: 'https://aarkro.github.io/neural-network-exploration/',
-  },
+  // {
+  //   id: 'wow-graveyard',
+  //   title: 'WoW Graveyard',
+  //   description:
+  //     'The original 2D version of the WoW character graveyard — where the idea for the 3D remake on the earlier channel started.',
+  //   tech: ['JavaScript', 'CSS'],
+  //   behindTheScenes:
+  //     'The original experiment that later earned a full 3D remake — also broadcasting on this TV.',
+  //   githubUrl: 'https://github.com/AarKro/wow-graveyard',
+  //   demoUrl: 'https://aarkro.github.io/wow-graveyard/',
+  // },
   {
     id: 'scholars-mate',
     title: "Scholar's Mate",
@@ -88,6 +91,17 @@ export const PROJECTS: Project[] = [
     videoUrl: scholarsMateVideo,
   },
   {
+    id: 'peggy-ashcroft',
+    title: 'Peggy Ashcroft',
+    description:
+      'A tribute site to Dame Peggy Ashcroft, the English stage-and-screen great — scroll through her life, her films and her awards. Built to look right on every screen and read well for everyone.',
+    tech: ['TypeScript', 'React', 'Accessibility'],
+    behindTheScenes:
+      'Built for a Responsive Design & Accessibility brief — hand-rolled hooks drive the scroll-spy navigation and sticky header, with the whole layout designed mobile-up and accessibility-first.',
+    githubUrl: 'https://github.com/AarKro/peggy-ashcroft',
+    demoUrl: 'https://aarkro.github.io/peggy-ashcroft/',
+  },
+  {
     id: 'zephir-flex',
     title: 'Zephir Flex',
     description:
@@ -99,90 +113,38 @@ export const PROJECTS: Project[] = [
     demoUrl: 'https://aarkro.github.io/zephir-flex/',
   },
   {
-    id: 'prompt-assistant',
-    title: 'Prompt Assistant',
+    id: 'css-toolbox',
+    title: 'CSS Toolbox',
     description:
-      'A small tool that helps you structure and refine prompts for AI models instead of typing them freehand.',
-    tech: ['TypeScript', 'React', 'AI'],
+      'A browser extension in the works: it drops an overlay of CSS and colour tools straight onto any site you are visiting. Still on the workbench — more tools (and some Figma-designed UI) on the way.',
+    tech: ['TypeScript', 'React', 'Browser Extension'],
     behindTheScenes:
-      'A lean React app with no backend — prompts are assembled entirely client-side.',
-    githubUrl: 'https://github.com/AarKro/prompt-assistant',
-    demoUrl: 'https://aarkro.github.io/prompt-assistant/dist/',
+      'A Chrome extension built on Vite + CRXJS — content scripts inject a React overlay directly into the page you are browsing.',
+    githubUrl: 'https://github.com/AarKro/css-toolbox',
   },
   {
-    id: 'typography-sandbox',
-    title: 'Typography Sandbox',
+    id: 'discord-bots',
+    title: 'Discord Bots',
     description:
-      'A sandbox to try out Google Fonts and compare them side by side across different screen sizes before committing to one.',
-    tech: ['TypeScript', 'Google Fonts', 'Typography'],
+      'A trio of Discord bots built over the years. Hera is the flagship — music, server stats and moderation for any server. Apollo answers to voice and sound commands, and League Buddy reacts live to your League of Legends client.',
+    tech: ['Java', 'TypeScript', 'Discord'],
     behindTheScenes:
-      'Built for my own workflow: comparing font candidates across breakpoints without rebuilding a page every time.',
-    githubUrl: 'https://github.com/AarKro/typography-sandbox',
-    demoUrl: 'https://aarkro.github.io/typography-sandbox/',
+      'Hera is a Java / Discord4J monorepo that ships through its own AWS CodePipeline onto EC2, backed by an RDS database; Apollo and League Buddy are leaner discord.ts bots.',
+    repos: [
+      { name: 'Hera', url: 'https://github.com/AarKro/Hera' },
+      { name: 'Apollo', url: 'https://github.com/AarKro/Apollo' },
+      { name: 'League Buddy', url: 'https://github.com/AarKro/League-Buddy' },
+    ],
   },
   {
-    id: 'wow-graveyard',
-    title: 'WoW Graveyard',
+    id: 'tramly',
+    title: 'Tramly',
     description:
-      'The original 2D version of the WoW character graveyard — where the idea for the 3D remake on the earlier channel started.',
-    tech: ['JavaScript', 'CSS'],
+      'A tiny tram departure board for your desk. An ESP32 build that lights up the next trams the way the signs at the stop do — still on the soldering bench.',
+    tech: ['ESP32', 'Arduino', 'Hardware'],
     behindTheScenes:
-      'The original experiment that later earned a full 3D remake — also broadcasting on this TV.',
-    githubUrl: 'https://github.com/AarKro/wow-graveyard',
-    demoUrl: 'https://aarkro.github.io/wow-graveyard/',
-  },
-  {
-    id: 'aframe-virtual-reality',
-    title: 'A-Frame VR',
-    description:
-      'Virtual reality experiments with A-Frame, running straight in the browser — no headset required to look around.',
-    tech: ['A-Frame', 'WebVR', 'JavaScript'],
-    behindTheScenes:
-      'The whole VR scene is declarative HTML — A-Frame’s entity-component system on top of three.js.',
-    githubUrl: 'https://github.com/AarKro/aframe-virtual-reality',
-    demoUrl: 'https://aarkro.github.io/aframe-virtual-reality/',
-  },
-  {
-    id: 'hera',
-    title: 'Hera',
-    description:
-      'A multi-purpose Discord chatbot with a music player, server metrics tracking and moderation features, deployed on AWS with its own build pipeline.',
-    tech: ['Java', 'Discord', 'AWS'],
-    behindTheScenes:
-      'Java, deployed on AWS with its own CodeBuild/CodePipeline setup — even the README status badges come from the pipeline.',
-    githubUrl: 'https://github.com/AarKro/Hera',
-  },
-  {
-    id: 'apollo',
-    title: 'Apollo',
-    description:
-      'A voice-controlled smart assistant for Discord. Talk to your server instead of typing commands.',
-    tech: ['TypeScript', 'Discord', 'Voice Recognition'],
-    behindTheScenes:
-      'Speech recognition wired into Discord voice channels — you talk, the bot acts.',
-    githubUrl: 'https://github.com/AarKro/Apollo',
-  },
-  {
-    id: 'diablo-companion',
-    title: 'Diablo Companion',
-    description:
-      'A companion PWA for Diablo 3 built on Blizzard’s community API. Create reorderable lists from every item in the game — installable like a native app.',
-    tech: ['TypeScript', 'PWA', 'Blizzard API'],
-    behindTheScenes:
-      'Talks to Blizzard\'s community API and works offline as an installable PWA.',
-    githubUrl: 'https://github.com/AarKro/Diablo-Companion',
-    demoUrl: 'https://festive-agnesi-223011.netlify.app/',
-  },
-  {
-    id: 'toggle-game',
-    title: 'Toggle Game',
-    description:
-      'A small web-based puzzle game: toggle all the tiles on or off. Sounds easy. It is not. Also installable as a PWA.',
-    tech: ['TypeScript', 'PWA', 'Game'],
-    behindTheScenes:
-      'Small enough to read the code in one sitting, hard enough to lose an afternoon to.',
-    githubUrl: 'https://github.com/AarKro/Toggle-Game',
-    demoUrl: 'https://silly-rosalind-93c29a.netlify.app/',
+      'Built on an ESP32-S3, with the display chosen to mimic a real transit departure board — amber pixels and all.',
+    // No source or demo link yet — a website will be added here later.
   },
 ];
 

@@ -24,7 +24,16 @@ this file.** Channel numbers are derived from array position (projects start
 at channel 2), so they renumber automatically.
 
 Per project:
-- `githubUrl` is required; `demoUrl`, `videoUrl` and `behindTheScenes` are optional.
+- Source is optional: a channel can have `githubUrl` (single repo), `repos`
+  (a bundle), or neither — a WIP with nothing public yet (e.g. Tramly) just
+  shows the TELETEXT button over the test card. `demoUrl`, `videoUrl` and
+  `behindTheScenes` are optional too.
+- `githubUrl` (single repo) renders the "VIEW CODE ↗" button.
+- `repos` (a `RepoLink[]` of `{ name, url }`) is for a channel that bundles
+  several repos under one program (e.g. the Discord bots = Hera + Apollo +
+  League Buddy). In place of VIEW CODE it renders one pill the same size as the
+  other action buttons, sectioned into a link per repo (dividers between). Set
+  `repos` OR `githubUrl`, not both.
 - `demoUrl` (optional) is the hosted demo; it becomes the "OPEN DEMO ↗"
   new-tab link (there is no in-screen iframe — demos are never framed).
 - `videoUrl` (optional) gives the channel a short teaser clip that autoplays

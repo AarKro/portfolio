@@ -40,14 +40,35 @@ export function ProjectProgram({ project, channel }: ProjectProgramProps) {
 
   const channelLabel = String(channel).padStart(2, '0');
 
-  // The same source/demo links live on the bug and at the top of teletext, so
+  // Source code: a single VIEW CODE button, or — for a bundled channel — one
+  // pill matching the other buttons, sectioned into a link per repo.
+  const sourceControl = project.repos ? (
+    <div className="program__source-group">
+      {project.repos.map((repo) => (
+        <a
+          key={repo.url}
+          className="program__source"
+          href={repo.url}
+          target="_blank"
+          rel="noreferrer"
+        >
+          {repo.name}
+          <span className="program__action-icon" aria-hidden="true">↗</span>
+        </a>
+      ))}
+    </div>
+  ) : project.githubUrl ? (
+    <a className="program__action" href={project.githubUrl} target="_blank" rel="noreferrer">
+      VIEW CODE
+      <span className="program__action-icon" aria-hidden="true">↗</span>
+    </a>
+  ) : null;
+
+  // The same source/demo links live on the bug and on the teletext page, so
   // they're reachable whether or not the teletext page is open.
   const actionLinks = (
     <>
-      <a className="program__action" href={project.githubUrl} target="_blank" rel="noreferrer">
-        VIEW CODE
-        <span className="program__action-icon" aria-hidden="true">↗</span>
-      </a>
+      {sourceControl}
       {project.demoUrl && (
         <a className="program__action" href={project.demoUrl} target="_blank" rel="noreferrer">
           OPEN DEMO
@@ -95,7 +116,6 @@ export function ProjectProgram({ project, channel }: ProjectProgramProps) {
                 ))}
               </ul>
               <div className="program__actions">
-                {actionLinks}
                 <button
                   className="program__action program__action--teletext"
                   onClick={() => setTeletextOpen(true)}
@@ -104,6 +124,7 @@ export function ProjectProgram({ project, channel }: ProjectProgramProps) {
                   TELETEXT
                   <span className="program__action-icon" aria-hidden="true">▤</span>
                 </button>
+                {actionLinks}
               </div>
             </div>
           </div>
@@ -129,7 +150,6 @@ export function ProjectProgram({ project, channel }: ProjectProgramProps) {
               {/* same row, same screen position as the bug's actions — the
                   links don't move, the toggle just morphs TELETEXT → CLOSE */}
               <div className="program__actions program__teletext-actions">
-                {actionLinks}
                 <button
                   className="program__action program__action--teletext"
                   onClick={() => setTeletextOpen(false)}
@@ -137,6 +157,7 @@ export function ProjectProgram({ project, channel }: ProjectProgramProps) {
                   CLOSE TELETEXT
                   <span className="program__action-icon" aria-hidden="true">▾</span>
                 </button>
+                {actionLinks}
               </div>
             </article>
           </div>

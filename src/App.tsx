@@ -48,7 +48,12 @@ export function App() {
               <p>
                 {project.description} {project.behindTheScenes ?? ''}
               </p>
-              <a href={project.githubUrl}>{project.title} source code</a>
+              {project.githubUrl && <a href={project.githubUrl}>{project.title} source code</a>}
+              {project.repos?.map((repo) => (
+                <a key={repo.url} href={repo.url}>
+                  {repo.name} source code
+                </a>
+              ))}
               {project.demoUrl && <a href={project.demoUrl}>{project.title} live demo</a>}
             </li>
           ))}
