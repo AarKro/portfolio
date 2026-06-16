@@ -102,6 +102,17 @@ export const PROJECTS: Project[] = [
     demoUrl: 'https://aarkro.github.io/zephir-flex/',
   },
   {
+    id: 'sugarcubes',
+    title: 'The Sugarcubes',
+    description:
+      'A print poster reimagined as a web page. Made for a Webtech module in my interaction design studies — simple, but a nice bit of type and layout to sit and look at.',
+    tech: ['HTML', 'CSS', 'JavaScript'],
+    behindTheScenes:
+      'Hand-built in plain HTML, CSS and JavaScript — the whole page is a faithful translation of a print poster into the browser.',
+    githubUrl: 'https://github.com/AarKro/modul_webtech',
+    demoUrl: 'https://aarkro.github.io/modul_webtech/sugarcubes/sugarcubes.html',
+  },
+  {
     id: 'css-toolbox',
     title: 'CSS Toolbox',
     description:
