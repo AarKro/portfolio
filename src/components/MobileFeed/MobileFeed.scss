@@ -1,15 +1,16 @@
 @use '../../styles/tokens' as *;
-@use '../../styles/interactions' as *;
 
-// The phone feed: full-screen vertical snap-cards, retro-broadcast styling.
+// The phone/tablet feed: full-screen vertical snap-cards, TikTok-style layout
+// (right-edge icon rail + tap-through caption), modern sans-serif type.
 .feed {
   height: 100dvh;
   overflow-y: scroll;
   scroll-snap-type: y mandatory;
   overscroll-behavior-y: contain; // no pull-to-refresh between cards
-  background: $phosphor-bg;
-  color: $phosphor-text;
-  font-family: $font-screen;
+  background: #000;
+  color: #fff;
+  font-family: $font-feed;
+  -webkit-tap-highlight-color: transparent;
 
   scrollbar-width: none;
   &::-webkit-scrollbar {
@@ -22,12 +23,9 @@
     scroll-snap-align: start;
     scroll-snap-stop: always;
     overflow: hidden;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-end;
   }
 
-  // ─── Backdrop: teaser clip, or a full-bleed test card ────────────────────
+  // ─── Backdrop ────────────────────────────────────────────────────────────
   &__video,
   &__testcard {
     position: absolute;
@@ -38,7 +36,7 @@
 
   &__video {
     object-fit: cover;
-    background: $phosphor-bg;
+    background: #000;
   }
 
   &__testcard {
@@ -68,268 +66,359 @@
     margin-bottom: 18%;
     padding: 0.3em 1em;
     background: rgba(8, 11, 8, 0.82);
-    letter-spacing: 0.18em;
-    font-size: 1rem;
+    letter-spacing: 0.12em;
+    font-size: 0.95rem;
+    font-family: $font-screen;
   }
 
-  // ─── Intro card (channel 1) ──────────────────────────────────────────────
-  &__card--intro {
-    justify-content: center;
-    background: radial-gradient(ellipse at 50% 40%, $room-warm, $phosphor-bg 70%);
+  // legibility gradient behind the caption
+  &__scrim {
+    position: absolute;
+    inset: auto 0 0 0;
+    height: 45%;
+    z-index: 1;
+    pointer-events: none;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.75) 0%, rgba(0, 0, 0, 0) 100%);
   }
 
-  &__intro {
+  // ─── Right-edge action rail ──────────────────────────────────────────────
+  &__rail {
+    position: absolute;
+    right: 0.4rem;
+    bottom: calc(env(safe-area-inset-bottom) + 5.5rem);
+    z-index: 3;
     display: flex;
     flex-direction: column;
-    gap: 0.7rem;
-    padding: 2rem clamp(1.2rem, 6vw, 2.4rem);
-    text-align: center;
+    align-items: center;
+    gap: 1.3rem;
   }
 
-  &__pretitle {
-    color: $phosphor-dim;
-    letter-spacing: 0.25em;
-    font-size: 0.95rem;
+  &__rail-btn {
+    display: grid;
+    place-items: center;
+    width: 48px;
+    height: 48px;
+    color: #fff;
+    background: none;
+    border: none;
+    cursor: pointer;
+    filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.6));
+    transition: transform 0.1s ease;
+
+    &:active {
+      transform: scale(0.88);
+    }
+
+    &--like.is-liked {
+      color: $feed-like; // white heart fills pink-red
+
+      svg {
+        animation: feed-like-pop 320ms ease;
+      }
+    }
   }
 
-  &__greeting {
-    font-size: 1.2rem;
-  }
-
-  &__intro-title {
-    font-size: clamp(2.4rem, 13vw, 3.6rem);
-    font-weight: normal;
-    line-height: 1;
-    color: $phosphor-amber;
-    text-shadow:
-      0 0 10px rgba(255, 180, 84, 0.7),
-      0 0 30px rgba(255, 180, 84, 0.35);
-  }
-
-  &__intro-subtitle {
-    font-size: 1.15rem;
-  }
-
-  &__swipe-hint {
+  // ─── Bottom-left caption (grows upward when expanded) ────────────────────
+  &__bug {
     position: absolute;
-    bottom: calc(env(safe-area-inset-bottom) + 1.4rem);
     left: 0;
     right: 0;
-    text-align: center;
-    color: $phosphor-green;
-    letter-spacing: 0.1em;
-    animation: feed-nudge 1.8s ease-in-out infinite;
+    bottom: 0;
+    z-index: 2;
+    padding: 0 4.8rem calc(env(safe-area-inset-bottom) + 1.3rem) 1.1rem;
   }
 
-  // ─── The lower-third bug over the backdrop ───────────────────────────────
-  &__bug {
-    position: relative;
-    z-index: 1;
+  &__caption {
+    border-radius: 14px;
+    padding: 0.7rem 0.9rem;
+    transition: background 280ms ease;
+  }
+
+  &__card.is-expanded &__caption {
+    // transparent black backdrop — the video still shows through
+    background: rgba(0, 0, 0, 0.5);
+  }
+
+  &__headline {
     display: flex;
-    flex-direction: column;
-    gap: 0.7rem;
-    padding: 6rem clamp(1.2rem, 5vw, 2rem)
-      calc(env(safe-area-inset-bottom) + 1.6rem);
-    background: linear-gradient(
-      to top,
-      rgba(8, 11, 8, 0.94) 0%,
-      rgba(8, 11, 8, 0.8) 45%,
-      rgba(8, 11, 8, 0.4) 75%,
-      rgba(8, 11, 8, 0) 100%
-    );
+    align-items: flex-end;
+    gap: 0.6rem;
+  }
+
+  &__headline-text {
+    flex: 1;
+    min-width: 0;
   }
 
   &__channel {
+    display: block;
     color: $phosphor-green;
-    letter-spacing: 0.12em;
-    font-size: 1.05rem;
+    font-weight: 600;
+    font-size: 0.8rem;
+    letter-spacing: 0.08em;
   }
 
   &__title {
-    font-size: clamp(2rem, 9vw, 3rem);
-    font-weight: normal;
-    line-height: 1;
+    margin-top: 0.15rem;
+    font-size: clamp(1.5rem, 7vw, 2.1rem);
+    font-weight: 700;
+    line-height: 1.05;
     color: $phosphor-amber;
-    text-shadow:
-      0 0 10px rgba(255, 180, 84, 0.6),
-      0 0 28px rgba(255, 180, 84, 0.3);
+    text-shadow: 0 1px 8px rgba(0, 0, 0, 0.6);
   }
 
   &__tech {
     list-style: none;
     display: flex;
     flex-wrap: wrap;
-    gap: 0.5rem;
+    gap: 0.4rem;
+    margin-top: 0.5rem;
   }
 
   &__tag {
-    padding: 0.1em 0.6em;
-    border: 1px solid rgba(77, 255, 136, 0.6);
-    border-radius: 2px;
+    padding: 0.15em 0.6em;
+    border: 1px solid rgba(77, 255, 136, 0.7);
+    border-radius: 999px;
     color: $phosphor-green;
-    font-size: 1rem;
-    letter-spacing: 0.06em;
+    font-size: 0.8rem;
+    font-weight: 500;
   }
 
-  // ─── Action buttons / links (touch-first sizing) ─────────────────────────
-  &__actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.6rem;
-    margin-top: 0.3rem;
-  }
-
-  &__action {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.4em;
-    min-height: 44px;
-    padding: 0.3em 1em;
-    border: 2px solid $phosphor-text;
-    color: $phosphor-text;
-    text-decoration: none;
-    font-size: 1.15rem;
-    letter-spacing: 0.08em;
-    background: none;
+  // the chevron toggle sits to the right of the title/tags
+  &__expand {
+    flex: none;
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    color: #fff;
+    background: rgba(0, 0, 0, 0.35);
+    border: none;
+    border-radius: 50%;
     cursor: pointer;
+    transition: transform 280ms ease, background 0.15s ease;
 
-    @include hover-focus {
-      background: $phosphor-text;
-      color: $phosphor-bg;
-      outline: none;
-    }
-
-    &--teletext {
-      border-color: $phosphor-purple;
-      color: $phosphor-purple;
-      text-shadow: 0 0 8px rgba(180, 124, 255, 0.5);
-
-      @include hover-focus {
-        background: $phosphor-purple;
-        color: $phosphor-bg;
-        text-shadow: none;
-      }
+    &:active {
+      background: rgba(0, 0, 0, 0.55);
     }
   }
 
-  &__source-group {
-    display: inline-flex;
-    align-items: stretch;
-    border: 2px solid $phosphor-text;
-    font-size: 1.15rem;
-    letter-spacing: 0.08em;
+  &__card.is-expanded &__expand {
+    transform: rotate(180deg); // chevron flips to point down (collapse)
   }
 
-  &__source {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.3em;
-    min-height: 44px;
-    padding: 0.3em 1em;
-    color: $phosphor-text;
-    text-decoration: none;
-
-    & + & {
-      border-left: 2px solid $phosphor-text;
-    }
-
-    @include hover-focus {
-      background: $phosphor-text;
-      color: $phosphor-bg;
-      outline: none;
-    }
+  // details reveal: animate height via the 0fr→1fr grid-rows trick
+  &__details {
+    display: grid;
+    grid-template-rows: 0fr;
+    opacity: 0;
+    transition: grid-template-rows 320ms ease, opacity 320ms ease, margin-top 320ms ease;
   }
 
-  // ─── Teletext sheet: slides up over the card ─────────────────────────────
-  &__teletext {
-    position: absolute;
-    inset: 0;
-    z-index: 2;
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-    padding: calc(env(safe-area-inset-top) + 1.4rem) clamp(1.2rem, 5vw, 2.4rem)
-      calc(env(safe-area-inset-bottom) + 1.4rem);
-    background: rgba(6, 9, 6, 0.97);
-    overflow-y: auto;
-    transform: translateY(100%);
-    transition: transform 400ms cubic-bezier(0.7, 0, 0.2, 1);
-    pointer-events: none;
+  &__details-inner {
+    min-height: 0;
+    overflow: hidden;
   }
 
-  &__card.is-teletext &__teletext {
-    transform: translateY(0);
-    pointer-events: auto;
+  &__card.is-expanded &__details {
+    grid-template-rows: 1fr;
+    opacity: 1;
+    margin-top: 0.7rem;
   }
 
-  &__teletext-head {
-    display: flex;
-    justify-content: space-between;
-    padding-bottom: 0.4rem;
-    border-bottom: 2px solid $phosphor-purple;
-    color: $phosphor-purple;
-    letter-spacing: 0.18em;
+  &__description {
     font-size: 1rem;
+    line-height: 1.4;
   }
 
-  &__teletext-brand {
-    color: $phosphor-amber;
-  }
-
-  &__teletext-title {
-    font-size: clamp(1.8rem, 8vw, 2.4rem);
-    font-weight: normal;
-    line-height: 1;
-    color: $phosphor-amber;
-    text-shadow:
-      0 0 10px rgba(255, 180, 84, 0.6),
-      0 0 28px rgba(255, 180, 84, 0.3);
-  }
-
-  &__teletext-body {
-    font-size: 1.3rem;
-    line-height: 1.35;
-  }
-
-  &__teletext-behind {
-    font-size: 1.15rem;
-    line-height: 1.35;
-    color: $phosphor-dim;
+  &__behind {
+    margin-top: 0.7rem;
+    font-size: 0.95rem;
+    line-height: 1.4;
+    color: rgba(255, 255, 255, 0.75);
   }
 
   &__behind-label {
     display: block;
     margin-bottom: 0.2rem;
     color: $phosphor-purple;
-    letter-spacing: 0.12em;
+    font-weight: 600;
+    font-size: 0.75rem;
+    letter-spacing: 0.1em;
   }
 
-  &__teletext-actions {
-    margin-top: auto;
+  // ─── Intro card (channel 1) ──────────────────────────────────────────────
+  &__card--intro {
+    background: radial-gradient(ellipse at 50% 38%, #241a12, #000 72%);
   }
 
-  // ─── Contact row (intro) ─────────────────────────────────────────────────
-  &__contact {
-    font-size: 1.1rem;
+  &__intro {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 0.8rem;
+    padding: 2rem clamp(1.4rem, 7vw, 2.6rem);
+    text-align: center;
+  }
+
+  &__intro-kicker {
+    color: rgba(255, 255, 255, 0.7);
+    font-weight: 500;
+    letter-spacing: 0.02em;
+  }
+
+  &__intro-title {
+    font-size: clamp(2.6rem, 14vw, 4rem);
+    font-weight: 700;
+    line-height: 1;
+    color: $phosphor-amber;
+    text-shadow: 0 2px 16px rgba(0, 0, 0, 0.5);
+  }
+
+  &__intro-sub {
+    max-width: 28ch;
+    color: rgba(255, 255, 255, 0.85);
+    font-size: 1.05rem;
+    line-height: 1.4;
+  }
+
+  &__intro-contact {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.6rem;
+    margin-top: 0.6rem;
 
     a {
-      color: $phosphor-green;
+      min-height: 44px;
+      display: inline-flex;
+      align-items: center;
+      padding: 0 1.1rem;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.12);
+      color: #fff;
       text-decoration: none;
-      border-bottom: 1px dashed rgba(77, 255, 136, 0.5);
+      font-weight: 600;
 
-      @include hover-focus {
-        background: $phosphor-green;
-        color: $phosphor-bg;
+      &:active {
+        background: rgba(255, 255, 255, 0.22);
       }
     }
+  }
+
+  &__swipe-hint {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: calc(env(safe-area-inset-bottom) + 1.4rem);
+    text-align: center;
+    color: rgba(255, 255, 255, 0.85);
+    letter-spacing: 0.04em;
+    animation: feed-nudge 1.8s ease-in-out infinite;
+  }
+
+  // ─── Bottom sheet (share / multi-repo source) ────────────────────────────
+  &__sheet-layer {
+    position: absolute;
+    inset: 0;
+    z-index: 5;
+    pointer-events: none;
+
+    &.is-open {
+      pointer-events: auto;
+    }
+  }
+
+  &__sheet-scrim {
+    position: absolute;
+    inset: 0;
+    border: none;
+    background: rgba(0, 0, 0, 0);
+    cursor: pointer;
+    transition: background 280ms ease;
+
+    .feed__sheet-layer.is-open & {
+      background: rgba(0, 0, 0, 0.5);
+    }
+  }
+
+  &__sheet {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    padding: 0.7rem 1.2rem calc(env(safe-area-inset-bottom) + 1.4rem);
+    background: #1b1b1f;
+    border-radius: 18px 18px 0 0;
+    transform: translateY(100%);
+    transition: transform 320ms cubic-bezier(0.7, 0, 0.2, 1);
+
+    .feed__sheet-layer.is-open & {
+      transform: translateY(0);
+    }
+  }
+
+  &__sheet-grabber {
+    display: block;
+    width: 40px;
+    height: 4px;
+    margin: 0 auto 1rem;
+    border-radius: 2px;
+    background: rgba(255, 255, 255, 0.3);
+  }
+
+  &__sheet-title {
+    margin-bottom: 0.8rem;
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 0.85rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  &__sheet-links {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+
+  &__sheet-link {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 52px;
+    padding: 0 1.1rem;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+    text-decoration: none;
+    font-weight: 600;
+
+    &:active {
+      background: rgba(255, 255, 255, 0.16);
+    }
+  }
+}
+
+@keyframes feed-like-pop {
+  0% {
+    transform: scale(1);
+  }
+  40% {
+    transform: scale(1.35);
+  }
+  100% {
+    transform: scale(1);
   }
 }
 
 @keyframes feed-nudge {
   0%,
   100% {
-    opacity: 0.45;
+    opacity: 0.5;
     transform: translateY(0);
   }
   50% {
