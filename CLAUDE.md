@@ -151,8 +151,9 @@ TikTok, in a modern sans (`$font-feed` = Inter) rather than the CRT fonts:
   black panel (the video still shows through), animated via the `0fr→1fr`
   grid-rows trick.
 - **Share** (and the multi-repo "code" case, e.g. the Discord bots) opens a
-  `FeedSheet` — a scrim-backed bottom sheet of links. Share = Aaron's LinkedIn +
-  the portfolio repo on GitHub.
+  `FeedSheet` — a scrim-backed bottom sheet of links. Share = the current
+  project's GitHub first, then Aaron's LinkedIn (a sourceless channel like
+  Tramly is LinkedIn only).
 - The active card is tracked with an `IntersectionObserver`; only it plays its
   video, and it drives the `#ch-N` hash + `document.title` (consistent with the
   TV, so deep links work).

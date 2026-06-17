@@ -11,11 +11,10 @@ import './MobileFeed.scss';
 
 const SITE_TITLE = 'Aaron Kromer — Frontend Developer & Interaction Designer, Zürich';
 
-/** "Share" targets: where to find Aaron / this site. */
-const SHARE_LINKS: SheetLink[] = [
-  { label: 'LinkedIn', href: 'https://www.linkedin.com/in/aaron-kromer-a3026b193/' },
-  { label: 'GitHub — this site', href: 'https://github.com/AarKro/portfolio' },
-];
+const LINKEDIN_LINK: SheetLink = {
+  label: 'LinkedIn',
+  href: 'https://www.linkedin.com/in/aaron-kromer-a3026b193/',
+};
 
 interface SheetLink {
   label: string;
@@ -159,6 +158,15 @@ function FeedCard({ project, channel, isActive, setRef }: FeedCardProps) {
     ? project.repos.map((repo) => ({ label: repo.name, href: repo.url }))
     : null;
 
+  // Share: this project's GitHub first, then Aaron's LinkedIn. A bundled
+  // channel lists each repo; a sourceless one (e.g. Tramly) is LinkedIn only.
+  const githubShareLinks: SheetLink[] = project.githubUrl
+    ? [{ label: 'GitHub', href: project.githubUrl }]
+    : repoLinks
+      ? repoLinks.map((repo) => ({ label: `GitHub — ${repo.label}`, href: repo.href }))
+      : [];
+  const shareLinks: SheetLink[] = [...githubShareLinks, LINKEDIN_LINK];
+
   return (
     <section
       className={`feed__card ${expanded ? 'is-expanded' : ''}`}
@@ -277,7 +285,7 @@ function FeedCard({ project, channel, isActive, setRef }: FeedCardProps) {
       <FeedSheet
         open={sheet !== null}
         title={sheet === 'share' ? 'Share' : 'Source code'}
-        links={sheet === 'code' && repoLinks ? repoLinks : SHARE_LINKS}
+        links={sheet === 'code' && repoLinks ? repoLinks : shareLinks}
         onClose={() => setSheet(null)}
       />
     </section>
