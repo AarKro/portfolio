@@ -64,8 +64,6 @@ export function IntroProgram({ tuneTo }: IntroProgramProps) {
         >
           LinkedIn
         </a>
-        <span aria-hidden="true"> · </span>
-        <a href="mailto:kromer.aaron@gmail.com">kromer.aaron@gmail.com</a>
       </p>
     </div>
   );
