@@ -6,7 +6,7 @@ import {
   type Project,
 } from '../../data/projects';
 import { renderInlineLinks } from '../InlineLink/InlineLink';
-import { ChevronIcon, CodeIcon, DemoIcon, HeartIcon, ShareIcon } from './icons';
+import { ChevronIcon, DemoIcon, HeartIcon, ShareIcon } from './icons';
 import './MobileFeed.scss';
 
 const SITE_TITLE = 'Aaron Kromer — Frontend Developer & Interaction Designer, Zürich';
@@ -135,7 +135,7 @@ function FeedCard({ project, channel, isActive, setRef }: FeedCardProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [expanded, setExpanded] = useState(false);
   const [liked, setLiked] = useState(false);
-  const [sheet, setSheet] = useState<'share' | 'code' | null>(null);
+  const [shareOpen, setShareOpen] = useState(false);
   const channelLabel = String(channel).padStart(2, '0');
 
   // Only the card in view plays (battery + mobile single-video limits); leaving
@@ -148,22 +148,18 @@ function FeedCard({ project, channel, isActive, setRef }: FeedCardProps) {
     } else {
       video?.pause();
       setExpanded(false);
-      setSheet(null);
+      setShareOpen(false);
     }
   }, [isActive]);
 
-  // The "code" action: a single repo links straight out; a bundle of repos
-  // (e.g. the Discord bots) opens a sheet listing them.
-  const repoLinks: SheetLink[] | null = project.repos
-    ? project.repos.map((repo) => ({ label: repo.name, href: repo.url }))
-    : null;
-
   // Share: this project's GitHub first, then Aaron's LinkedIn. A bundled
-  // channel lists each repo; a sourceless one (e.g. Tramly) is LinkedIn only.
+  // channel (e.g. the Discord bots) lists each repo; a sourceless one (e.g.
+  // Tramly) is LinkedIn only. The source code lives here in the share sheet —
+  // there's no separate code button on the rail.
   const githubShareLinks: SheetLink[] = project.githubUrl
     ? [{ label: 'GitHub', href: project.githubUrl }]
-    : repoLinks
-      ? repoLinks.map((repo) => ({ label: `GitHub — ${repo.label}`, href: repo.href }))
+    : project.repos
+      ? project.repos.map((repo) => ({ label: `GitHub — ${repo.name}`, href: repo.url }))
       : [];
   const shareLinks: SheetLink[] = [...githubShareLinks, LINKEDIN_LINK];
 
@@ -204,26 +200,6 @@ function FeedCard({ project, channel, isActive, setRef }: FeedCardProps) {
           <HeartIcon filled={liked} />
         </button>
 
-        {project.githubUrl ? (
-          <a
-            className="feed__rail-btn"
-            href={project.githubUrl}
-            target="_blank"
-            rel="noreferrer"
-            aria-label="View source code"
-          >
-            <CodeIcon />
-          </a>
-        ) : repoLinks ? (
-          <button
-            className="feed__rail-btn"
-            onClick={() => setSheet('code')}
-            aria-label="View source code"
-          >
-            <CodeIcon />
-          </button>
-        ) : null}
-
         {project.demoUrl && (
           <a
             className="feed__rail-btn"
@@ -236,7 +212,7 @@ function FeedCard({ project, channel, isActive, setRef }: FeedCardProps) {
           </a>
         )}
 
-        <button className="feed__rail-btn" onClick={() => setSheet('share')} aria-label="Share">
+        <button className="feed__rail-btn" onClick={() => setShareOpen(true)} aria-label="Share">
           <ShareIcon />
         </button>
       </div>
@@ -283,10 +259,10 @@ function FeedCard({ project, channel, isActive, setRef }: FeedCardProps) {
       </div>
 
       <FeedSheet
-        open={sheet !== null}
-        title={sheet === 'share' ? 'Share' : 'Source code'}
-        links={sheet === 'code' && repoLinks ? repoLinks : shareLinks}
-        onClose={() => setSheet(null)}
+        open={shareOpen}
+        title="Share"
+        links={shareLinks}
+        onClose={() => setShareOpen(false)}
       />
     </section>
   );

@@ -26,16 +26,6 @@ export function HeartIcon({ filled, className }: IconProps & { filled: boolean }
   );
 }
 
-/** `</>` — source code. */
-export function CodeIcon({ className }: IconProps) {
-  return (
-    <svg {...base} className={className}>
-      <polyline points="16 18 22 12 16 6" />
-      <polyline points="8 6 2 12 8 18" />
-    </svg>
-  );
-}
-
 /** Box with an arrow leaving it — open the live demo (external). */
 export function DemoIcon({ className }: IconProps) {
   return (

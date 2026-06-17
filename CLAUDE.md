@@ -144,8 +144,9 @@ A full-screen vertical scroll-snap feed (one card per channel) styled after
 TikTok, in a modern sans (`$font-feed` = Inter) rather than the CRT fonts:
 - Each project card is a full-bleed teaser video (or SMPTE test card) with a
   right-edge **rail** of icon-only actions: like (fake heart; white → `$feed-like`
-  pink when toggled), source code, open demo, share. Icons are inline SVGs in
-  `icons.tsx` (no icon dependency).
+  pink when toggled), open demo, share. Source code isn't a separate rail button
+  — it lives inside the share sheet. Icons are inline SVGs in `icons.tsx` (no
+  icon dependency).
 - The **caption** (bottom-left) shows channel/title/tags with a chevron; tapping
   it expands the card's `description` + `behindTheScenes` over a translucent
   black panel (the video still shows through), animated via the `0fr→1fr`
