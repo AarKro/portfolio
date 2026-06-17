@@ -1,0 +1,17 @@
+// Shared interaction mixins.
+
+// Touch-safe "invert"/highlight affordance. The styled state shows on real
+// hover (gated to hover-capable pointers, so a tap on a touchscreen never
+// leaves the highlight stuck) and always on keyboard focus. Pass the visual
+// declarations as the mixin content so each call site keeps its own look.
+@mixin hover-focus {
+  &:focus-visible {
+    @content;
+  }
+
+  @media (hover: hover) {
+    &:hover {
+      @content;
+    }
+  }
+}

@@ -2,31 +2,45 @@ import { useState } from 'react';
 import { PROJECTS } from './data/projects';
 import { Scene, type ViewMode } from './components/Scene/Scene';
 import { TVSet } from './components/TVSet/TVSet';
+import { MobileFeed } from './components/MobileFeed/MobileFeed';
+import { useDeviceTier } from './hooks/useDeviceTier';
 import { stripInlineLinks } from './components/InlineLink/InlineLink';
 import './App.scss';
 
 /**
- * There is only one view: the 3D living room (Scene), with the DOM TV
- * projected onto the 3D TV body. The modes just describe the camera:
+ * Three device tiers (see useDeviceTier):
+ *  - desktop → the full 3D living room (Scene) with the DOM TV projected onto
+ *    the 3D TV body; powering off flies the camera back into the walkable room.
+ *  - tablet  → the same 3D TV, but the room/power-off-to-room is disabled
+ *    (PWR just toggles standby) and GPU settings are reduced.
+ *  - mobile  → a separate vertical feed UI; no three.js at all.
  *
+ * The camera modes (desktop/tablet) just describe the camera:
  * tv      → parked in front of the TV: the portfolio, fully interactive
  * to-room → user powered off: camera pulls back from the glass
  * room    → first-person walking (WASD + pointer lock)
  * to-tv   → user clicked the TV: camera flies back to the website framing
  */
 export function App() {
+  const tier = useDeviceTier();
   const [mode, setMode] = useState<ViewMode>('tv');
 
   return (
     <main className="app">
-      <Scene
-        mode={mode}
-        onArrivedInRoom={() => setMode('room')}
-        onArrivedAtTV={() => setMode('tv')}
-        onTVClicked={() => setMode('to-tv')}
-      >
-        <TVSet onPoweredOff={() => setMode('to-room')} />
-      </Scene>
+      {tier === 'mobile' ? (
+        <MobileFeed />
+      ) : (
+        <Scene
+          mode={mode}
+          tier={tier}
+          onArrivedInRoom={() => setMode('room')}
+          onArrivedAtTV={() => setMode('tv')}
+          onTVClicked={() => setMode('to-tv')}
+        >
+          {/* Off-desktop: no room callback, so PWR is a standby toggle only */}
+          <TVSet onPoweredOff={tier === 'desktop' ? () => setMode('to-room') : undefined} />
+        </Scene>
+      )}
 
       {/*
         Crawlable text version of the broadcast. Project content only appears

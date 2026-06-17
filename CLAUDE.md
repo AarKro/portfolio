@@ -2,7 +2,9 @@
 
 A portfolio site styled as a vintage CRT television. Every "channel" is one of
 Aaron's GitHub projects (github.com/AarKro); channel 1 is the intro program.
-Desktop-first; mobile only needs to not break.
+Desktop-first, with three device tiers (see "Device tiers" below): desktop gets
+the full 3D room, tablet keeps the 3D TV but no room, and phones get a separate
+vertical TikTok-style feed.
 
 ## Commands
 
@@ -108,10 +110,35 @@ src/
     programs/ProjectProgram/    ← project channels: one "broadcast" layout
                                   (teaser-or-testcard backdrop + bug +
                                   slide-up teletext page)
+    MobileFeed/             ← phones only: vertical TikTok-style swipe feed of
+                              the same projects (no three.js)
+  hooks/useDeviceTier.ts   ← desktop | tablet | mobile classification
+  hooks/useSwipe.ts        ← tiny pointer-based swipe detector (no deps)
   utils/noise.ts            ← static-noise pixel fill (used by StaticNoise)
   styles/_tokens.scss       ← ALL colors and fonts; theme changes happen here
+  styles/_interactions.scss ← `hover-focus` mixin (touch-safe hover + focus)
   styles/global.scss        ← reset + base
 ```
+
+## Device tiers (desktop / tablet / mobile)
+
+`useDeviceTier` classifies the device and `App.tsx` branches on it. Detection is
+**capability-first, width-second, and always prefers a precise pointer over
+touch**, so a touch-enabled laptop is treated as desktop:
+
+- **desktop** — `(hover: hover) and (pointer: fine)` matches (a mouse/trackpad is
+  the primary input). The full 3D room, power-off-to-room, hover UI, arrow keys.
+  A present touchscreen is purely additive (swipe/buttons still work).
+- **tablet** — primary input is coarse/hoverless and width ≥ 768px. Renders the
+  **same** `<Scene><TVSet/></Scene>` 3D TV (the camera auto-fits the 920px
+  cabinet to any viewport, so no CSS rescale), but the room is disabled (PWR is a
+  standby toggle only — App passes no `onPoweredOff` room callback) and the
+  WebGLRenderer drops antialias + shadows and runs at pixel-ratio 1.
+- **mobile** — coarse/hoverless and width ≤ 767px. Renders `MobileFeed` instead
+  of the Scene; **three.js is never instantiated** on phones.
+
+`Scene` takes a `tier` prop (`'desktop' | 'tablet'`); changing tier (e.g.
+plugging in a mouse) rebuilds the WebGL context so the new settings apply.
 
 ## One scene, one TV (the core architecture)
 
@@ -152,8 +179,17 @@ Things to know:
 - Camera flights lerp position/quaternion/FOV (CLOSEUP_FOV 55° ↔
   WALKING_FOV 70°); durations at the top of Scene.tsx; the CRT collapse
   handoff is POWER_OFF_DELAY (700ms) in TVSet.tsx.
-- three.js is in the main bundle now (~200 kB gz total) — it can't be
-  lazy-loaded since the scene IS the page.
+- three.js is in the main bundle (~200 kB gz total). On desktop/tablet the scene
+  IS the page so it can't be lazy-loaded there; phones render `MobileFeed`
+  instead and simply never instantiate it (kept in the bundle for simplicity —
+  not code-split).
+- **Render-on-demand:** the loop only draws when something moves (a camera
+  flight, walking, or a `syncWorldToDOM` from resize/reflow). A parked TV — every
+  tablet, and an idle desktop — costs ~0 GPU/frame. This is safe because the DOM
+  TV's own motion (video, static noise, OSD, teletext slide, phosphor flicker)
+  lives in the browser-composited CSS3D layer and keeps animating without a three
+  re-render. If you add anything that moves the camera/objects, set
+  `needsRender = true` (Scene.tsx) or it won't show.
 - Walkable area is clamped to `BOUNDS` (no collision with furniture yet).
 - Known CSS3D limitation: the DOM TV ignores WebGL depth, so meshes between
   the camera and the TV won't occlude it (mostly invisible in practice;
@@ -180,7 +216,13 @@ importing tokens via a relative `@use '../../styles/tokens' as *;`.
   the panel LED turns red (green while on) so the site never looks broken.
 - Current channel is mirrored to the URL hash (`#ch-5`), read once on load,
   so channels are shareable links. Deep-linked visitors (initial channel ≠ 1)
-  get a one-time arrow-keys hint on screen for ~6s.
+  get a one-time hint on screen for ~6s — arrow-keys wording on fine pointers,
+  swipe/CH-button wording on touch (`(pointer: coarse)`).
+- **Touch:** channels also flip by swiping the glass left/right (`useSwipe` on
+  `screen__tube`, `touch-action: pan-y` so vertical teletext scroll still works);
+  the CH ▲/▼ buttons remain. Hover styles use the `hover-focus` mixin so they
+  never stick after a tap, and tap targets grow to ≈44px under `(pointer:
+  coarse)`. The mobile feed is touch-native (vertical scroll-snap).
 - `document.title` mirrors the broadcast ("CH 03 · WoW Graveyard 3D — Aaron
   Kromer"; "Standby — …" when off).
 - A `videoUrl` channel autoplays its teaser the moment you land on it. The clip

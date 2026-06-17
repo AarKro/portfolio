@@ -1,4 +1,5 @@
 @use '../../../styles/tokens' as *;
+@use '../../../styles/interactions' as *;
 
 .program {
   // Shared screen text bits, reused inside the bug and the teletext page
@@ -49,8 +50,13 @@
     background: none;
     cursor: pointer;
 
-    &:hover,
-    &:focus-visible {
+    // comfortable finger targets on touch primaries (≈ 44px)
+    @media (pointer: coarse) {
+      min-height: 44px;
+      padding: 0.4em 1em;
+    }
+
+    @include hover-focus {
       background: $phosphor-text;
       color: $phosphor-bg;
       outline: none;
@@ -63,8 +69,7 @@
       color: $phosphor-purple;
       text-shadow: 0 0 8px rgba(180, 124, 255, 0.5);
 
-      &:hover,
-      &:focus-visible {
+      @include hover-focus {
         background: $phosphor-purple;
         color: $phosphor-bg;
         text-shadow: none;
@@ -97,13 +102,17 @@
     color: $phosphor-text;
     text-decoration: none;
 
+    @media (pointer: coarse) {
+      min-height: 44px;
+      padding: 0.4em 1em;
+    }
+
     // divider between sections
     & + & {
       border-left: 2px solid $phosphor-text;
     }
 
-    &:hover,
-    &:focus-visible {
+    @include hover-focus {
       background: $phosphor-text;
       color: $phosphor-bg;
       outline: none;
