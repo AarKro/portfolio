@@ -27,5 +27,10 @@ $phosphor-purple: #b47cff; // teletext's own "info" voice
 $phosphor-dim: #8aa388;
 
 // Fonts
-$font-screen: 'VT323', monospace;
-$font-brand: 'Bungee', sans-serif;
+$font-screen: 'VT323', monospace; // the CRT screen (desktop TV)
+$font-brand: 'Bungee', sans-serif; // cabinet brand badge only
+// modern UI font for the mobile/tablet feed (TikTok-ish)
+$font-feed: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+
+// The mobile feed's "like" heart when active (white → pink-red)
+$feed-like: #fe2c55;

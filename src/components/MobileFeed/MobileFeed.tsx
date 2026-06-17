@@ -6,9 +6,20 @@ import {
   type Project,
 } from '../../data/projects';
 import { renderInlineLinks } from '../InlineLink/InlineLink';
+import { ChevronIcon, DemoIcon, HeartIcon, ShareIcon } from './icons';
 import './MobileFeed.scss';
 
 const SITE_TITLE = 'Aaron Kromer — Frontend Developer & Interaction Designer, Zürich';
+
+const LINKEDIN_LINK: SheetLink = {
+  label: 'LinkedIn',
+  href: 'https://www.linkedin.com/in/aaron-kromer-a3026b193/',
+};
+
+interface SheetLink {
+  label: string;
+  href: string;
+}
 
 /** Channels are shareable links: #ch-5 opens the feed on that card. */
 function channelFromHash(): number {
@@ -26,11 +37,11 @@ function greeting(): string {
 }
 
 /**
- * The phone experience: a full-screen vertical feed, one snap-card per channel,
- * driven by the same `projects.ts` data and retro palette as the TV. No
- * three.js — the 3D room/TV is desktop+tablet only. Swiping up/down moves
- * between cards (native scroll-snap); the channel hash + tab title track the
- * card in view, so deep links and SEO stay consistent with the TV.
+ * The phone & tablet experience: a full-screen vertical feed, one snap-card
+ * per channel, taking its layout cues from TikTok — a tap-through caption and a
+ * right-edge rail of icon actions. Driven by the same `projects.ts` data as the
+ * desktop TV; no three.js. The channel hash + tab title track the card in view
+ * so deep links and SEO stay consistent with the TV.
  */
 export function MobileFeed() {
   const sectionsRef = useRef<(HTMLElement | null)[]>([]);
@@ -73,25 +84,15 @@ export function MobileFeed() {
 
   return (
     <div className="feed">
-      <section
-        className="feed__card feed__card--intro"
-        data-channel={1}
-        ref={setSectionRef(1)}
-      >
+      <section className="feed__card feed__card--intro" data-channel={1} ref={setSectionRef(1)}>
         <div className="feed__intro">
-          <p className="feed__pretitle">*** LIVE ***</p>
-          <p className="feed__greeting">{greeting()} You’re tuned in to</p>
+          <p className="feed__intro-kicker">Frontend Developer &amp; Interaction Designer</p>
           <h1 className="feed__intro-title">Aaron Kromer</h1>
-          <p className="feed__intro-subtitle">
-            Frontend Developer &amp; Interaction Designer.
-            <br />
-            My projects, on every channel.
-          </p>
-          <p className="feed__contact">
+          <p className="feed__intro-sub">{greeting()} Every channel below is one of my projects.</p>
+          <p className="feed__intro-contact">
             <a href="https://github.com/AarKro" target="_blank" rel="noreferrer">
               GitHub
             </a>
-            <span aria-hidden="true"> · </span>
             <a
               href="https://www.linkedin.com/in/aaron-kromer-a3026b193/"
               target="_blank"
@@ -99,12 +100,11 @@ export function MobileFeed() {
             >
               LinkedIn
             </a>
-            <span aria-hidden="true"> · </span>
-            <a href="mailto:kromer.aaron@gmail.com">kromer.aaron@gmail.com</a>
+            <a href="mailto:kromer.aaron@gmail.com">Email</a>
           </p>
         </div>
         <p className="feed__swipe-hint" aria-hidden="true">
-          swipe up to browse channels ↑
+          swipe up to browse ↑
         </p>
       </section>
 
@@ -133,51 +133,39 @@ interface FeedCardProps {
 
 function FeedCard({ project, channel, isActive, setRef }: FeedCardProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const [teletextOpen, setTeletextOpen] = useState(false);
+  const [expanded, setExpanded] = useState(false);
+  const [liked, setLiked] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
   const channelLabel = String(channel).padStart(2, '0');
 
   // Only the card in view plays (battery + mobile single-video limits); leaving
-  // a card also closes its teletext sheet. play() may reject without a user
-  // gesture (e.g. iOS low-power) — that's fine, the first frame still shows.
+  // a card resets its open panels. play() may reject without a user gesture
+  // (e.g. iOS low-power) — that's fine, the first frame still shows.
   useEffect(() => {
     const video = videoRef.current;
     if (isActive) {
       video?.play().catch(() => {});
     } else {
       video?.pause();
-      setTeletextOpen(false);
+      setExpanded(false);
+      setShareOpen(false);
     }
   }, [isActive]);
 
-  const sourceControl = project.repos ? (
-    <div className="feed__source-group">
-      {project.repos.map((repo) => (
-        <a key={repo.url} className="feed__source" href={repo.url} target="_blank" rel="noreferrer">
-          {repo.name}
-          <span aria-hidden="true">↗</span>
-        </a>
-      ))}
-    </div>
-  ) : project.githubUrl ? (
-    <a className="feed__action" href={project.githubUrl} target="_blank" rel="noreferrer">
-      VIEW CODE <span aria-hidden="true">↗</span>
-    </a>
-  ) : null;
-
-  const actionLinks = (
-    <>
-      {sourceControl}
-      {project.demoUrl && (
-        <a className="feed__action" href={project.demoUrl} target="_blank" rel="noreferrer">
-          OPEN DEMO <span aria-hidden="true">↗</span>
-        </a>
-      )}
-    </>
-  );
+  // Share: this project's GitHub first, then Aaron's LinkedIn. A bundled
+  // channel (e.g. the Discord bots) lists each repo; a sourceless one (e.g.
+  // Tramly) is LinkedIn only. The source code lives here in the share sheet —
+  // there's no separate code button on the rail.
+  const githubShareLinks: SheetLink[] = project.githubUrl
+    ? [{ label: 'GitHub', href: project.githubUrl }]
+    : project.repos
+      ? project.repos.map((repo) => ({ label: `GitHub — ${repo.name}`, href: repo.url }))
+      : [];
+  const shareLinks: SheetLink[] = [...githubShareLinks, LINKEDIN_LINK];
 
   return (
     <section
-      className={`feed__card ${teletextOpen ? 'is-teletext' : ''}`}
+      className={`feed__card ${expanded ? 'is-expanded' : ''}`}
       data-channel={channel}
       ref={setRef}
     >
@@ -198,54 +186,119 @@ function FeedCard({ project, channel, isActive, setRef }: FeedCardProps) {
         </div>
       )}
 
-      <div className="feed__bug">
-        <span className="feed__channel" aria-hidden="true">
-          CH {channelLabel}
-        </span>
-        <h2 className="feed__title">{project.title}</h2>
-        <ul className="feed__tech">
-          {project.tech.map((tag) => (
-            <li key={tag} className="feed__tag">
-              {tag}
-            </li>
-          ))}
-        </ul>
-        <div className="feed__actions">
-          <button
-            className="feed__action feed__action--teletext"
-            onClick={() => setTeletextOpen(true)}
-            aria-expanded={teletextOpen}
+      {/* legibility scrim under the caption */}
+      <div className="feed__scrim" aria-hidden="true" />
+
+      {/* right-edge rail of icon actions */}
+      <div className="feed__rail">
+        <button
+          className={`feed__rail-btn feed__rail-btn--like ${liked ? 'is-liked' : ''}`}
+          onClick={() => setLiked((v) => !v)}
+          aria-pressed={liked}
+          aria-label={liked ? 'Unlike' : 'Like'}
+        >
+          <HeartIcon filled={liked} />
+        </button>
+
+        {project.demoUrl && (
+          <a
+            className="feed__rail-btn"
+            href={project.demoUrl}
+            target="_blank"
+            rel="noreferrer"
+            aria-label="Open live demo"
           >
-            TELETEXT <span aria-hidden="true">▤</span>
-          </button>
-          {actionLinks}
+            <DemoIcon />
+          </a>
+        )}
+
+        <button className="feed__rail-btn" onClick={() => setShareOpen(true)} aria-label="Share">
+          <ShareIcon />
+        </button>
+      </div>
+
+      {/* bottom-left caption: title + tags, expanding upward to reveal details */}
+      <div className="feed__bug">
+        <div className="feed__caption">
+          <div className="feed__headline">
+            <div className="feed__headline-text">
+              <span className="feed__channel" aria-hidden="true">
+                CH {channelLabel}
+              </span>
+              <h2 className="feed__title">{project.title}</h2>
+              <ul className="feed__tech">
+                {project.tech.map((tag) => (
+                  <li key={tag} className="feed__tag">
+                    {tag}
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <button
+              className="feed__expand"
+              onClick={() => setExpanded((v) => !v)}
+              aria-expanded={expanded}
+              aria-label={expanded ? 'Hide details' : 'Show details'}
+            >
+              <ChevronIcon />
+            </button>
+          </div>
+
+          <div className="feed__details" aria-hidden={!expanded}>
+            <div className="feed__details-inner">
+              <p className="feed__description">{renderInlineLinks(project.description)}</p>
+              {project.behindTheScenes && (
+                <p className="feed__behind">
+                  <span className="feed__behind-label">BEHIND THE SCENES</span>
+                  {renderInlineLinks(project.behindTheScenes)}
+                </p>
+              )}
+            </div>
+          </div>
         </div>
       </div>
 
-      <article className="feed__teletext" aria-hidden={!teletextOpen}>
-        <header className="feed__teletext-head">
-          <span>P1{channelLabel}</span>
-          <span className="feed__teletext-brand">AARKRO TV</span>
-          <span>CH {channelLabel}</span>
-        </header>
-        <h3 className="feed__teletext-title">{project.title}</h3>
-        <p className="feed__teletext-body">{renderInlineLinks(project.description)}</p>
-        {project.behindTheScenes && (
-          <p className="feed__teletext-behind">
-            <span className="feed__behind-label">BEHIND THE SCENES</span>
-            {renderInlineLinks(project.behindTheScenes)}
-          </p>
-        )}
-        <div className="feed__actions feed__teletext-actions">
-          <button
-            className="feed__action feed__action--teletext"
-            onClick={() => setTeletextOpen(false)}
-          >
-            CLOSE TELETEXT <span aria-hidden="true">▾</span>
-          </button>
-          {actionLinks}
-        </div>
-      </article>
+      <FeedSheet
+        open={shareOpen}
+        title="Share"
+        links={shareLinks}
+        onClose={() => setShareOpen(false)}
+      />
     </section>
+  );
+}
+
+interface FeedSheetProps {
+  open: boolean;
+  title: string;
+  links: SheetLink[];
+  onClose: () => void;
+}
+
+/** A scrim-backed menu that scrolls up from the bottom of the card. */
+function FeedSheet({ open, title, links, onClose }: FeedSheetProps) {
+  return (
+    <div className={`feed__sheet-layer ${open ? 'is-open' : ''}`} aria-hidden={!open}>
+      <button className="feed__sheet-scrim" onClick={onClose} aria-label="Close menu" />
+      <div className="feed__sheet" role="dialog" aria-modal="true">
+        <span className="feed__sheet-grabber" aria-hidden="true" />
+        <p className="feed__sheet-title">{title}</p>
+        <div className="feed__sheet-links">
+          {links.map((link) => (
+            <a
+              key={link.href}
+              className="feed__sheet-link"
+              href={link.href}
+              target="_blank"
+              rel="noreferrer"
+              onClick={onClose}
+            >
+              {link.label}
+              <span aria-hidden="true">↗</span>
+            </a>
+          ))}
+        </div>
+      </div>
+    </div>
   );
 }

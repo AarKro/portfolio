@@ -8,14 +8,12 @@ import { stripInlineLinks } from './components/InlineLink/InlineLink';
 import './App.scss';
 
 /**
- * Three device tiers (see useDeviceTier):
+ * Two experiences (see useDeviceTier):
  *  - desktop → the full 3D living room (Scene) with the DOM TV projected onto
  *    the 3D TV body; powering off flies the camera back into the walkable room.
- *  - tablet  → the same 3D TV, but the room/power-off-to-room is disabled
- *    (PWR just toggles standby) and GPU settings are reduced.
- *  - mobile  → a separate vertical feed UI; no three.js at all.
+ *  - mobile  → a vertical feed UI (phones AND tablets); no three.js at all.
  *
- * The camera modes (desktop/tablet) just describe the camera:
+ * The camera modes (desktop) just describe the camera:
  * tv      → parked in front of the TV: the portfolio, fully interactive
  * to-room → user powered off: camera pulls back from the glass
  * room    → first-person walking (WASD + pointer lock)
@@ -32,13 +30,11 @@ export function App() {
       ) : (
         <Scene
           mode={mode}
-          tier={tier}
           onArrivedInRoom={() => setMode('room')}
           onArrivedAtTV={() => setMode('tv')}
           onTVClicked={() => setMode('to-tv')}
         >
-          {/* Off-desktop: no room callback, so PWR is a standby toggle only */}
-          <TVSet onPoweredOff={tier === 'desktop' ? () => setMode('to-room') : undefined} />
+          <TVSet onPoweredOff={() => setMode('to-room')} />
         </Scene>
       )}
 
