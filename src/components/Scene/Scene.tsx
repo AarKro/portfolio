@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import * as THREE from 'three';
 import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
 import { CSS3DObject, CSS3DRenderer } from 'three/addons/renderers/CSS3DRenderer.js';
+import type { DeviceTier } from '../../hooks/useDeviceTier';
 import {
   BOUNDS,
   CLOSEUP_FOV,
@@ -31,6 +32,12 @@ export type ViewMode = 'tv' | 'to-room' | 'room' | 'to-tv';
 
 interface SceneProps {
   mode: ViewMode;
+  /**
+   * Device tier (only 'desktop' | 'tablet' reach the Scene — mobile uses the
+   * feed). 'desktop' enables the walkable room and full GPU quality; 'tablet'
+   * disables the room and renders with antialias/shadows off at pixel-ratio 1.
+   */
+  tier: Exclude<DeviceTier, 'mobile'>;
   /** Pull-back flight finished: visitor is standing in the room */
   onArrivedInRoom: () => void;
   /** Fly-in flight finished: visitor is back at the website framing */
@@ -66,7 +73,14 @@ function quaternionLookingAt(from: THREE.Vector3, target: THREE.Vector3): THREE.
  * body). "Website mode" is nothing more than the camera parked right in
  * front of the TV — so the power-off pull-back is inherently seamless.
  */
-export function Scene({ mode, onArrivedInRoom, onArrivedAtTV, onTVClicked, children }: SceneProps) {
+export function Scene({
+  mode,
+  tier,
+  onArrivedInRoom,
+  onArrivedAtTV,
+  onTVClicked,
+  children,
+}: SceneProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const crosshairRef = useRef<HTMLDivElement>(null);
   const apiRef = useRef<{ flyToRoom: () => void; flyToTV: () => void } | null>(null);
@@ -85,11 +99,15 @@ export function Scene({ mode, onArrivedInRoom, onArrivedAtTV, onTVClicked, child
 
   useEffect(() => {
     const container = containerRef.current!;
+    // The room (power-off → walk) is desktop-only. Tablets keep the 3D TV but
+    // render it cheaply: no antialias, no shadows, pixel-ratio 1.
+    const roomEnabled = tier === 'desktop';
+    const highQuality = tier === 'desktop';
 
-    const renderer = new THREE.WebGLRenderer({ antialias: true });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    const renderer = new THREE.WebGLRenderer({ antialias: highQuality });
+    renderer.setPixelRatio(highQuality ? Math.min(window.devicePixelRatio, 2) : 1);
     renderer.setSize(container.clientWidth, container.clientHeight);
-    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.enabled = highQuality;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.domElement.classList.add('scene__canvas');
@@ -115,6 +133,13 @@ export function Scene({ mode, onArrivedInRoom, onArrivedAtTV, onTVClicked, child
     const tvObject = new CSS3DObject(tvHost);
     tvObject.scale.setScalar(WORLD_PER_PX);
     cssScene.add(tvObject);
+
+    // Render-on-demand: the loop only draws when the camera/objects/sizes
+    // change. A parked TV (every tablet, and an idle desktop) then costs ~0
+    // GPU per frame. The DOM TV's own motion — video, static, OSD, teletext
+    // slide, phosphor flicker — lives in the browser-composited CSS3D layer
+    // and keeps animating without us re-rendering three.
+    let needsRender = true;
 
     // Measures the DOM TV and aligns the 3D world to it: the CSS3D object,
     // the wooden body behind the cabinet, and the closeup camera framing.
@@ -155,6 +180,7 @@ export function Scene({ mode, onArrivedInRoom, onArrivedAtTV, onTVClicked, child
         camera.fov = CLOSEUP_FOV;
         camera.updateProjectionMatrix();
       }
+      needsRender = true; // the world moved — draw at least one frame
     };
 
     const controls = new PointerLockControls(camera, renderer.domElement);
@@ -226,7 +252,9 @@ export function Scene({ mode, onArrivedInRoom, onArrivedAtTV, onTVClicked, child
       const hit = raycaster.intersectObject(tvGroup, true)[0];
       if (hit && hit.distance <= TV_REACH) callbacksRef.current.onTVClicked();
     };
-    container.addEventListener('click', onClick);
+    // only the desktop tier walks/clicks into the room; a tablet tap must never
+    // grab pointer lock
+    if (roomEnabled) container.addEventListener('click', onClick);
 
     const onLock = () => {
       // during the to-room flight the crosshair waits for arrival
@@ -272,6 +300,8 @@ export function Scene({ mode, onArrivedInRoom, onArrivedAtTV, onTVClicked, child
       const delta = Math.min(clock.getDelta(), 0.05);
 
       if (flight) {
+        // a flight moves the camera every frame
+        needsRender = true;
         flight.elapsed += delta;
         const t = THREE.MathUtils.clamp(flight.elapsed / flight.duration, 0, 1);
         const eased = easeInOut(t);
@@ -285,6 +315,8 @@ export function Scene({ mode, onArrivedInRoom, onArrivedAtTV, onTVClicked, child
           onDone();
         }
       } else if (controls.isLocked) {
+        // walking: the camera can move every frame
+        needsRender = true;
         const forward = (keys.has('KeyW') ? 1 : 0) - (keys.has('KeyS') ? 1 : 0);
         const sideways = (keys.has('KeyD') ? 1 : 0) - (keys.has('KeyA') ? 1 : 0);
         if (forward) controls.moveForward(forward * WALK_SPEED * delta);
@@ -302,8 +334,11 @@ export function Scene({ mode, onArrivedInRoom, onArrivedAtTV, onTVClicked, child
         );
       }
 
-      renderer.render(scene, camera);
-      cssRenderer.render(cssScene, camera);
+      if (needsRender) {
+        renderer.render(scene, camera);
+        cssRenderer.render(cssScene, camera);
+        needsRender = false;
+      }
     };
     loop();
 
@@ -330,8 +365,10 @@ export function Scene({ mode, onArrivedInRoom, onArrivedAtTV, onTVClicked, child
       container.removeChild(cssRenderer.domElement);
       apiRef.current = null;
     };
+    // Rebuild the WebGL/CSS3D context when the tier changes (e.g. a mouse is
+    // plugged into a tablet) so the new quality/room settings take effect.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [tier]);
 
   // mode transitions trigger camera flights; the DOM TV is only clickable
   // while the camera is parked in front of it

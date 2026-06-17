@@ -1,4 +1,5 @@
 @use '../../../styles/tokens' as *;
+@use '../../../styles/interactions' as *;
 
 .intro {
   min-height: 100%;
@@ -70,8 +71,13 @@
     text-overflow: ellipsis;
     max-width: 100%;
 
-    &:hover,
-    &:focus-visible {
+    // roomier tap targets on touch primaries
+    @media (pointer: coarse) {
+      min-height: 40px;
+      padding: 0.35em 0.5em;
+    }
+
+    @include hover-focus {
       background: $phosphor-text;
       color: $phosphor-bg;
       outline: none;
@@ -82,9 +88,15 @@
     color: $phosphor-green;
   }
 
-  &__guide-entry:hover &__guide-channel,
+  // keep the channel number readable when the entry is highlighted
   &__guide-entry:focus-visible &__guide-channel {
     color: $phosphor-bg;
+  }
+
+  @media (hover: hover) {
+    &__guide-entry:hover &__guide-channel {
+      color: $phosphor-bg;
+    }
   }
 
   &__contact {
@@ -96,7 +108,7 @@
       text-decoration: none;
       border-bottom: 1px dashed rgba(77, 255, 136, 0.5);
 
-      &:hover {
+      @include hover-focus {
         background: $phosphor-green;
         color: $phosphor-bg;
       }

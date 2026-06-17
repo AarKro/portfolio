@@ -19,6 +19,8 @@ body {
   background: $room-dark;
   color: $phosphor-text;
   overflow: hidden;
+  // no grey flash when tapping the retro buttons/links on touch
+  -webkit-tap-highlight-color: transparent;
 }
 
 button {

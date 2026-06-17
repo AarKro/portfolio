@@ -1,13 +1,18 @@
 import { useEffect, useRef, useState } from 'react';
 import { FIRST_PROJECT_CHANNEL, PROJECTS } from '../../data/projects';
 import type { TVState } from '../../hooks/useTV';
+import { useSwipe } from '../../hooks/useSwipe';
 import { IntroProgram } from '../programs/IntroProgram/IntroProgram';
 import { ProjectProgram } from '../programs/ProjectProgram/ProjectProgram';
 import { StaticNoise } from '../StaticNoise/StaticNoise';
 import './Screen.scss';
 
-/** How long the one-time arrow-keys hint stays up for deep-linked visitors */
+/** How long the one-time channel hint stays up for deep-linked visitors */
 const KEYS_HINT_DURATION = 6000;
+
+/** Touch devices can't read "← →", so they get a swipe/buttons hint instead. */
+const coarsePointer =
+  typeof window !== 'undefined' && !!window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
 
 interface ScreenProps {
   tv: TVState;
@@ -36,6 +41,13 @@ export function Screen({ tv }: ScreenProps) {
     if (channel !== initialChannel.current) setKeysHintVisible(false);
   }, [channel]);
 
+  // Swipe the glass left/right to flip channels (the touch equivalent of the
+  // arrow keys); the on-screen CH ▲/▼ buttons still work too.
+  const swipe = useSwipe({
+    onSwipeLeft: tv.channelUp,
+    onSwipeRight: tv.channelDown,
+  });
+
   // Browser tab mirrors the broadcast
   useEffect(() => {
     if (!poweredOn) {
@@ -50,7 +62,7 @@ export function Screen({ tv }: ScreenProps) {
 
   return (
     <div className={`screen ${poweredOn ? 'screen--on' : 'screen--off'}`}>
-      <div className="screen__tube">
+      <div className="screen__tube" {...swipe}>
         <div className="screen__content">
           {poweredOn &&
             (project ? (
@@ -71,7 +83,11 @@ export function Screen({ tv }: ScreenProps) {
         )}
 
         {poweredOn && keysHintVisible && (
-          <p className="screen__keys-hint">← → flips channels · the guide is on CH 01</p>
+          <p className="screen__keys-hint">
+            {coarsePointer
+              ? 'swipe or tap CH ▲ / CH ▼ · the guide is on CH 01'
+              : '← → flips channels · the guide is on CH 01'}
+          </p>
         )}
 
         {/* purely decorative CRT layers */}

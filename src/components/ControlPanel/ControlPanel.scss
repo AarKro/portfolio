@@ -89,6 +89,12 @@
     border-radius: 8px;
     font-size: clamp(0.95rem, 1.8vw, 1.3rem);
     letter-spacing: 0.05em;
+
+    // comfortable finger targets on touch primaries (≈ 44px)
+    @media (pointer: coarse) {
+      min-height: 44px;
+      padding: 0.45em 1em;
+    }
     color: $panel-text;
     background: linear-gradient(180deg, #f6ecd6, $panel-mid);
     box-shadow:
