@@ -126,17 +126,33 @@
     bottom: 0;
     z-index: 2;
     padding: 0 4.8rem calc(env(safe-area-inset-bottom) + 1.3rem) 1.1rem;
+
+    // full-width backdrop revealed when the caption is expanded: a gradient
+    // that's fully transparent at the top and fades to black at the bottom,
+    // so the video still shows through. (Text keeps its own inset padding.)
+    &::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      z-index: -1;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 280ms ease;
+      background: linear-gradient(
+        to top,
+        rgba(0, 0, 0, 0.72) 0%,
+        rgba(0, 0, 0, 0.55) 45%,
+        rgba(0, 0, 0, 0) 100%
+      );
+    }
+  }
+
+  &__card.is-expanded &__bug::before {
+    opacity: 1;
   }
 
   &__caption {
-    border-radius: 14px;
     padding: 0.7rem 0.9rem;
-    transition: background 280ms ease;
-  }
-
-  &__card.is-expanded &__caption {
-    // transparent black backdrop — the video still shows through
-    background: rgba(0, 0, 0, 0.5);
   }
 
   &__headline {
@@ -358,6 +374,21 @@
 
     .feed__sheet-layer.is-open & {
       transform: translateY(0);
+    }
+
+    // follow the finger 1:1 while dragging (no easing)
+    &.is-dragging {
+      transition: none;
+    }
+  }
+
+  // drag target: the grabber + title. Drag it down to dismiss.
+  &__sheet-handle {
+    touch-action: none;
+    cursor: grab;
+
+    &:active {
+      cursor: grabbing;
     }
   }
 
