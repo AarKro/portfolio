@@ -124,10 +124,10 @@ src/
     StaticNoise/            ← canvas noise; animates only while `active`
     VideoPreloader/         ← off-screen <video preload="auto"> to warm the
                               prev/next channels' clips ahead of time
-    programs/IntroProgram/      ← channel 1 (intro + clickable TV guide)
-    programs/ProjectProgram/    ← project channels: one "broadcast" layout
-                                  (teaser-or-testcard backdrop + bug +
-                                  slide-up teletext page)
+    IntroProgram/           ← channel 1 (intro + clickable TV guide)
+    ProjectProgram/         ← project channels: one "broadcast" layout
+                              (teaser-or-testcard backdrop + bug +
+                              slide-up teletext page)
     InlineLink/             ← inline `[label](url)` text-link renderer
     MobileFeed/             ← phones AND tablets: vertical TikTok-style feed of
                               the same projects (no three.js). Each sub-part is
