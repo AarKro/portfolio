@@ -11,10 +11,10 @@
  * Vite bundles + fingerprints it.
  */
 
-import scholarsMateVideo from '../assets/scholars_mate.mp4';
-import scholarsMatePoster from '../assets/scholars_mate_poster.jpg';
-import wowGraveyard3dVideo from '../assets/wow_graveyard_3d.mp4';
-import wowGraveyard3dPoster from '../assets/wow_graveyard_3d_poster.jpg';
+import scholarsMateVideo from '../assets/desktop-videos/scholars_mate.mp4';
+import scholarsMatePoster from '../assets/thumbnails/scholars_mate.jpg';
+import wowGraveyard3dVideo from '../assets/desktop-videos/wow_graveyard_3d.mp4';
+import wowGraveyard3dPoster from '../assets/thumbnails/wow_graveyard_3d.jpg';
 
 /** A named source-code link, for channels that bundle several repos. */
 export interface RepoLink {

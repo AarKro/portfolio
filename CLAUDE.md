@@ -17,6 +17,8 @@ separate vertical TikTok-style feed.
 React 19 + TypeScript + Vite + SCSS, plus **three.js** (the only other
 runtime dependency, used exclusively by the lazy-loaded 3D room). No router,
 no state library — keep it that way unless there is a strong reason.
+`vite-plugin-svgr` is a build-time dev dependency only (lets `*.svg?react`
+icons import as components) — it adds nothing to the runtime bundle.
 
 ## The one file that matters for content
 
@@ -39,10 +41,10 @@ Per project:
 - `demoUrl` (optional) is the hosted demo; it becomes the "OPEN DEMO ↗"
   new-tab link (there is no in-screen iframe — demos are never framed).
 - `videoUrl` (optional) gives the channel a short teaser clip that autoplays
-  (muted, looping) full-bleed as the program backdrop. Import the file
-  from `../assets` so Vite bundles + fingerprints it (`import clip from
-  '../assets/foo.mp4'; … videoUrl: clip`), don't hand-write a path. Compress
-  before adding (see "Adding a teaser clip").
+  (muted, looping) full-bleed as the program backdrop. Import the file from
+  `../assets/desktop-videos` so Vite bundles + fingerprints it (`import clip from
+  '../assets/desktop-videos/foo.mp4'; … videoUrl: clip`), don't hand-write a
+  path. Compress before adding (see "Adding a teaser clip").
 - `posterUrl` (optional, pairs with `videoUrl`): the clip's first frame as a
   small image. Used as the `<video poster>` (instant frame while the clip loads,
   desktop + feed) and as the project's thumbnail in the feed's profile grid.
@@ -76,10 +78,12 @@ Per project:
 
 ## Adding a teaser clip
 
-Clips live in `src/assets/*.mp4` (imported, bundled, fingerprinted — not in
-`public/`). Always compress before committing — raw screen recordings are
-huge (the source for Scholar's Mate was 2360×1594 @ 120fps, 9.7 MB; the
-shipped clip is 1066×720 @ 30fps, no audio, 1.3 MB). Recipe with ffmpeg:
+Clips live in `src/assets/desktop-videos/*.mp4` (imported, bundled,
+fingerprinted — not in `public/`); portrait clips for the feed go in
+`mobile-videos/` (none yet). Always compress before committing — raw screen
+recordings are huge (the source for Scholar's Mate was 2360×1594 @ 120fps,
+9.7 MB; the shipped clip is 1066×720 @ 30fps, no audio, 1.3 MB). Recipe with
+ffmpeg:
 
 ```
 ffmpeg -i raw.mov -vf "scale=-2:720,fps=30" -c:v libx264 -preset slow \
@@ -90,11 +94,12 @@ ffmpeg -i raw.mov -vf "scale=-2:720,fps=30" -c:v libx264 -preset slow \
 lets it start before fully downloaded, 720p is plenty for the small CRT
 screen. Drop `crf` toward 30 / `scale` to 540 for an even smaller file.
 
-Then grab a **poster** (first frame) for `posterUrl` — the loading fallback and
-the feed grid thumbnail. Regenerate whenever the clip changes:
+Then grab a **poster** (first frame) into `src/assets/thumbnails/` for
+`posterUrl` — the loading fallback and the feed grid thumbnail. Regenerate
+whenever the clip changes:
 
 ```
-ffmpeg -i out.mp4 -frames:v 1 -vf "scale=-2:540" -q:v 4 out_poster.jpg
+ffmpeg -i desktop-videos/foo.mp4 -frames:v 1 -vf "scale=-2:540" -q:v 4 thumbnails/foo.jpg
 ```
 
 ## Architecture
@@ -123,17 +128,31 @@ src/
     programs/ProjectProgram/    ← project channels: one "broadcast" layout
                                   (teaser-or-testcard backdrop + bug +
                                   slide-up teletext page)
+    InlineLink/             ← inline `[label](url)` text-link renderer
     MobileFeed/             ← phones AND tablets: vertical TikTok-style feed of
-                              the same projects (no three.js)
-      MobileFeed.tsx        ← the feed + per-card actions + bottom sheet
-      icons.tsx             ← hand-rolled inline SVG rail icons (no icon dep)
+                              the same projects (no three.js). Each sub-part is
+                              its own folder (Component.tsx + Component.scss):
+      MobileFeed.tsx        ← the scroll-snap container + feed state
+      FeedCard/             ← one project card (video, rail, caption)
+      FeedProfile/          ← the tap-only profile overlay (header + grid)
+      FeedSheet/            ← the drag-to-dismiss bottom sheet
   hooks/useDeviceTier.ts   ← desktop | mobile classification (capability-based)
   hooks/useSwipe.ts        ← tiny pointer-based swipe detector (no deps)
   utils/noise.ts            ← static-noise pixel fill (used by StaticNoise)
+  assets/                   ← bundled assets, grouped by kind:
+    desktop-videos/         ← landscape teaser clips (the CRT + feed source today)
+    mobile-videos/          ← portrait clips for the feed (empty until recorded)
+    thumbnails/             ← video first-frame posters (loading + grid)
+    icons/                  ← *.svg, imported as components via `?react` (svgr)
   styles/_tokens.scss       ← ALL colors and fonts; theme changes happen here
   styles/_interactions.scss ← `hover-focus` mixin (touch-safe hover + focus)
   styles/global.scss        ← reset + base
 ```
+
+Icons are individual `*.svg` files in `src/assets/icons/`, imported as React
+components with `import X from '…/x.svg?react'` (vite-plugin-svgr, a build-time
+dev dependency). They paint in `currentColor` and are sized via CSS — keep new
+icons the same way rather than re-inlining SVG markup in TSX.
 
 ## Device tiers (desktop vs feed)
 
@@ -159,8 +178,8 @@ NOT the CRT one: a **light** profile + bottom sheet (dark text on near-white),
 video cards with white text over the footage, a single cyan accent
 (`$feed-accent`, for labels/badges/links/just-viewed), the pink-red `$feed-like`
 heart, and a modern sans (`$font-feed` = Inter). Keep CRT phosphor colours out of
-the feed. Rail icons are **filled/solid** silhouettes (`icons.tsx`), including the
-real GitHub/LinkedIn brand marks.
+the feed. Rail icons are **filled/solid** silhouettes (`src/assets/icons/*.svg`
+via `?react`), including the real GitHub/LinkedIn brand marks.
 - **The profile (channel 1) is a tap-only overlay**, NOT a swipe card
   (`feed__profile`, `position: fixed`, slides down from the top on
   `.is-open`). `profileOpen` state toggles it — you can't swipe into or out of
@@ -185,8 +204,7 @@ real GitHub/LinkedIn brand marks.
   and **share**. Share uses the **native OS share sheet** (`navigator.share`)
   on the card's `#ch-N` deep link, falling back to copying the link (with a
   transient "Copied"). The rail sits at the bottom (lowest icon level with the
-  caption); the caption's left inset matches the rail's right inset. Icons are
-  inline SVGs in `icons.tsx` (no icon dependency), incl. the GitHub mark.
+  caption); the caption's left inset matches the rail's right inset.
 - **Video loading** (both views): each clip shows its `posterUrl` first frame
   instantly, and only the active channel ± 1 is fetched — the feed sets
   `preload` per card by distance to the active card; the desktop TV mounts a
@@ -357,4 +375,9 @@ engines — not to outrank ESPN for the bare name.
   Regenerate after visual changes: build + preview, then capture at 1800×945
   with headless Chrome, center-crop to 1560×819 and resize to 1200×630
   (`sips -c 819 1560 og-image.png && sips -z 630 1200 og-image.png`).
-- `public/favicon.svg` is a hand-drawn mini TV matching the site's palette.
+- **Favicons swap with the experience** (`App.tsx`, keyed on `useDeviceTier`):
+  `public/favicon.svg` is the hand-drawn mini CRT TV (desktop);
+  `public/favicon-mobile.svg` is the social-style "AK" monogram with a TikTok
+  chromatic split (the mobile feed). The `<link id="favicon">` in `index.html`
+  defaults to the TV; App.tsx rewrites its `href` (base-aware via
+  `import.meta.env.BASE_URL`) when the tier resolves.

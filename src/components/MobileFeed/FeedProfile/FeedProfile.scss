@@ -1,0 +1,197 @@
+@use '../../../styles/tokens' as *;
+
+.feed {
+  // The profile is a fixed, tap-only overlay (NOT a swipe card): you tap a tile
+  // to open a project; swiping is for the feed alone. Slides down from the top.
+  // Light theme (the feed's chrome); video cards stay white-over-video.
+  &__profile {
+    position: fixed;
+    inset: 0;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    background: radial-gradient(ellipse at 50% 20%, #ffffff, #e7eaef 76%);
+    color: #15161a;
+    font-family: $font-feed; // sibling of .feed, so doesn't inherit its font
+    -webkit-tap-highlight-color: transparent;
+    transform: translateY(-100%);
+    transition: transform 360ms cubic-bezier(0.7, 0, 0.2, 1);
+    pointer-events: none;
+
+    &.is-open {
+      transform: translateY(0);
+      pointer-events: auto;
+    }
+  }
+
+  // top 40% of the screen: identity cluster (name → tagline → social links) at
+  // the top, the instruction line pinned just above the grid. The space between
+  // them grows on taller screens (space-between).
+  &__profile-head {
+    flex: none;
+    height: 40dvh;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    text-align: center;
+    padding: calc(env(safe-area-inset-top) + 3.6rem) clamp(1.4rem, 7vw, 2.6rem) 0.9rem;
+  }
+
+  &__profile-id {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.85rem;
+  }
+
+  &__intro-title {
+    font-size: clamp(2.4rem, 12vw, 3.4rem);
+    font-weight: 800;
+    line-height: 1;
+    color: #15161a;
+  }
+
+  // tagline, sits below the name
+  &__intro-kicker {
+    color: rgba(0, 0, 0, 0.62);
+    font-weight: 500;
+    font-size: 1.02rem;
+    letter-spacing: 0.01em;
+  }
+
+  &__intro-sub {
+    max-width: 30ch;
+    color: rgba(0, 0, 0, 0.55);
+    font-size: 0.98rem;
+    line-height: 1.4;
+  }
+
+  &__intro-contact {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.7rem;
+    margin-top: 0.6rem;
+
+    a {
+      min-height: 44px;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      padding: 0 1.2rem;
+      border-radius: 999px;
+      background: rgba(0, 0, 0, 0.06);
+      color: #15161a;
+      text-decoration: none;
+      font-weight: 600;
+
+      svg {
+        width: 18px;
+        height: 18px;
+      }
+
+      &:active {
+        background: rgba(0, 0, 0, 0.12);
+      }
+    }
+  }
+
+  // bottom ~60%: project thumbnail grid, 3 per row, tap a tile to jump to it.
+  // `overscroll-behavior: contain` keeps a scroll gesture inside the grid.
+  &__grid {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2px;
+    align-content: start;
+    padding: 0 2px env(safe-area-inset-bottom);
+  }
+
+  &__tile {
+    position: relative;
+    aspect-ratio: 1;
+    overflow: hidden;
+    padding: 0;
+    border: none;
+    background: #111;
+    cursor: pointer;
+
+    &:active {
+      opacity: 0.75;
+    }
+
+    // the project you just came back from is ringed in the accent colour
+    &.is-just-viewed {
+      box-shadow: inset 0 0 0 3px $feed-accent;
+    }
+  }
+
+  &__tile-media {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  // project title pinned bottom-left over a legibility gradient
+  &__tile-title {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 1;
+    padding: 1.1rem 0.5rem 0.4rem;
+    text-align: left;
+    font-size: 0.72rem;
+    font-weight: 600;
+    line-height: 1.15;
+    color: #fff;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.85);
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.72) 0%, rgba(0, 0, 0, 0) 100%);
+    pointer-events: none;
+
+    // cap at two lines
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  // "just viewed" badge over the tile you returned from
+  &__tile-badge {
+    position: absolute;
+    top: 0.35rem;
+    left: 0.35rem;
+    z-index: 2;
+    padding: 0.15em 0.5em;
+    border-radius: 999px;
+    background: $feed-accent;
+    color: #001a19;
+    font-size: 0.6rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    pointer-events: none;
+  }
+
+  // mini SMPTE test card for projects without a teaser clip
+  &__tile-testcard {
+    position: absolute;
+    inset: 0;
+    opacity: 0.8;
+    background: linear-gradient(
+      90deg,
+      #b7b7a8 0 14.28%,
+      #b7b425 14.28% 28.57%,
+      #2bb7b4 28.57% 42.85%,
+      #28b428 42.85% 57.14%,
+      #b42bb1 57.14% 71.42%,
+      #b42525 71.42% 85.71%,
+      #2528b4 85.71% 100%
+    );
+  }
+}

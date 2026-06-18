@@ -1,0 +1,320 @@
+@use '../../../styles/tokens' as *;
+@use '../../../styles/interactions' as *;
+
+.feed {
+  &__card {
+    position: relative;
+    height: 100dvh;
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+    overflow: hidden;
+  }
+
+  // ─── Backdrop ──────────────────────────────────────────────────────────────
+  &__video,
+  &__testcard {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  &__video {
+    object-fit: cover;
+    background: #000;
+  }
+
+  &__testcard {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  &__testcard-bars {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      90deg,
+      #b7b7a8 0 14.28%,
+      #b7b425 14.28% 28.57%,
+      #2bb7b4 28.57% 42.85%,
+      #28b428 42.85% 57.14%,
+      #b42bb1 57.14% 71.42%,
+      #b42525 71.42% 85.71%,
+      #2528b4 85.71% 100%
+    );
+    opacity: 0.8;
+  }
+
+  &__testcard-caption {
+    position: relative;
+    margin-bottom: 18%;
+    padding: 0.3em 1em;
+    background: rgba(8, 11, 8, 0.82);
+    letter-spacing: 0.12em;
+    font-size: 0.95rem;
+    font-family: $font-screen;
+  }
+
+  // legibility gradient behind the caption
+  &__scrim {
+    position: absolute;
+    inset: auto 0 0 0;
+    height: 45%;
+    z-index: 1;
+    pointer-events: none;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.75) 0%, rgba(0, 0, 0, 0) 100%);
+  }
+
+  // ─── Right-edge action rail ────────────────────────────────────────────────
+  &__rail {
+    position: absolute;
+    right: 0.4rem;
+    // sit at the very bottom, lowest icon level with the caption (no gap)
+    bottom: calc(env(safe-area-inset-bottom) + 1.3rem);
+    z-index: 3;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.9rem;
+  }
+
+  &__rail-btn {
+    display: grid;
+    place-items: center;
+    width: 48px;
+    height: 48px;
+    color: #fff;
+    background: none;
+    border: none;
+    cursor: pointer;
+    filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.6));
+    transition: transform 0.1s ease;
+
+    svg {
+      width: 28px;
+      height: 28px;
+    }
+
+    &:active {
+      transform: scale(0.88);
+    }
+
+    &--like.is-liked {
+      color: $feed-like; // white heart fills pink-red
+
+      svg {
+        animation: feed-like-pop 320ms ease;
+      }
+    }
+
+    // demo: launch arrow + a small "DEMO" caption, stacked
+    &--demo {
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+
+      svg {
+        width: 23px;
+        height: 23px;
+      }
+    }
+
+    // source: the GitHub mark, sized up to match the other rail icons
+    &--code svg {
+      width: 26px;
+      height: 26px;
+    }
+
+    // share: anchor for the transient "Copied" fallback label
+    &--share {
+      position: relative;
+    }
+  }
+
+  &__rail-label {
+    font-size: 0.55rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+  }
+
+  // shown only when the Web Share API is unavailable and we copy the link
+  &__rail-copied {
+    position: absolute;
+    top: calc(100% + 1px);
+    left: 50%;
+    transform: translateX(-50%);
+    white-space: nowrap;
+  }
+
+  // ─── Bottom-left caption (grows upward when expanded) ───────────────────────
+  &__bug {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 2;
+    padding: 0 4.8rem calc(env(safe-area-inset-bottom) + 1.3rem) 1.1rem;
+
+    // full-width backdrop revealed when the caption is expanded
+    &::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      z-index: -1;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 280ms ease;
+      background: linear-gradient(
+        to top,
+        rgba(0, 0, 0, 0.72) 0%,
+        rgba(0, 0, 0, 0.55) 45%,
+        rgba(0, 0, 0, 0) 100%
+      );
+    }
+  }
+
+  &__card.is-expanded &__bug::before {
+    opacity: 1;
+  }
+
+  // no bottom padding: the lowest text line bottoms out at the bug's bottom
+  // padding, level with the rail. Left inset = bug's left padding (1.1rem).
+  &__caption {
+    padding: 0.7rem 0 0;
+  }
+
+  &__title {
+    font-size: clamp(1.5rem, 7vw, 2.1rem);
+    font-weight: 700;
+    line-height: 1.1;
+    color: #fff;
+    text-shadow: 0 1px 8px rgba(0, 0, 0, 0.6);
+  }
+
+  &__tech {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-top: 0.5rem;
+  }
+
+  &__tag {
+    padding: 0.18em 0.7em;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.16);
+    color: #fff;
+    font-size: 0.8rem;
+    font-weight: 500;
+  }
+
+  // one-line synopsis: description clipped to a single line, expand toggle
+  // aligned to that line; expanding un-clips it and reveals the details below
+  &__synopsis {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    margin-top: 0.6rem;
+  }
+
+  &__description {
+    flex: 1;
+    min-width: 0;
+    font-size: 1rem;
+    line-height: 1.4;
+
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 1;
+    overflow: hidden;
+  }
+
+  &__card.is-expanded &__description {
+    -webkit-line-clamp: unset;
+    overflow: visible;
+  }
+
+  &__expand {
+    flex: none;
+    display: grid;
+    place-items: center;
+    width: 30px;
+    height: 30px;
+    margin-top: -2px;
+    color: #fff;
+    background: rgba(255, 255, 255, 0.14);
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: transform 280ms ease, background 0.15s ease;
+
+    svg {
+      width: 20px;
+      height: 20px;
+    }
+
+    &:active {
+      background: rgba(255, 255, 255, 0.26);
+    }
+  }
+
+  &__card.is-expanded &__expand {
+    transform: rotate(180deg); // caret flips to point down (collapse)
+  }
+
+  // behind-the-scenes reveal: animate height via the 0fr→1fr grid-rows trick
+  &__details {
+    display: grid;
+    grid-template-rows: 0fr;
+    opacity: 0;
+    transition: grid-template-rows 320ms ease, opacity 320ms ease, margin-top 320ms ease;
+  }
+
+  &__details-inner {
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  &__card.is-expanded &__details {
+    grid-template-rows: 1fr;
+    opacity: 1;
+    margin-top: 0.6rem;
+  }
+
+  &__behind {
+    font-size: 0.95rem;
+    line-height: 1.4;
+    color: rgba(255, 255, 255, 0.78);
+  }
+
+  &__behind-label {
+    display: block;
+    margin-bottom: 0.2rem;
+    color: $feed-accent;
+    font-weight: 600;
+    font-size: 0.75rem;
+    letter-spacing: 0.1em;
+  }
+
+  // feed inline links use the social accent, not the CRT teletext purple
+  .inline-link {
+    color: $feed-accent;
+
+    @include hover-focus {
+      color: #fff;
+    }
+  }
+}
+
+@keyframes feed-like-pop {
+  0% {
+    transform: scale(1);
+  }
+  40% {
+    transform: scale(1.35);
+  }
+  100% {
+    transform: scale(1);
+  }
+}

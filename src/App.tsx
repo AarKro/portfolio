@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { PROJECTS } from './data/projects';
 import { Scene, type ViewMode } from './components/Scene/Scene';
 import { TVSet } from './components/TVSet/TVSet';
@@ -22,6 +22,16 @@ import './App.scss';
 export function App() {
   const tier = useDeviceTier();
   const [mode, setMode] = useState<ViewMode>('tv');
+
+  // Favicon follows the experience: the CRT TV on desktop, the AK monogram
+  // (social style) on the mobile feed.
+  useEffect(() => {
+    const link = document.getElementById('favicon');
+    if (link instanceof HTMLLinkElement) {
+      const file = tier === 'mobile' ? 'favicon-mobile.svg' : 'favicon.svg';
+      link.href = `${import.meta.env.BASE_URL}${file}`;
+    }
+  }, [tier]);
 
   return (
     <main className="app">
