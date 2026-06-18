@@ -154,12 +154,15 @@ primary input) gets desktop; everything else gets the feed:
 ## The mobile/tablet feed (`MobileFeed`)
 
 A full-screen vertical scroll-snap feed (one card per channel) styled after
-TikTok — its own **social palette**, NOT the CRT one: white text on black, a
-single cyan accent (`$feed-accent`, for labels/badges/links/just-viewed), the
-pink-red `$feed-like` heart, and a modern sans (`$font-feed` = Inter). Keep CRT
-phosphor colours out of the feed. Rail icons are **filled/solid** silhouettes.
-- **Card 1 is a profile page** (`feed__card--profile`): a centred header (name +
-  tagline + GitHub/LinkedIn) over a 3-column **thumbnail grid** of every project
+TikTok — its own **social palette**, NOT the CRT one: a **light** profile page +
+bottom sheet (dark text on near-white), video cards with white text over the
+footage, a single cyan accent (`$feed-accent`, for labels/badges/links/
+just-viewed), the pink-red `$feed-like` heart, and a modern sans (`$font-feed` =
+Inter). Keep CRT phosphor colours out of the feed. Rail icons are **filled/solid**
+silhouettes (`icons.tsx`), including the real GitHub/LinkedIn brand marks.
+- **Card 1 is a light profile page** (`feed__card--profile`): a roomy centred
+  header — name, the tagline below it, a one-line hint, then GitHub/LinkedIn
+  buttons with brand icons — over a 3-column **thumbnail grid** of every project
   (`feed__grid` / `feed__tile`). Each tile is the project's `posterUrl` (or a
   mini test card) with its **title bottom-left**; tapping one smooth-scrolls
   (`scrollIntoView({ behavior: 'smooth' })`) to that project's card. Arriving back via a card's

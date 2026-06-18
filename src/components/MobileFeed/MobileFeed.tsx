@@ -6,7 +6,15 @@ import {
   type Project,
 } from '../../data/projects';
 import { renderInlineLinks } from '../InlineLink/InlineLink';
-import { ChevronIcon, DemoIcon, HeartIcon, ProfileIcon, ShareIcon } from './icons';
+import {
+  ChevronIcon,
+  DemoIcon,
+  GithubIcon,
+  HeartIcon,
+  LinkedinIcon,
+  ProfileIcon,
+  ShareIcon,
+} from './icons';
 import './MobileFeed.scss';
 
 const SITE_TITLE = 'Aaron Kromer — Frontend Developer & Interaction Designer, Zürich';
@@ -26,14 +34,6 @@ function channelFromHash(): number {
   const match = /^#ch-(\d+)$/.exec(window.location.hash);
   const parsed = match ? Number(match[1]) : 1;
   return parsed >= 1 && parsed <= CHANNEL_COUNT ? parsed : 1;
-}
-
-function greeting(): string {
-  const hour = new Date().getHours();
-  if (hour < 5) return 'Up late?';
-  if (hour < 12) return 'Good morning.';
-  if (hour < 18) return 'Good afternoon.';
-  return 'Good evening.';
 }
 
 /**
@@ -116,11 +116,12 @@ export function MobileFeed() {
       <section className="feed__card feed__card--profile" data-channel={1} ref={setSectionRef(1)}>
         <div className="feed__profile">
           <header className="feed__profile-head">
-            <p className="feed__intro-kicker">Frontend Developer &amp; Interaction Designer</p>
             <h1 className="feed__intro-title">Aaron Kromer</h1>
-            <p className="feed__intro-sub">{greeting()} Tap a project, or swipe up to browse.</p>
+            <p className="feed__intro-kicker">Frontend Developer &amp; Interaction Designer</p>
+            <p className="feed__intro-sub">Tap a project, or swipe up to browse.</p>
             <p className="feed__intro-contact">
               <a href="https://github.com/AarKro" target="_blank" rel="noreferrer">
+                <GithubIcon />
                 GitHub
               </a>
               <a
@@ -128,6 +129,7 @@ export function MobileFeed() {
                 target="_blank"
                 rel="noreferrer"
               >
+                <LinkedinIcon />
                 LinkedIn
               </a>
             </p>
