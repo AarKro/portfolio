@@ -3,20 +3,30 @@
 .feed {
   // The profile is a fixed, tap-only overlay (NOT a swipe card): you tap a tile
   // to open a project; swiping is for the feed alone. Slides down from the top.
-  // Light theme (the feed's chrome); video cards stay white-over-video.
+  // A dark, immersive hero (drifting aurora + glowing monogram) that flows into
+  // the black feed; the project grid below is unchanged.
   &__profile {
     position: fixed;
     inset: 0;
     z-index: 10;
     display: flex;
     flex-direction: column;
-    background: radial-gradient(ellipse at 50% 20%, #ffffff, #e7eaef 76%);
-    color: #15161a;
+    background: #07080d;
+    color: #f4f6fb;
     font-family: $font-feed; // sibling of .feed, so doesn't inherit its font
     -webkit-tap-highlight-color: transparent;
+    // the WHOLE page scrolls (not just the grid) when projects overflow
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
     transform: translateY(-100%);
-    transition: transform 360ms cubic-bezier(0.7, 0, 0.2, 1);
+    transition: transform 420ms cubic-bezier(0.7, 0, 0.2, 1);
     pointer-events: none;
+
+    scrollbar-width: none;
+    &::-webkit-scrollbar {
+      display: none;
+    }
 
     &.is-open {
       transform: translateY(0);
@@ -24,45 +34,138 @@
     }
   }
 
-  // top 30% of the screen: identity cluster (name → tagline → social links) at
-  // the top, the instruction line pinned just above the grid. The space between
-  // them grows on taller screens (space-between).
+  // ─── Drifting aurora backdrop (decorative) ─────────────────────────────────
+  &__aurora {
+    // fixed (relative to the transformed .feed__profile) so it stays pinned to
+    // the viewport hero while the page scrolls
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    overflow: hidden;
+    pointer-events: none;
+    // fade the colour out toward the grid so tiles read cleanly
+    mask-image: linear-gradient(to bottom, #000 0%, #000 42%, rgba(0, 0, 0, 0.35) 64%, transparent 80%);
+  }
+
+  &__aurora-blob {
+    position: absolute;
+    width: 78vw;
+    height: 78vw;
+    max-width: 520px;
+    max-height: 520px;
+    border-radius: 50%;
+    filter: blur(58px);
+    opacity: 0.72;
+    will-change: transform;
+
+    &--cyan {
+      top: -14%;
+      left: -18%;
+      background: radial-gradient(circle at 50% 50%, $feed-accent 0%, rgba(37, 244, 238, 0) 68%);
+      animation: feed-aurora-a 22s ease-in-out infinite;
+    }
+
+    &--pink {
+      top: -6%;
+      right: -22%;
+      background: radial-gradient(circle at 50% 50%, $feed-like 0%, rgba(254, 44, 85, 0) 68%);
+      animation: feed-aurora-b 26s ease-in-out infinite;
+    }
+
+    &--violet {
+      top: 16%;
+      left: 24%;
+      background: radial-gradient(circle at 50% 50%, #7c5cff 0%, rgba(124, 92, 255, 0) 68%);
+      opacity: 0.55;
+      animation: feed-aurora-c 19s ease-in-out infinite;
+    }
+  }
+
+  // faint film grain over the colour, for depth
+  &__aurora-grain {
+    position: absolute;
+    inset: -50%;
+    opacity: 0.05;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  // ─── Identity hero ─────────────────────────────────────────────────────────
+  // Top of the screen: monogram → name → tagline → social links, then the
+  // scroll cue pinned just above the grid. Height grows the gap on tall screens.
   &__profile-head {
+    position: relative;
+    z-index: 1;
     flex: none;
-    height: 35dvh;
+    min-height: 40dvh;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
     align-items: center;
     text-align: center;
-    padding: calc(env(safe-area-inset-top) + 3.6rem) clamp(1.4rem, 7vw, 2.6rem) 0.9rem;
+    padding: calc(env(safe-area-inset-top) + 2.6rem) clamp(1.4rem, 7vw, 2.6rem) 0.9rem;
   }
 
   &__profile-id {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 0.85rem;
+    gap: 0.6rem;
+  }
+
+  // the name sits over a large, faint, floating chromatic "AK" watermark
+  &__nameplate {
+    position: relative;
+    display: grid;
+    place-items: center;
+    isolation: isolate; // keep the watermark's negative z-index local
+    padding: 0.6rem 0;
+  }
+
+  // big "AK" behind the name — cleaned-up echo of public/favicon-mobile.svg
+  &__monogram {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    z-index: -1;
+    font-weight: 900;
+    font-size: clamp(7rem, 38vw, 12rem);
+    line-height: 1;
+    letter-spacing: 0.01em;
+    color: #fff;
+    // TikTok-style chromatic split: cyan + pink offsets behind the white
+    text-shadow:
+      -4px -3px 0 $feed-accent,
+      4px 3px 0 $feed-like;
+    opacity: 0.12;
+    pointer-events: none;
+    white-space: nowrap;
+    animation: feed-monogram-float 7s ease-in-out infinite;
   }
 
   &__intro-title {
-    font-size: clamp(2.4rem, 12vw, 3.4rem);
+    position: relative;
+    font-size: clamp(2.5rem, 13vw, 3.6rem);
     font-weight: 800;
     line-height: 1;
-    color: #15161a;
+    letter-spacing: -0.01em;
+    background: linear-gradient(180deg, #ffffff 0%, #c7cede 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    filter: drop-shadow(0 2px 14px rgba(37, 244, 238, 0.18));
   }
 
   // tagline, sits below the name
   &__intro-kicker {
-    color: rgba(0, 0, 0, 0.62);
+    color: rgba(244, 246, 251, 0.66);
     font-weight: 500;
     font-size: 1.02rem;
     letter-spacing: 0.01em;
   }
 
   &__intro-sub {
-    max-width: 30ch;
-    color: rgba(0, 0, 0, 0.55);
+    max-width: 32ch;
+    color: rgba(244, 246, 251, 0.58);
     font-size: 0.98rem;
     line-height: 1.4;
   }
@@ -72,19 +175,23 @@
     flex-wrap: wrap;
     justify-content: center;
     gap: 0.7rem;
-    margin-top: 0.6rem;
+    margin-top: 0.7rem;
 
     a {
       min-height: 44px;
       display: inline-flex;
       align-items: center;
       gap: 0.45rem;
-      padding: 0 1.2rem;
+      padding: 0 1.3rem;
       border-radius: 999px;
-      background: rgba(0, 0, 0, 0.06);
-      color: #15161a;
+      // glassy pill on the dark hero
+      background: rgba(255, 255, 255, 0.07);
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12);
+      backdrop-filter: blur(8px);
+      color: #f4f6fb;
       text-decoration: none;
       font-weight: 600;
+      transition: transform 0.12s ease, box-shadow 0.18s ease, background 0.18s ease;
 
       svg {
         width: 18px;
@@ -92,18 +199,51 @@
       }
 
       &:active {
-        background: rgba(0, 0, 0, 0.12);
+        transform: scale(0.96);
+        background: rgba(255, 255, 255, 0.13);
+        box-shadow: inset 0 0 0 1px rgba(37, 244, 238, 0.6);
       }
     }
   }
 
+  // ─── Staggered entrance — children rise+fade in once the panel is open ──────
+  &__nameplate,
+  &__intro-kicker,
+  &__intro-contact,
+  &__intro-sub {
+    opacity: 0;
+    transform: translateY(14px);
+    transition: opacity 520ms ease, transform 520ms cubic-bezier(0.2, 0.7, 0.2, 1);
+  }
+
+  &__profile.is-open &__nameplate {
+    opacity: 1;
+    transform: translateY(0);
+    transition-delay: 120ms;
+  }
+  &__profile.is-open &__intro-kicker {
+    opacity: 1;
+    transform: translateY(0);
+    transition-delay: 280ms;
+  }
+  &__profile.is-open &__intro-contact {
+    opacity: 1;
+    transform: translateY(0);
+    transition-delay: 360ms;
+  }
+  &__profile.is-open &__intro-sub {
+    opacity: 1;
+    transform: translateY(0);
+    transition-delay: 440ms;
+  }
+
+  // ─── Project grid (UNCHANGED layout) ───────────────────────────────────────
   // bottom ~60%: project thumbnail grid, 3 per row, tap a tile to jump to it.
-  // `overscroll-behavior: contain` keeps a scroll gesture inside the grid.
+  // Flows in the normal document; the whole profile scrolls (see &__profile).
   &__grid {
-    flex: 1;
-    min-height: 0;
-    overflow-y: auto;
-    overscroll-behavior: contain;
+    position: relative;
+    z-index: 1;
+    flex: none;
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 1px;
@@ -193,5 +333,64 @@
       #b42525 71.42% 85.71%,
       #2528b4 85.71% 100%
     );
+  }
+}
+
+// ─── Animations ──────────────────────────────────────────────────────────────
+@keyframes feed-aurora-a {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  50% {
+    transform: translate(18%, 12%) scale(1.18);
+  }
+}
+
+@keyframes feed-aurora-b {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1.1);
+  }
+  50% {
+    transform: translate(-16%, 16%) scale(0.92);
+  }
+}
+
+@keyframes feed-aurora-c {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(0.95);
+  }
+  50% {
+    transform: translate(12%, -14%) scale(1.2);
+  }
+}
+
+// the watermark drifts gently behind the name (keeps its centring transform)
+@keyframes feed-monogram-float {
+  0%,
+  100% {
+    transform: translate(-50%, -50%) scale(1);
+  }
+  50% {
+    transform: translate(-50%, calc(-50% - 7px)) scale(1.03);
+  }
+}
+
+// respect reduced-motion: hold everything still, show the hero immediately
+@media (prefers-reduced-motion: reduce) {
+  .feed__aurora-blob,
+  .feed__monogram {
+    animation: none;
+  }
+
+  .feed__nameplate,
+  .feed__intro-kicker,
+  .feed__intro-contact,
+  .feed__intro-sub {
+    opacity: 1;
+    transform: none;
+    transition: none;
   }
 }

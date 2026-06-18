@@ -174,8 +174,9 @@ primary input) gets desktop; everything else gets the feed:
 
 A full-screen vertical scroll-snap feed (one card per **project** channel) plus
 a separate profile overlay, styled after TikTok — its own **social palette**,
-NOT the CRT one: a **light** profile + bottom sheet (dark text on near-white),
-video cards with white text over the footage, a single cyan accent
+NOT the CRT one: a **dark, immersive** profile hero and **glassmorphism**
+throughout (frosted pills/buttons + a dark glass bottom sheet), video cards with
+white text over the footage, a single cyan accent
 (`$feed-accent`, for labels/badges/links/just-viewed), the pink-red `$feed-like`
 heart, and a modern sans (`$font-feed` = Inter). Keep CRT phosphor colours out of
 the feed. Rail icons are **filled/solid** silhouettes (`src/assets/icons/*.svg`
@@ -186,12 +187,20 @@ via `?react`), including the real GitHub/LinkedIn brand marks.
   it; you **tap a tile to open a project** and the rail **profile icon to return**.
   This is why the profile is a fixed overlay rather than a snap card: swiping is
   for the feed alone. Layout: a fixed-height header (`feed__profile-head`,
-  `height: 40dvh`) so the **grid starts at 40%**; inside it the identity cluster
-  (name → tagline → GitHub/LinkedIn brand-icon buttons) sits at top and the
-  one-line instruction is pinned just above the grid (gap grows on tall screens
-  via `justify-content: space-between`). The bottom 60% is a 3-column **thumbnail
-  grid** (`feed__grid` / `feed__tile`) that scrolls internally when tiles overflow
-  (`overscroll-behavior: contain`). Each tile is the project's `posterUrl` (or a
+  `min-height: 40dvh`) so the **grid starts at ~40%**; inside it the identity
+  cluster (the name set over a large, faint, floating chromatic **"AK"
+  watermark** echoing `favicon-mobile.svg` → tagline → GitHub/LinkedIn glass
+  brand-icon buttons) sits at top and the one-line instruction is pinned just
+  above the grid (gap grows on tall screens via `justify-content:
+  space-between`). The
+  hero rides on a **drifting aurora backdrop** (`feed__aurora`: cyan/pink/violet
+  blobs + faint grain, masked to fade out before the grid) over a near-black
+  base, and the identity elements **rise-and-fade in staggered** on `.is-open`
+  (all motion disabled under `prefers-reduced-motion`). The bottom 60% is a 3-column **thumbnail
+  grid** (`feed__grid` / `feed__tile`); when tiles overflow the **whole profile
+  page scrolls** (`feed__profile` is `overflow-y: auto`, head is `min-height:
+  40dvh`, grid flows below) — not just the grid. The aurora is `position: fixed`
+  so it stays pinned to the viewport while the page scrolls. Each tile is the project's `posterUrl` (or a
   mini test card) with its **title bottom-left**; opening the profile from a
   card's profile icon badges the tile you came from ("Just viewed", cyan ring),
   cleared when the profile closes (`justViewedChannel`).

@@ -12,16 +12,32 @@ interface FeedProfileProps {
 }
 
 /**
- * The profile page: a fixed, tap-only overlay (NOT a swipe card). A header
- * (name → tagline → social links) over a thumbnail grid of every project;
- * tapping a tile opens that project. Reached only via the rail profile icon.
+ * The profile page: a fixed, tap-only overlay (NOT a swipe card). A dark,
+ * immersive hero — drifting aurora backdrop, a glowing chromatic "AK" monogram
+ * (echoes the mobile favicon), name → tagline → social links — over the
+ * unchanged thumbnail grid of every project. Tapping a tile opens that project.
+ * Reached only via the rail profile icon. Content mirrors the SEO block.
  */
 export function FeedProfile({ open, justViewedChannel, onOpenProject }: FeedProfileProps) {
   return (
     <section className={`feed__profile ${open ? 'is-open' : ''}`} aria-hidden={!open}>
+      {/* drifting aurora backdrop — purely decorative */}
+      <div className="feed__aurora" aria-hidden="true">
+        <span className="feed__aurora-blob feed__aurora-blob--cyan" />
+        <span className="feed__aurora-blob feed__aurora-blob--pink" />
+        <span className="feed__aurora-blob feed__aurora-blob--violet" />
+        <span className="feed__aurora-grain" />
+      </div>
+
       <header className="feed__profile-head">
         <div className="feed__profile-id">
-          <h1 className="feed__intro-title">Aaron Kromer</h1>
+          {/* name over a large, faint chromatic "AK" watermark (mobile favicon) */}
+          <div className="feed__nameplate">
+            <span className="feed__monogram" aria-hidden="true">
+              AK
+            </span>
+            <h1 className="feed__intro-title">Aaron Kromer</h1>
+          </div>
           <p className="feed__intro-kicker">Frontend Developer &amp; Interaction Designer</p>
           <p className="feed__intro-contact">
             <a href="https://github.com/AarKro" target="_blank" rel="noreferrer">
