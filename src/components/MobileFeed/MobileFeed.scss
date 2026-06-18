@@ -1,4 +1,5 @@
 @use '../../styles/tokens' as *;
+@use '../../styles/interactions' as *;
 
 // The phone/tablet feed: full-screen vertical scroll-snap container of project
 // cards (FeedCard). The profile (FeedProfile) is a fixed overlay, not a card.
@@ -12,9 +13,5 @@
   color: #fff;
   font-family: $font-feed;
   -webkit-tap-highlight-color: transparent;
-
-  scrollbar-width: none;
-  &::-webkit-scrollbar {
-    display: none;
-  }
+  @include hide-scrollbar;
 }

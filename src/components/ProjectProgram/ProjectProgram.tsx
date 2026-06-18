@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { Project } from '../../data/projects';
+import { formatChannel } from '../../utils/broadcast';
 import { renderInlineLinks } from '../InlineLink/InlineLink';
 import { StaticNoise } from '../StaticNoise/StaticNoise';
 import './ProjectProgram.scss';
@@ -10,6 +11,15 @@ const VIDEO_LOAD_TIMEOUT = 6000;
 interface ProjectProgramProps {
   project: Project;
   channel: number;
+}
+
+/** Trailing glyph on an action label: external ↗, teletext ▤, close ▾. */
+function ActionIcon({ glyph }: { glyph: string }) {
+  return (
+    <span className="program__action-icon" aria-hidden="true">
+      {glyph}
+    </span>
+  );
 }
 
 /**
@@ -39,7 +49,7 @@ export function ProjectProgram({ project, channel }: ProjectProgramProps) {
     return () => window.clearTimeout(timer);
   }, [project.id, project.videoUrl]);
 
-  const channelLabel = String(channel).padStart(2, '0');
+  const channelLabel = formatChannel(channel);
 
   // Source code: a single VIEW CODE button, or — for a bundled channel — one
   // pill matching the other buttons, sectioned into a link per repo.
@@ -54,14 +64,14 @@ export function ProjectProgram({ project, channel }: ProjectProgramProps) {
           rel="noreferrer"
         >
           {repo.name}
-          <span className="program__action-icon" aria-hidden="true">↗</span>
+          <ActionIcon glyph="↗" />
         </a>
       ))}
     </div>
   ) : project.githubUrl ? (
     <a className="program__action" href={project.githubUrl} target="_blank" rel="noreferrer">
       VIEW CODE
-      <span className="program__action-icon" aria-hidden="true">↗</span>
+      <ActionIcon glyph="↗" />
     </a>
   ) : null;
 
@@ -73,7 +83,7 @@ export function ProjectProgram({ project, channel }: ProjectProgramProps) {
       {project.demoUrl && (
         <a className="program__action" href={project.demoUrl} target="_blank" rel="noreferrer">
           OPEN DEMO
-          <span className="program__action-icon" aria-hidden="true">↗</span>
+          <ActionIcon glyph="↗" />
         </a>
       )}
     </>
@@ -124,7 +134,7 @@ export function ProjectProgram({ project, channel }: ProjectProgramProps) {
                   aria-expanded={teletextOpen}
                 >
                   TELETEXT
-                  <span className="program__action-icon" aria-hidden="true">▤</span>
+                  <ActionIcon glyph="▤" />
                 </button>
                 {actionLinks}
               </div>
@@ -157,7 +167,7 @@ export function ProjectProgram({ project, channel }: ProjectProgramProps) {
                   onClick={() => setTeletextOpen(false)}
                 >
                   CLOSE TELETEXT
-                  <span className="program__action-icon" aria-hidden="true">▾</span>
+                  <ActionIcon glyph="▾" />
                 </button>
                 {actionLinks}
               </div>

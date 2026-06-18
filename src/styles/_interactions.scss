@@ -1,4 +1,26 @@
-// Shared interaction mixins.
+// Shared SCSS mixins.
+
+// Hide the scrollbar but keep the element scrollable (Firefox + WebKit).
+@mixin hide-scrollbar {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+// SMPTE colour-bar test card — the fallback backdrop for channels with no clip.
+@mixin smpte-bars {
+  background: linear-gradient(
+    90deg,
+    #b7b7a8 0 14.28%,
+    #b7b425 14.28% 28.57%,
+    #2bb7b4 28.57% 42.85%,
+    #28b428 42.85% 57.14%,
+    #b42bb1 57.14% 71.42%,
+    #b42525 71.42% 85.71%,
+    #2528b4 85.71% 100%
+  );
+}
 
 // Frosted-glass surface for the mobile feed. The feed has two backdrops, so two
 // tones — `media` (white text over the video cards) and `light` (the light

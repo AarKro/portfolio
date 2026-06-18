@@ -1,3 +1,4 @@
+import { formatChannel } from '../../utils/broadcast';
 import type { TVState } from '../../hooks/useTV';
 import './ControlPanel.scss';
 
@@ -23,7 +24,7 @@ export function ControlPanel({ tv }: ControlPanelProps) {
       </div>
 
       <div className="controls__channel-display" aria-label={`Channel ${channel}`}>
-        {poweredOn ? String(channel).padStart(2, '0') : '--'}
+        {poweredOn ? formatChannel(channel) : '--'}
       </div>
 
       <span

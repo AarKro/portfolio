@@ -139,13 +139,16 @@ src/
   hooks/useDeviceTier.ts   ← desktop | mobile classification (capability-based)
   hooks/useSwipe.ts        ← tiny pointer-based swipe detector (no deps)
   utils/noise.ts            ← static-noise pixel fill (used by StaticNoise)
+  utils/broadcast.ts        ← SITE_TITLE + formatChannel/broadcastTitle helpers
+                              (shared by the TV and the feed; keeps titles in sync)
   assets/                   ← bundled assets, grouped by kind:
     desktop-videos/         ← landscape teaser clips (the CRT + feed source today)
     mobile-videos/          ← portrait clips for the feed (empty until recorded)
     thumbnails/             ← video first-frame posters (loading + grid)
     icons/                  ← *.svg, imported as components via `?react` (svgr)
   styles/_tokens.scss       ← ALL colors and fonts; theme changes happen here
-  styles/_interactions.scss ← `hover-focus` mixin (touch-safe hover + focus)
+  styles/_interactions.scss ← shared SCSS mixins: `hover-focus` (touch-safe
+                              hover + focus), `glass`, `hide-scrollbar`, `smpte-bars`
   styles/global.scss        ← reset + base
 ```
 
@@ -318,7 +321,9 @@ importing tokens via a relative `@use '../../styles/tokens' as *;`.
   never stick after a tap, and tap targets grow to ≈44px under `(pointer:
   coarse)`. The mobile feed is touch-native (vertical scroll-snap).
 - `document.title` mirrors the broadcast ("CH 03 · WoW Graveyard 3D — Aaron
-  Kromer"; "Standby — …" when off).
+  Kromer"; "Standby — …" when off). The TV and the feed both build it via
+  `broadcastTitle()` in `utils/broadcast.ts`, which also exports `SITE_TITLE`
+  (the intro/profile fallback — keep it in sync with index.html's `<title>`).
 - A `videoUrl` channel autoplays its teaser the moment you land on it. The clip
   stays covered by static until the `<video>` fires `playing` (6s safety
   timeout), so there's no black-frame flash. The video is
@@ -358,7 +363,8 @@ engines — not to outrank ESPN for the bare name.
   Interaction Designer, Zürich"), keyword-rich meta description, canonical
   URL, and two JSON-LD blocks: a `Person` (with `disambiguatingDescription`,
   `sameAs` GitHub/LinkedIn, Zürich address) and a `WebSite`. Keep the runtime
-  default `document.title` in `Screen.tsx` in sync with the HTML title.
+  default `document.title` in sync with the HTML title — it's the `SITE_TITLE`
+  constant in `utils/broadcast.ts` (used by both the TV and the feed).
 - `App.tsx` renders an `.sr-only` crawlable section generated from
   `projects.ts` — project channels are only reachable by interaction, which
   crawlers don't do. It must mirror on-screen content only (no extra

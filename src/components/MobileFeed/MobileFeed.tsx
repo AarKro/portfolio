@@ -1,10 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { CHANNEL_COUNT, FIRST_PROJECT_CHANNEL, PROJECTS } from '../../data/projects';
+import { broadcastTitle } from '../../utils/broadcast';
 import { FeedCard } from './FeedCard/FeedCard';
 import { FeedProfile } from './FeedProfile/FeedProfile';
 import './MobileFeed.scss';
-
-const SITE_TITLE = 'Aaron Kromer — Frontend Developer & Interaction Designer, Zürich';
 
 /** Channels are shareable links: #ch-5 opens the feed on that card. */
 function channelFromHash(): number {
@@ -57,9 +56,7 @@ export function MobileFeed() {
     const channel = profileOpen ? 1 : activeChannel;
     window.history.replaceState(null, '', `#ch-${channel}`);
     const project = profileOpen ? null : PROJECTS[activeChannel - FIRST_PROJECT_CHANNEL];
-    document.title = project
-      ? `CH ${String(activeChannel).padStart(2, '0')} · ${project.title} — Aaron Kromer`
-      : SITE_TITLE;
+    document.title = broadcastTitle(activeChannel, project);
   }, [profileOpen, activeChannel]);
 
   // Leaving the profile clears the "just viewed" badge

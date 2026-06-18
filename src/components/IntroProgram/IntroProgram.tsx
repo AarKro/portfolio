@@ -1,4 +1,5 @@
 import { FIRST_PROJECT_CHANNEL, PROJECTS } from '../../data/projects';
+import { formatChannel } from '../../utils/broadcast';
 import './IntroProgram.scss';
 
 interface IntroProgramProps {
@@ -42,7 +43,7 @@ export function IntroProgram({ tuneTo }: IntroProgramProps) {
               <li key={project.id}>
                 <button className="intro__guide-entry" onClick={() => tuneTo(channel)}>
                   <span className="intro__guide-channel">
-                    CH {String(channel).padStart(2, '0')}
+                    CH {formatChannel(channel)}
                   </span>{' '}
                   {project.title}
                 </button>

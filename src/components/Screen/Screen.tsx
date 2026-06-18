@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { FIRST_PROJECT_CHANNEL, PROJECTS } from '../../data/projects';
+import { broadcastTitle, formatChannel } from '../../utils/broadcast';
 import type { TVState } from '../../hooks/useTV';
 import { useSwipe } from '../../hooks/useSwipe';
 import { IntroProgram } from '../IntroProgram/IntroProgram';
@@ -57,14 +58,7 @@ export function Screen({ tv }: ScreenProps) {
 
   // Browser tab mirrors the broadcast
   useEffect(() => {
-    if (!poweredOn) {
-      document.title = 'Standby — Aaron Kromer';
-    } else if (project) {
-      document.title = `CH ${String(channel).padStart(2, '0')} · ${project.title} — Aaron Kromer`;
-    } else {
-      // keep in sync with the SEO title in index.html
-      document.title = 'Aaron Kromer — Frontend Developer & Interaction Designer, Zürich';
-    }
+    document.title = poweredOn ? broadcastTitle(channel, project) : 'Standby — Aaron Kromer';
   }, [channel, poweredOn, project]);
 
   return (
@@ -85,7 +79,7 @@ export function Screen({ tv }: ScreenProps) {
 
         {poweredOn && osdVisible && (
           <div className="screen__osd" aria-live="polite">
-            CH {String(channel).padStart(2, '0')}
+            CH {formatChannel(channel)}
           </div>
         )}
 

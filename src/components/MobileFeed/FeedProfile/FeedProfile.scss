@@ -23,11 +23,7 @@
     transform: translateY(-100%);
     transition: transform 420ms cubic-bezier(0.7, 0, 0.2, 1);
     pointer-events: none;
-
-    scrollbar-width: none;
-    &::-webkit-scrollbar {
-      display: none;
-    }
+    @include hide-scrollbar;
 
     &.is-open {
       transform: translateY(0);
@@ -36,11 +32,9 @@
   }
 
   // ─── Identity hero ─────────────────────────────────────────────────────────
-  // Top of the screen: monogram → name → tagline → social links, then the
-  // scroll cue pinned just above the grid. Height grows the gap on tall screens.
+  // Top of the screen: name → tagline → social links at the top, the instruction
+  // pinned just above the grid. The gap grows on tall screens (space-between).
   &__profile-head {
-    position: relative;
-    z-index: 1;
     flex: none;
     min-height: 40dvh;
     display: flex;
@@ -142,25 +136,17 @@
     opacity: 0;
   }
 
-  &__profile.is-open &__nameplate {
-    animation: feed-rise 520ms cubic-bezier(0.2, 0.7, 0.2, 1) 120ms both;
-  }
-  &__profile.is-open &__intro-kicker {
-    animation: feed-rise 520ms cubic-bezier(0.2, 0.7, 0.2, 1) 280ms both;
-  }
-  &__profile.is-open &__intro-contact {
-    animation: feed-rise 520ms cubic-bezier(0.2, 0.7, 0.2, 1) 360ms both;
-  }
-  &__profile.is-open &__intro-sub {
-    animation: feed-rise 520ms cubic-bezier(0.2, 0.7, 0.2, 1) 440ms both;
+  // each element rises+fades in turn (delay = its place in the cluster)
+  @each $part, $delay in (nameplate: 120ms, intro-kicker: 280ms, intro-contact: 360ms, intro-sub: 440ms) {
+    &__profile.is-open &__#{$part} {
+      animation: feed-rise 520ms cubic-bezier(0.2, 0.7, 0.2, 1) $delay both;
+    }
   }
 
-  // ─── Project grid (UNCHANGED layout) ───────────────────────────────────────
-  // bottom ~60%: project thumbnail grid, 3 per row, tap a tile to jump to it.
-  // Flows in the normal document; the whole profile scrolls (see &__profile).
+  // ─── Project grid ──────────────────────────────────────────────────────────
+  // 3 per row, tap a tile to jump to it. Flows in normal document order; the
+  // whole profile scrolls (see &__profile), not the grid on its own.
   &__grid {
-    position: relative;
-    z-index: 1;
     flex: none;
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -241,16 +227,7 @@
     position: absolute;
     inset: 0;
     opacity: 0.8;
-    background: linear-gradient(
-      90deg,
-      #b7b7a8 0 14.28%,
-      #b7b425 14.28% 28.57%,
-      #2bb7b4 28.57% 42.85%,
-      #28b428 42.85% 57.14%,
-      #b42bb1 57.14% 71.42%,
-      #b42525 71.42% 85.71%,
-      #2528b4 85.71% 100%
-    );
+    @include smpte-bars;
   }
 }
 
