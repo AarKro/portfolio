@@ -345,7 +345,8 @@ export function Scene({ mode, onArrivedInRoom, onArrivedAtTV, onTVClicked, child
       container.removeChild(cssRenderer.domElement);
       apiRef.current = null;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // Deliberately mount-once: the scene is built imperatively and never
+    // rebuilt — live props are read through modeRef/callbacksRef instead.
   }, []);
 
   // mode transitions trigger camera flights; the DOM TV is only clickable

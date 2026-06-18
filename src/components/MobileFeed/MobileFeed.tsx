@@ -1,16 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
-import { CHANNEL_COUNT, FIRST_PROJECT_CHANNEL, PROJECTS } from '../../data/projects';
-import { broadcastTitle } from '../../utils/broadcast';
+import { FIRST_PROJECT_CHANNEL, PROJECTS } from '../../data/projects';
+import { broadcastTitle, channelFromHash } from '../../utils/broadcast';
 import { FeedCard } from './FeedCard/FeedCard';
 import { FeedProfile } from './FeedProfile/FeedProfile';
 import './MobileFeed.scss';
-
-/** Channels are shareable links: #ch-5 opens the feed on that card. */
-function channelFromHash(): number {
-  const match = /^#ch-(\d+)$/.exec(window.location.hash);
-  const parsed = match ? Number(match[1]) : 1;
-  return parsed >= 1 && parsed <= CHANNEL_COUNT ? parsed : 1;
-}
 
 /**
  * The phone & tablet experience: a vertical scroll-snap feed of project cards
