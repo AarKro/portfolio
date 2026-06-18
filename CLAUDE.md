@@ -160,10 +160,16 @@ footage, a single cyan accent (`$feed-accent`, for labels/badges/links/
 just-viewed), the pink-red `$feed-like` heart, and a modern sans (`$font-feed` =
 Inter). Keep CRT phosphor colours out of the feed. Rail icons are **filled/solid**
 silhouettes (`icons.tsx`), including the real GitHub/LinkedIn brand marks.
-- **Card 1 is a light profile page** (`feed__card--profile`): a roomy centred
-  header — name, the tagline below it, a one-line hint, then GitHub/LinkedIn
-  buttons with brand icons — over a 3-column **thumbnail grid** of every project
-  (`feed__grid` / `feed__tile`). Each tile is the project's `posterUrl` (or a
+- **Card 1 is a light profile page** (`feed__card--profile`): a fixed-height
+  header (`feed__profile-head`, `height: 40dvh`) so the **grid always starts at
+  40% of the screen**. Inside the header, the identity cluster (name → tagline →
+  GitHub/LinkedIn buttons with brand icons) sits at the top and the one-line
+  "tap/swipe" instruction is pinned at the bottom just above the grid — the gap
+  between them grows on taller screens (`justify-content: space-between`). The
+  bottom 60% is a 3-column **thumbnail grid** of every project (`feed__grid` /
+  `feed__tile`); it scrolls internally when the tiles overflow
+  (`overscroll-behavior: contain`, so the scroll stays in the grid instead of
+  snapping the feed to the first project). Each tile is the project's `posterUrl` (or a
   mini test card) with its **title bottom-left**; tapping one smooth-scrolls
   (`scrollIntoView({ behavior: 'smooth' })`) to that project's card. Arriving back via a card's
   profile icon badges the tile you came from ("Just viewed", cyan ring) until

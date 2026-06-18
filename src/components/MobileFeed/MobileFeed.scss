@@ -313,17 +313,27 @@
     inset: 0;
     display: flex;
     flex-direction: column;
-    padding: calc(env(safe-area-inset-top) + 2.6rem) 0 calc(env(safe-area-inset-bottom) + 1rem);
   }
 
+  // top 40% of the screen: identity cluster (name → tagline → social links) at
+  // the top, the instruction line pinned just above the grid. The space between
+  // them grows on taller screens (space-between).
   &__profile-head {
     flex: none;
+    height: 40dvh;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    text-align: center;
+    padding: calc(env(safe-area-inset-top) + 3.6rem) clamp(1.4rem, 7vw, 2.6rem) 0.9rem;
+  }
+
+  &__profile-id {
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 0.85rem;
-    padding: 0 clamp(1.4rem, 7vw, 2.6rem) 2.2rem;
-    text-align: center;
   }
 
   &__intro-title {
@@ -378,16 +388,19 @@
     }
   }
 
-  // project thumbnail grid: 3 per row, no text, tap a tile to jump to its card
+  // bottom ~60%: project thumbnail grid, 3 per row, tap a tile to jump to it.
+  // `overscroll-behavior: contain` keeps a scroll gesture inside the grid (when
+  // the tiles overflow) instead of letting the parent snap to the first project.
   &__grid {
     flex: 1;
     min-height: 0;
     overflow-y: auto;
+    overscroll-behavior: contain;
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 2px;
     align-content: start;
-    padding: 0 2px;
+    padding: 0 2px env(safe-area-inset-bottom);
   }
 
   &__tile {

@@ -116,23 +116,25 @@ export function MobileFeed() {
       <section className="feed__card feed__card--profile" data-channel={1} ref={setSectionRef(1)}>
         <div className="feed__profile">
           <header className="feed__profile-head">
-            <h1 className="feed__intro-title">Aaron Kromer</h1>
-            <p className="feed__intro-kicker">Frontend Developer &amp; Interaction Designer</p>
+            <div className="feed__profile-id">
+              <h1 className="feed__intro-title">Aaron Kromer</h1>
+              <p className="feed__intro-kicker">Frontend Developer &amp; Interaction Designer</p>
+              <p className="feed__intro-contact">
+                <a href="https://github.com/AarKro" target="_blank" rel="noreferrer">
+                  <GithubIcon />
+                  GitHub
+                </a>
+                <a
+                  href="https://www.linkedin.com/in/aaron-kromer-a3026b193/"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  <LinkedinIcon />
+                  LinkedIn
+                </a>
+              </p>
+            </div>
             <p className="feed__intro-sub">Tap a project, or swipe up to browse.</p>
-            <p className="feed__intro-contact">
-              <a href="https://github.com/AarKro" target="_blank" rel="noreferrer">
-                <GithubIcon />
-                GitHub
-              </a>
-              <a
-                href="https://www.linkedin.com/in/aaron-kromer-a3026b193/"
-                target="_blank"
-                rel="noreferrer"
-              >
-                <LinkedinIcon />
-                LinkedIn
-              </a>
-            </p>
           </header>
 
           <div className="feed__grid">
