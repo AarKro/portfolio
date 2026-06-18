@@ -12,7 +12,9 @@
  */
 
 import scholarsMateVideo from '../assets/scholars_mate.mp4';
+import scholarsMatePoster from '../assets/scholars_mate_poster.jpg';
 import wowGraveyard3dVideo from '../assets/wow_graveyard_3d.mp4';
+import wowGraveyard3dPoster from '../assets/wow_graveyard_3d_poster.jpg';
 
 /** A named source-code link, for channels that bundle several repos. */
 export interface RepoLink {
@@ -52,6 +54,12 @@ export interface Project {
    * Import the asset from ../assets so Vite bundles it.
    */
   videoUrl?: string;
+  /**
+   * First-frame poster for `videoUrl` — shown instantly while the clip loads
+   * (the `<video poster>`), and as the project's thumbnail in the feed grid.
+   * Generate from the video (see "Adding a teaser clip"); pairs with videoUrl.
+   */
+  posterUrl?: string;
 }
 
 export const PROJECTS: Project[] = [
@@ -66,6 +74,7 @@ export const PROJECTS: Project[] = [
     githubUrl: 'https://github.com/AarKro/wow-graveyard-3d',
     demoUrl: 'https://aarkro.github.io/wow-graveyard-3d/',
     videoUrl: wowGraveyard3dVideo,
+    posterUrl: wowGraveyard3dPoster,
   },
   {
     id: 'scholars-mate',
@@ -78,6 +87,7 @@ export const PROJECTS: Project[] = [
     githubUrl: 'https://github.com/AarKro/scholars-mate',
     demoUrl: 'https://aarkro.github.io/scholars-mate/',
     videoUrl: scholarsMateVideo,
+    posterUrl: scholarsMatePoster,
   },
   {
     id: 'peggy-ashcroft',

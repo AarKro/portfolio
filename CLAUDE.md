@@ -43,6 +43,10 @@ Per project:
   from `../assets` so Vite bundles + fingerprints it (`import clip from
   '../assets/foo.mp4'; … videoUrl: clip`), don't hand-write a path. Compress
   before adding (see "Adding a teaser clip").
+- `posterUrl` (optional, pairs with `videoUrl`): the clip's first frame as a
+  small image. Used as the `<video poster>` (instant frame while the clip loads,
+  desktop + feed) and as the project's thumbnail in the feed's profile grid.
+  Generate it from the video (see "Adding a teaser clip") and import it.
 - `behindTheScenes` (optional): one sentence on the interesting technical or
   design decision — written for hiring managers. Must be factually grounded
   in the repo (check its README/package.json), never invented. Shown on the
@@ -86,6 +90,13 @@ ffmpeg -i raw.mov -vf "scale=-2:720,fps=30" -c:v libx264 -preset slow \
 lets it start before fully downloaded, 720p is plenty for the small CRT
 screen. Drop `crf` toward 30 / `scale` to 540 for an even smaller file.
 
+Then grab a **poster** (first frame) for `posterUrl` — the loading fallback and
+the feed grid thumbnail. Regenerate whenever the clip changes:
+
+```
+ffmpeg -i out.mp4 -frames:v 1 -vf "scale=-2:540" -q:v 4 out_poster.jpg
+```
+
 ## Architecture
 
 ```
@@ -106,6 +117,8 @@ src/
                               scanlines/vignette/glare on top
     ControlPanel/           ← physical buttons strip (CH ▼/▲, power, decor)
     StaticNoise/            ← canvas noise; animates only while `active`
+    VideoPreloader/         ← off-screen <video preload="auto"> to warm the
+                              prev/next channels' clips ahead of time
     programs/IntroProgram/      ← channel 1 (intro + clickable TV guide)
     programs/ProjectProgram/    ← project channels: one "broadcast" layout
                                   (teaser-or-testcard backdrop + bug +
@@ -142,11 +155,26 @@ primary input) gets desktop; everything else gets the feed:
 
 A full-screen vertical scroll-snap feed (one card per channel) styled after
 TikTok, in a modern sans (`$font-feed` = Inter) rather than the CRT fonts:
-- Each project card is a full-bleed teaser video (or SMPTE test card) with a
-  right-edge **rail** of icon-only actions: like (fake heart; white → `$feed-like`
-  pink when toggled), open demo, share. Source code isn't a separate rail button
-  — it lives inside the share sheet. Icons are inline SVGs in `icons.tsx` (no
-  icon dependency).
+- **Card 1 is a profile page** (`feed__card--profile`): a centred header (name +
+  tagline + GitHub/LinkedIn) over a 3-column **thumbnail grid** of every project
+  (`feed__grid` / `feed__tile`). Each tile is the project's `posterUrl` (or a
+  mini test card) with its **title bottom-left**; tapping one smooth-scrolls
+  (`scrollIntoView({ behavior: 'smooth' })`) to that project's card. Arriving back via a card's
+  profile icon badges the tile you came from ("Just viewed", purple ring) until
+  you leave the profile again (`justViewedChannel` + `arrivedProfileRef`).
+- Each project card is a full-bleed teaser video (`poster={posterUrl}` shows the
+  first frame while it loads) or SMPTE test card, with a right-edge **rail** of
+  icon-only actions: a **profile icon at the top** (smooth-scrolls back to card
+  1), then like (fake heart; white → `$feed-like` pink when toggled), open demo,
+  share. The rail sits at the bottom (lowest icon level with the caption); the
+  caption's left inset matches the rail's right inset. Source code isn't a
+  separate rail button — it lives inside the share sheet. Icons are inline SVGs
+  in `icons.tsx` (no icon dependency).
+- **Video loading** (both views): each clip shows its `posterUrl` first frame
+  instantly, and only the active channel ± 1 is fetched — the feed sets
+  `preload` per card by distance to the active card; the desktop TV mounts a
+  `VideoPreloader` for the prev/next channels. So clips load on demand in a
+  small window, not all up front.
 - The **caption** (bottom-left) shows channel/title/tags with a chevron; tapping
   it expands the card's `description` + `behindTheScenes` over a translucent
   black panel (the video still shows through), animated via the `0fr→1fr`

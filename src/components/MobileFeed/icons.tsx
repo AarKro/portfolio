@@ -58,3 +58,13 @@ export function ChevronIcon({ className }: IconProps) {
     </svg>
   );
 }
+
+/** Person — back to the profile page (top of the rail). */
+export function ProfileIcon({ className }: IconProps) {
+  return (
+    <svg {...base} className={className}>
+      <circle cx="12" cy="8" r="4" />
+      <path d="M4 21a8 8 0 0 1 16 0" />
+    </svg>
+  );
+}

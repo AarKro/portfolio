@@ -6,7 +6,7 @@ import {
   type Project,
 } from '../../data/projects';
 import { renderInlineLinks } from '../InlineLink/InlineLink';
-import { ChevronIcon, DemoIcon, HeartIcon, ShareIcon } from './icons';
+import { ChevronIcon, DemoIcon, HeartIcon, ProfileIcon, ShareIcon } from './icons';
 import './MobileFeed.scss';
 
 const SITE_TITLE = 'Aaron Kromer — Frontend Developer & Interaction Designer, Zürich';
@@ -46,6 +46,10 @@ function greeting(): string {
 export function MobileFeed() {
   const sectionsRef = useRef<(HTMLElement | null)[]>([]);
   const [activeChannel, setActiveChannel] = useState(channelFromHash);
+  // The project you jumped to the profile FROM — its grid tile gets a "just
+  // viewed" badge while you're on the profile, cleared once you leave again.
+  const [justViewedChannel, setJustViewedChannel] = useState<number | null>(null);
+  const arrivedProfileRef = useRef(false);
 
   // Jump a deep-linked card into view on first paint
   useEffect(() => {
@@ -82,29 +86,77 @@ export function MobileFeed() {
     sectionsRef.current[channel - 1] = el;
   };
 
+  // Thumbnail grid → smoothly scroll to a project card.
+  const goToChannel = (channel: number) => {
+    sectionsRef.current[channel - 1]?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  // Rail profile icon → smoothly scroll back to the profile, badging the card
+  // we came from. `arrivedProfileRef` guards against the badge being cleared by
+  // the intermediate cards the smooth scroll passes through (see effect below).
+  const goToProfile = (fromChannel: number) => {
+    setJustViewedChannel(fromChannel);
+    arrivedProfileRef.current = false;
+    sectionsRef.current[0]?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  // Clear the "just viewed" badge once the user has reached the profile and
+  // then leaves it again (manual scroll or a thumbnail tap).
+  useEffect(() => {
+    if (activeChannel === 1) {
+      arrivedProfileRef.current = true;
+    } else if (arrivedProfileRef.current) {
+      arrivedProfileRef.current = false;
+      setJustViewedChannel(null);
+    }
+  }, [activeChannel]);
+
   return (
     <div className="feed">
-      <section className="feed__card feed__card--intro" data-channel={1} ref={setSectionRef(1)}>
-        <div className="feed__intro">
-          <p className="feed__intro-kicker">Frontend Developer &amp; Interaction Designer</p>
-          <h1 className="feed__intro-title">Aaron Kromer</h1>
-          <p className="feed__intro-sub">{greeting()} Every channel below is one of my projects.</p>
-          <p className="feed__intro-contact">
-            <a href="https://github.com/AarKro" target="_blank" rel="noreferrer">
-              GitHub
-            </a>
-            <a
-              href="https://www.linkedin.com/in/aaron-kromer-a3026b193/"
-              target="_blank"
-              rel="noreferrer"
-            >
-              LinkedIn
-            </a>
-          </p>
+      <section className="feed__card feed__card--profile" data-channel={1} ref={setSectionRef(1)}>
+        <div className="feed__profile">
+          <header className="feed__profile-head">
+            <p className="feed__intro-kicker">Frontend Developer &amp; Interaction Designer</p>
+            <h1 className="feed__intro-title">Aaron Kromer</h1>
+            <p className="feed__intro-sub">{greeting()} Tap a project, or swipe up to browse.</p>
+            <p className="feed__intro-contact">
+              <a href="https://github.com/AarKro" target="_blank" rel="noreferrer">
+                GitHub
+              </a>
+              <a
+                href="https://www.linkedin.com/in/aaron-kromer-a3026b193/"
+                target="_blank"
+                rel="noreferrer"
+              >
+                LinkedIn
+              </a>
+            </p>
+          </header>
+
+          <div className="feed__grid">
+            {PROJECTS.map((project, index) => {
+              const channel = index + FIRST_PROJECT_CHANNEL;
+              return (
+                <button
+                  key={project.id}
+                  className={`feed__tile ${justViewedChannel === channel ? 'is-just-viewed' : ''}`}
+                  onClick={() => goToChannel(channel)}
+                  aria-label={`Open ${project.title}`}
+                >
+                  {project.posterUrl ? (
+                    <img className="feed__tile-media" src={project.posterUrl} alt="" loading="lazy" />
+                  ) : (
+                    <span className="feed__tile-testcard" aria-hidden="true" />
+                  )}
+                  <span className="feed__tile-title">{project.title}</span>
+                  {justViewedChannel === channel && (
+                    <span className="feed__tile-badge">Just viewed</span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
         </div>
-        <p className="feed__swipe-hint" aria-hidden="true">
-          swipe up to browse ↑
-        </p>
       </section>
 
       {PROJECTS.map((project, index) => {
@@ -115,7 +167,10 @@ export function MobileFeed() {
             project={project}
             channel={channel}
             isActive={activeChannel === channel}
+            // preload the active card and its immediate neighbours only
+            preloadVideo={Math.abs(channel - activeChannel) <= 1}
             setRef={setSectionRef(channel)}
+            onProfile={goToProfile}
           />
         );
       })}
@@ -127,10 +182,14 @@ interface FeedCardProps {
   project: Project;
   channel: number;
   isActive: boolean;
+  /** Whether to fetch this card's video ahead of time (active ± 1). */
+  preloadVideo: boolean;
   setRef: (el: HTMLElement | null) => void;
+  /** Jump back to the profile page, badging the card we came from. */
+  onProfile: (fromChannel: number) => void;
 }
 
-function FeedCard({ project, channel, isActive, setRef }: FeedCardProps) {
+function FeedCard({ project, channel, isActive, preloadVideo, setRef, onProfile }: FeedCardProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [expanded, setExpanded] = useState(false);
   const [liked, setLiked] = useState(false);
@@ -173,10 +232,11 @@ function FeedCard({ project, channel, isActive, setRef }: FeedCardProps) {
           className="feed__video"
           ref={videoRef}
           src={project.videoUrl}
+          poster={project.posterUrl}
           muted
           loop
           playsInline
-          preload="metadata"
+          preload={preloadVideo ? 'auto' : 'none'}
         />
       ) : (
         <div className="feed__testcard" aria-hidden="true">
@@ -190,6 +250,14 @@ function FeedCard({ project, channel, isActive, setRef }: FeedCardProps) {
 
       {/* right-edge rail of icon actions */}
       <div className="feed__rail">
+        <button
+          className="feed__rail-btn feed__rail-btn--profile"
+          onClick={() => onProfile(channel)}
+          aria-label="Back to profile"
+        >
+          <ProfileIcon />
+        </button>
+
         <button
           className={`feed__rail-btn feed__rail-btn--like ${liked ? 'is-liked' : ''}`}
           onClick={() => setLiked((v) => !v)}

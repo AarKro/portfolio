@@ -85,7 +85,8 @@
   &__rail {
     position: absolute;
     right: 0.4rem;
-    bottom: calc(env(safe-area-inset-bottom) + 5.5rem);
+    // sit at the very bottom, lowest icon level with the caption (no gap)
+    bottom: calc(env(safe-area-inset-bottom) + 1.3rem);
     z-index: 3;
     display: flex;
     flex-direction: column;
@@ -151,8 +152,10 @@
     opacity: 1;
   }
 
+  // no horizontal padding: the title/tags inset is the bug's left padding
+  // (1.1rem), so the left gap matches the rail's gap to the right edge
   &__caption {
-    padding: 0.7rem 0.9rem;
+    padding: 0.7rem 0;
   }
 
   &__headline {
@@ -263,20 +266,26 @@
     letter-spacing: 0.1em;
   }
 
-  // ─── Intro card (channel 1) ──────────────────────────────────────────────
-  &__card--intro {
-    background: radial-gradient(ellipse at 50% 38%, #241a12, #000 72%);
+  // ─── Profile card (channel 1): TikTok-style profile + project grid ───────
+  &__card--profile {
+    background: radial-gradient(ellipse at 50% 26%, #241a12, #000 72%);
   }
 
-  &__intro {
+  &__profile {
     position: absolute;
     inset: 0;
     display: flex;
     flex-direction: column;
-    justify-content: center;
+    padding: calc(env(safe-area-inset-top) + 1.6rem) 0 calc(env(safe-area-inset-bottom) + 1rem);
+  }
+
+  &__profile-head {
+    flex: none;
+    display: flex;
+    flex-direction: column;
     align-items: center;
-    gap: 0.8rem;
-    padding: 2rem clamp(1.4rem, 7vw, 2.6rem);
+    gap: 0.6rem;
+    padding: 0 clamp(1.4rem, 7vw, 2.6rem) 1.3rem;
     text-align: center;
   }
 
@@ -287,7 +296,7 @@
   }
 
   &__intro-title {
-    font-size: clamp(2.6rem, 14vw, 4rem);
+    font-size: clamp(2.2rem, 11vw, 3.2rem);
     font-weight: 700;
     line-height: 1;
     color: $phosphor-amber;
@@ -295,9 +304,9 @@
   }
 
   &__intro-sub {
-    max-width: 28ch;
+    max-width: 30ch;
     color: rgba(255, 255, 255, 0.85);
-    font-size: 1.05rem;
+    font-size: 1.02rem;
     line-height: 1.4;
   }
 
@@ -306,7 +315,7 @@
     flex-wrap: wrap;
     justify-content: center;
     gap: 0.6rem;
-    margin-top: 0.6rem;
+    margin-top: 0.4rem;
 
     a {
       min-height: 44px;
@@ -325,15 +334,100 @@
     }
   }
 
-  &__swipe-hint {
+  // project thumbnail grid: 3 per row, no text, tap a tile to jump to its card
+  &__grid {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2px;
+    align-content: start;
+    padding: 0 2px;
+  }
+
+  &__tile {
+    position: relative;
+    aspect-ratio: 1;
+    overflow: hidden;
+    padding: 0;
+    border: none;
+    background: #111;
+    cursor: pointer;
+
+    &:active {
+      opacity: 0.75;
+    }
+
+    // the project you just came back from is ringed in purple
+    &.is-just-viewed {
+      box-shadow: inset 0 0 0 3px $phosphor-purple;
+    }
+  }
+
+  &__tile-media {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  // project title pinned bottom-left over a legibility gradient
+  &__tile-title {
     position: absolute;
     left: 0;
     right: 0;
-    bottom: calc(env(safe-area-inset-bottom) + 1.4rem);
-    text-align: center;
-    color: rgba(255, 255, 255, 0.85);
+    bottom: 0;
+    z-index: 1;
+    padding: 1.1rem 0.5rem 0.4rem;
+    text-align: left;
+    font-size: 0.72rem;
+    font-weight: 600;
+    line-height: 1.15;
+    color: #fff;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.85);
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.72) 0%, rgba(0, 0, 0, 0) 100%);
+    pointer-events: none;
+
+    // cap at two lines
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  // "just viewed" badge over the tile you returned from
+  &__tile-badge {
+    position: absolute;
+    top: 0.35rem;
+    left: 0.35rem;
+    z-index: 2;
+    padding: 0.15em 0.5em;
+    border-radius: 999px;
+    background: $phosphor-purple;
+    color: $phosphor-bg;
+    font-size: 0.6rem;
+    font-weight: 700;
     letter-spacing: 0.04em;
-    animation: feed-nudge 1.8s ease-in-out infinite;
+    text-transform: uppercase;
+    pointer-events: none;
+  }
+
+  // mini SMPTE test card for projects without a teaser clip
+  &__tile-testcard {
+    position: absolute;
+    inset: 0;
+    opacity: 0.8;
+    background: linear-gradient(
+      90deg,
+      #b7b7a8 0 14.28%,
+      #b7b425 14.28% 28.57%,
+      #2bb7b4 28.57% 42.85%,
+      #28b428 42.85% 57.14%,
+      #b42bb1 57.14% 71.42%,
+      #b42525 71.42% 85.71%,
+      #2528b4 85.71% 100%
+    );
   }
 
   // ─── Bottom sheet (share / multi-repo source) ────────────────────────────
@@ -446,14 +540,3 @@
   }
 }
 
-@keyframes feed-nudge {
-  0%,
-  100% {
-    opacity: 0.5;
-    transform: translateY(0);
-  }
-  50% {
-    opacity: 1;
-    transform: translateY(-4px);
-  }
-}

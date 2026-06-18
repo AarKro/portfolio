@@ -1,0 +1,10 @@
+// Off-screen, zero-sized container for preloading video elements. Not
+// display:none — that can stop browsers from fetching the media.
+.video-preloader {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+  pointer-events: none;
+  opacity: 0;
+}

@@ -5,6 +5,7 @@ import { useSwipe } from '../../hooks/useSwipe';
 import { IntroProgram } from '../programs/IntroProgram/IntroProgram';
 import { ProjectProgram } from '../programs/ProjectProgram/ProjectProgram';
 import { StaticNoise } from '../StaticNoise/StaticNoise';
+import { VideoPreloader } from '../VideoPreloader/VideoPreloader';
 import './Screen.scss';
 
 /** How long the one-time channel hint stays up for deep-linked visitors */
@@ -25,6 +26,12 @@ interface ScreenProps {
 export function Screen({ tv }: ScreenProps) {
   const { channel, poweredOn, staticVisible, osdVisible } = tv;
   const project = channel >= FIRST_PROJECT_CHANNEL ? PROJECTS[channel - FIRST_PROJECT_CHANNEL] : null;
+
+  // Warm the clips on either side of the current channel so CH ▲/▼ lands on an
+  // already-buffered video (out-of-range indices fall through to undefined).
+  const neighborVideoUrls = [channel - 1, channel + 1]
+    .map((ch) => PROJECTS[ch - FIRST_PROJECT_CHANNEL]?.videoUrl)
+    .filter((url): url is string => Boolean(url));
 
   // Visitors who deep-link past the intro never see the explainer,
   // so show them the arrow-keys hint once.
@@ -95,6 +102,8 @@ export function Screen({ tv }: ScreenProps) {
         <div className="screen__vignette" aria-hidden="true" />
         <div className="screen__glare" aria-hidden="true" />
       </div>
+
+      {poweredOn && <VideoPreloader urls={neighborVideoUrls} />}
     </div>
   );
 }

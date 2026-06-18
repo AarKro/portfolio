@@ -87,6 +87,7 @@ export function ProjectProgram({ project, channel }: ProjectProgramProps) {
           <video
             className="program__video"
             src={project.videoUrl}
+            poster={project.posterUrl}
             muted
             loop
             autoPlay
