@@ -194,7 +194,6 @@ function FeedCard({ project, channel, isActive, preloadVideo, setRef, onProfile 
   const [expanded, setExpanded] = useState(false);
   const [liked, setLiked] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
-  const channelLabel = String(channel).padStart(2, '0');
 
   // Only the card in view plays (battery + mobile single-video limits); leaving
   // a card resets its open panels. play() may reject without a user gesture
@@ -264,18 +263,19 @@ function FeedCard({ project, channel, isActive, preloadVideo, setRef, onProfile 
           aria-pressed={liked}
           aria-label={liked ? 'Unlike' : 'Like'}
         >
-          <HeartIcon filled={liked} />
+          <HeartIcon />
         </button>
 
         {project.demoUrl && (
           <a
-            className="feed__rail-btn"
+            className="feed__rail-btn feed__rail-btn--demo"
             href={project.demoUrl}
             target="_blank"
             rel="noreferrer"
             aria-label="Open live demo"
           >
             <DemoIcon />
+            <span className="feed__rail-label">DEMO</span>
           </a>
         )}
 
@@ -284,23 +284,21 @@ function FeedCard({ project, channel, isActive, preloadVideo, setRef, onProfile 
         </button>
       </div>
 
-      {/* bottom-left caption: title + tags, expanding upward to reveal details */}
+      {/* bottom-left caption: title, then tags, then a one-line synopsis that
+          expands to the full description + behind-the-scenes */}
       <div className="feed__bug">
         <div className="feed__caption">
-          <div className="feed__headline">
-            <div className="feed__headline-text">
-              <span className="feed__channel" aria-hidden="true">
-                CH {channelLabel}
-              </span>
-              <h2 className="feed__title">{project.title}</h2>
-              <ul className="feed__tech">
-                {project.tech.map((tag) => (
-                  <li key={tag} className="feed__tag">
-                    {tag}
-                  </li>
-                ))}
-              </ul>
-            </div>
+          <h2 className="feed__title">{project.title}</h2>
+          <ul className="feed__tech">
+            {project.tech.map((tag) => (
+              <li key={tag} className="feed__tag">
+                {tag}
+              </li>
+            ))}
+          </ul>
+
+          <div className="feed__synopsis">
+            <p className="feed__description">{renderInlineLinks(project.description)}</p>
             <button
               className="feed__expand"
               onClick={() => setExpanded((v) => !v)}
@@ -311,17 +309,16 @@ function FeedCard({ project, channel, isActive, preloadVideo, setRef, onProfile 
             </button>
           </div>
 
-          <div className="feed__details" aria-hidden={!expanded}>
-            <div className="feed__details-inner">
-              <p className="feed__description">{renderInlineLinks(project.description)}</p>
-              {project.behindTheScenes && (
+          {project.behindTheScenes && (
+            <div className="feed__details" aria-hidden={!expanded}>
+              <div className="feed__details-inner">
                 <p className="feed__behind">
                   <span className="feed__behind-label">BEHIND THE SCENES</span>
                   {renderInlineLinks(project.behindTheScenes)}
                 </p>
-              )}
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
 

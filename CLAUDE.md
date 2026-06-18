@@ -154,13 +154,16 @@ primary input) gets desktop; everything else gets the feed:
 ## The mobile/tablet feed (`MobileFeed`)
 
 A full-screen vertical scroll-snap feed (one card per channel) styled after
-TikTok, in a modern sans (`$font-feed` = Inter) rather than the CRT fonts:
+TikTok — its own **social palette**, NOT the CRT one: white text on black, a
+single cyan accent (`$feed-accent`, for labels/badges/links/just-viewed), the
+pink-red `$feed-like` heart, and a modern sans (`$font-feed` = Inter). Keep CRT
+phosphor colours out of the feed. Rail icons are **filled/solid** silhouettes.
 - **Card 1 is a profile page** (`feed__card--profile`): a centred header (name +
   tagline + GitHub/LinkedIn) over a 3-column **thumbnail grid** of every project
   (`feed__grid` / `feed__tile`). Each tile is the project's `posterUrl` (or a
   mini test card) with its **title bottom-left**; tapping one smooth-scrolls
   (`scrollIntoView({ behavior: 'smooth' })`) to that project's card. Arriving back via a card's
-  profile icon badges the tile you came from ("Just viewed", purple ring) until
+  profile icon badges the tile you came from ("Just viewed", cyan ring) until
   you leave the profile again (`justViewedChannel` + `arrivedProfileRef`).
 - Each project card is a full-bleed teaser video (`poster={posterUrl}` shows the
   first frame while it loads) or SMPTE test card, with a right-edge **rail** of
@@ -175,10 +178,12 @@ TikTok, in a modern sans (`$font-feed` = Inter) rather than the CRT fonts:
   `preload` per card by distance to the active card; the desktop TV mounts a
   `VideoPreloader` for the prev/next channels. So clips load on demand in a
   small window, not all up front.
-- The **caption** (bottom-left) shows channel/title/tags with a chevron; tapping
-  it expands the card's `description` + `behindTheScenes` over a translucent
-  black panel (the video still shows through), animated via the `0fr→1fr`
-  grid-rows trick.
+- The **caption** (bottom-left): title on its own line, tags below, then a
+  one-line **synopsis** — the `description` clipped to a single line with an
+  ellipsis and an expand caret aligned to that line. Tapping the caret un-clips
+  the description and reveals `behindTheScenes` below (the `0fr→1fr` grid-rows
+  trick) over a translucent panel (video still shows through). No channel number
+  in the caption (the green `CH 0X` was removed for the social look).
 - **Share** (and the multi-repo "code" case, e.g. the Discord bots) opens a
   `FeedSheet` — a scrim-backed bottom sheet of links. Share = the current
   project's GitHub first, then Aaron's LinkedIn (a sourceless channel like

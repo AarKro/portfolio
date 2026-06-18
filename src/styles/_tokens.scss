@@ -32,5 +32,7 @@ $font-brand: 'Bungee', sans-serif; // cabinet brand badge only
 // modern UI font for the mobile/tablet feed (TikTok-ish)
 $font-feed: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
 
-// The mobile feed's "like" heart when active (white → pink-red)
+// The mobile feed's social palette (TikTok-ish): white text on black, a single
+// cyan accent for labels/badges/links, and the pink-red "like" heart.
+$feed-accent: #25f4ee;
 $feed-like: #fe2c55;
