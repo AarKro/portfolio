@@ -40,19 +40,23 @@ function channelFromHash(): number {
  */
 export function MobileFeed() {
   const sectionsRef = useRef<(HTMLElement | null)[]>([]);
-  const [activeChannel, setActiveChannel] = useState(channelFromHash);
-  // The project you jumped to the profile FROM — its grid tile gets a "just
-  // viewed" badge while you're on the profile, cleared once you leave again.
+  // Channel 1 is the profile, which is a tap-only overlay (NOT a swipe card):
+  // `profileOpen` toggles it; `activeChannel` always tracks a project (2..N).
+  const [initialChannel] = useState(channelFromHash);
+  const [profileOpen, setProfileOpen] = useState(initialChannel === 1);
+  const [activeChannel, setActiveChannel] = useState(
+    initialChannel === 1 ? FIRST_PROJECT_CHANNEL : initialChannel,
+  );
+  // The project you opened the profile FROM — its grid tile gets a "just viewed"
+  // badge while the profile is open, cleared once you leave again.
   const [justViewedChannel, setJustViewedChannel] = useState<number | null>(null);
-  const arrivedProfileRef = useRef(false);
 
-  // Jump a deep-linked card into view on first paint
+  // Deep-linked straight to a project: put it in view under the closed profile
   useEffect(() => {
-    const initial = channelFromHash();
-    if (initial !== 1) sectionsRef.current[initial - 1]?.scrollIntoView();
-  }, []);
+    if (initialChannel !== 1) sectionsRef.current[initialChannel - 1]?.scrollIntoView();
+  }, [initialChannel]);
 
-  // Whichever card is most in view becomes the active channel
+  // Whichever project card is most in view becomes the active channel
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
@@ -67,113 +71,106 @@ export function MobileFeed() {
     return () => observer.disconnect();
   }, []);
 
-  // Mirror the active card to the URL hash and the browser tab
+  // Mirror to the URL hash + tab title — the profile is channel 1
   useEffect(() => {
-    window.history.replaceState(null, '', `#ch-${activeChannel}`);
-    const project =
-      activeChannel >= FIRST_PROJECT_CHANNEL ? PROJECTS[activeChannel - FIRST_PROJECT_CHANNEL] : null;
+    const channel = profileOpen ? 1 : activeChannel;
+    window.history.replaceState(null, '', `#ch-${channel}`);
+    const project = profileOpen ? null : PROJECTS[activeChannel - FIRST_PROJECT_CHANNEL];
     document.title = project
       ? `CH ${String(activeChannel).padStart(2, '0')} · ${project.title} — Aaron Kromer`
       : SITE_TITLE;
-  }, [activeChannel]);
+  }, [profileOpen, activeChannel]);
+
+  // Leaving the profile clears the "just viewed" badge
+  useEffect(() => {
+    if (!profileOpen) setJustViewedChannel(null);
+  }, [profileOpen]);
 
   const setSectionRef = (channel: number) => (el: HTMLElement | null) => {
     sectionsRef.current[channel - 1] = el;
   };
 
-  // Thumbnail grid → smoothly scroll to a project card.
-  const goToChannel = (channel: number) => {
-    sectionsRef.current[channel - 1]?.scrollIntoView({ behavior: 'smooth' });
+  // Tile tap → reveal that project: scroll the feed under the overlay, then
+  // slide the profile away.
+  const openProject = (channel: number) => {
+    sectionsRef.current[channel - 1]?.scrollIntoView();
+    setProfileOpen(false);
   };
 
-  // Rail profile icon → smoothly scroll back to the profile, badging the card
-  // we came from. `arrivedProfileRef` guards against the badge being cleared by
-  // the intermediate cards the smooth scroll passes through (see effect below).
-  const goToProfile = (fromChannel: number) => {
+  // Rail profile icon → slide the profile back over, badging the card we left.
+  const openProfile = (fromChannel: number) => {
     setJustViewedChannel(fromChannel);
-    arrivedProfileRef.current = false;
-    sectionsRef.current[0]?.scrollIntoView({ behavior: 'smooth' });
+    setProfileOpen(true);
   };
-
-  // Clear the "just viewed" badge once the user has reached the profile and
-  // then leaves it again (manual scroll or a thumbnail tap).
-  useEffect(() => {
-    if (activeChannel === 1) {
-      arrivedProfileRef.current = true;
-    } else if (arrivedProfileRef.current) {
-      arrivedProfileRef.current = false;
-      setJustViewedChannel(null);
-    }
-  }, [activeChannel]);
 
   return (
-    <div className="feed">
-      <section className="feed__card feed__card--profile" data-channel={1} ref={setSectionRef(1)}>
-        <div className="feed__profile">
-          <header className="feed__profile-head">
-            <div className="feed__profile-id">
-              <h1 className="feed__intro-title">Aaron Kromer</h1>
-              <p className="feed__intro-kicker">Frontend Developer &amp; Interaction Designer</p>
-              <p className="feed__intro-contact">
-                <a href="https://github.com/AarKro" target="_blank" rel="noreferrer">
-                  <GithubIcon />
-                  GitHub
-                </a>
-                <a
-                  href="https://www.linkedin.com/in/aaron-kromer-a3026b193/"
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  <LinkedinIcon />
-                  LinkedIn
-                </a>
-              </p>
-            </div>
-            <p className="feed__intro-sub">Tap a project, or swipe up to browse.</p>
-          </header>
+    <>
+      <div className="feed">
+        {PROJECTS.map((project, index) => {
+          const channel = index + FIRST_PROJECT_CHANNEL;
+          return (
+            <FeedCard
+              key={project.id}
+              project={project}
+              channel={channel}
+              isActive={!profileOpen && activeChannel === channel}
+              // preload the active card and its immediate neighbours only
+              preloadVideo={Math.abs(channel - activeChannel) <= 1}
+              setRef={setSectionRef(channel)}
+              onProfile={openProfile}
+            />
+          );
+        })}
+      </div>
 
-          <div className="feed__grid">
-            {PROJECTS.map((project, index) => {
-              const channel = index + FIRST_PROJECT_CHANNEL;
-              return (
-                <button
-                  key={project.id}
-                  className={`feed__tile ${justViewedChannel === channel ? 'is-just-viewed' : ''}`}
-                  onClick={() => goToChannel(channel)}
-                  aria-label={`Open ${project.title}`}
-                >
-                  {project.posterUrl ? (
-                    <img className="feed__tile-media" src={project.posterUrl} alt="" loading="lazy" />
-                  ) : (
-                    <span className="feed__tile-testcard" aria-hidden="true" />
-                  )}
-                  <span className="feed__tile-title">{project.title}</span>
-                  {justViewedChannel === channel && (
-                    <span className="feed__tile-badge">Just viewed</span>
-                  )}
-                </button>
-              );
-            })}
+      <section className={`feed__profile ${profileOpen ? 'is-open' : ''}`} aria-hidden={!profileOpen}>
+        <header className="feed__profile-head">
+          <div className="feed__profile-id">
+            <h1 className="feed__intro-title">Aaron Kromer</h1>
+            <p className="feed__intro-kicker">Frontend Developer &amp; Interaction Designer</p>
+            <p className="feed__intro-contact">
+              <a href="https://github.com/AarKro" target="_blank" rel="noreferrer">
+                <GithubIcon />
+                GitHub
+              </a>
+              <a
+                href="https://www.linkedin.com/in/aaron-kromer-a3026b193/"
+                target="_blank"
+                rel="noreferrer"
+              >
+                <LinkedinIcon />
+                LinkedIn
+              </a>
+            </p>
           </div>
+          <p className="feed__intro-sub">Tap a project and swipe away!</p>
+        </header>
+
+        <div className="feed__grid">
+          {PROJECTS.map((project, index) => {
+            const channel = index + FIRST_PROJECT_CHANNEL;
+            return (
+              <button
+                key={project.id}
+                className={`feed__tile ${justViewedChannel === channel ? 'is-just-viewed' : ''}`}
+                onClick={() => openProject(channel)}
+                aria-label={`Open ${project.title}`}
+              >
+                {project.posterUrl ? (
+                  <img className="feed__tile-media" src={project.posterUrl} alt="" loading="lazy" />
+                ) : (
+                  <span className="feed__tile-testcard" aria-hidden="true" />
+                )}
+                <span className="feed__tile-title">{project.title}</span>
+                {justViewedChannel === channel && (
+                  <span className="feed__tile-badge">Just viewed</span>
+                )}
+              </button>
+            );
+          })}
         </div>
       </section>
-
-      {PROJECTS.map((project, index) => {
-        const channel = index + FIRST_PROJECT_CHANNEL;
-        return (
-          <FeedCard
-            key={project.id}
-            project={project}
-            channel={channel}
-            isActive={activeChannel === channel}
-            // preload the active card and its immediate neighbours only
-            preloadVideo={Math.abs(channel - activeChannel) <= 1}
-            setRef={setSectionRef(channel)}
-            onProfile={goToProfile}
-          />
-        );
-      })}
-    </div>
+    </>
   );
 }
 

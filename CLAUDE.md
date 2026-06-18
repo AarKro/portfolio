@@ -153,27 +153,29 @@ primary input) gets desktop; everything else gets the feed:
 
 ## The mobile/tablet feed (`MobileFeed`)
 
-A full-screen vertical scroll-snap feed (one card per channel) styled after
-TikTok — its own **social palette**, NOT the CRT one: a **light** profile page +
-bottom sheet (dark text on near-white), video cards with white text over the
-footage, a single cyan accent (`$feed-accent`, for labels/badges/links/
-just-viewed), the pink-red `$feed-like` heart, and a modern sans (`$font-feed` =
-Inter). Keep CRT phosphor colours out of the feed. Rail icons are **filled/solid**
-silhouettes (`icons.tsx`), including the real GitHub/LinkedIn brand marks.
-- **Card 1 is a light profile page** (`feed__card--profile`): a fixed-height
-  header (`feed__profile-head`, `height: 40dvh`) so the **grid always starts at
-  40% of the screen**. Inside the header, the identity cluster (name → tagline →
-  GitHub/LinkedIn buttons with brand icons) sits at the top and the one-line
-  "tap/swipe" instruction is pinned at the bottom just above the grid — the gap
-  between them grows on taller screens (`justify-content: space-between`). The
-  bottom 60% is a 3-column **thumbnail grid** of every project (`feed__grid` /
-  `feed__tile`); it scrolls internally when the tiles overflow
-  (`overscroll-behavior: contain`, so the scroll stays in the grid instead of
-  snapping the feed to the first project). Each tile is the project's `posterUrl` (or a
-  mini test card) with its **title bottom-left**; tapping one smooth-scrolls
-  (`scrollIntoView({ behavior: 'smooth' })`) to that project's card. Arriving back via a card's
-  profile icon badges the tile you came from ("Just viewed", cyan ring) until
-  you leave the profile again (`justViewedChannel` + `arrivedProfileRef`).
+A full-screen vertical scroll-snap feed (one card per **project** channel) plus
+a separate profile overlay, styled after TikTok — its own **social palette**,
+NOT the CRT one: a **light** profile + bottom sheet (dark text on near-white),
+video cards with white text over the footage, a single cyan accent
+(`$feed-accent`, for labels/badges/links/just-viewed), the pink-red `$feed-like`
+heart, and a modern sans (`$font-feed` = Inter). Keep CRT phosphor colours out of
+the feed. Rail icons are **filled/solid** silhouettes (`icons.tsx`), including the
+real GitHub/LinkedIn brand marks.
+- **The profile (channel 1) is a tap-only overlay**, NOT a swipe card
+  (`feed__profile`, `position: fixed`, slides down from the top on
+  `.is-open`). `profileOpen` state toggles it — you can't swipe into or out of
+  it; you **tap a tile to open a project** and the rail **profile icon to return**.
+  This is why the profile is a fixed overlay rather than a snap card: swiping is
+  for the feed alone. Layout: a fixed-height header (`feed__profile-head`,
+  `height: 40dvh`) so the **grid starts at 40%**; inside it the identity cluster
+  (name → tagline → GitHub/LinkedIn brand-icon buttons) sits at top and the
+  one-line instruction is pinned just above the grid (gap grows on tall screens
+  via `justify-content: space-between`). The bottom 60% is a 3-column **thumbnail
+  grid** (`feed__grid` / `feed__tile`) that scrolls internally when tiles overflow
+  (`overscroll-behavior: contain`). Each tile is the project's `posterUrl` (or a
+  mini test card) with its **title bottom-left**; opening the profile from a
+  card's profile icon badges the tile you came from ("Just viewed", cyan ring),
+  cleared when the profile closes (`justViewedChannel`).
 - Each project card is a full-bleed teaser video (`poster={posterUrl}` shows the
   first frame while it loads) or SMPTE test card, with a right-edge **rail** of
   icon-only actions: a **profile icon at the top** (smooth-scrolls back to card
@@ -200,9 +202,12 @@ silhouettes (`icons.tsx`), including the real GitHub/LinkedIn brand marks.
   a scrim-backed, drag-to-dismiss bottom sheet listing each repo. (Single-repo
   source is a plain link; share is native, so the sheet is source-only now.
   LinkedIn lives on the profile page.)
-- The active card is tracked with an `IntersectionObserver`; only it plays its
-  video, and it drives the `#ch-N` hash + `document.title` (consistent with the
-  TV, so deep links work).
+- The active project card is tracked with an `IntersectionObserver`
+  (`activeChannel`, always a project 2..N); only it plays — and only when the
+  profile is closed (`isActive = !profileOpen && …`), so nothing plays behind the
+  overlay. The hash/title use channel 1 when `profileOpen`, else the active
+  project (consistent with the TV, so `#ch-N` deep links still work — a project
+  deep link opens with the profile closed and that card in view).
 
 ## One scene, one TV (the core architecture)
 
