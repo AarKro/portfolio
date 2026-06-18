@@ -24,12 +24,12 @@
     }
   }
 
-  // top 40% of the screen: identity cluster (name → tagline → social links) at
+  // top 30% of the screen: identity cluster (name → tagline → social links) at
   // the top, the instruction line pinned just above the grid. The space between
   // them grows on taller screens (space-between).
   &__profile-head {
     flex: none;
-    height: 40dvh;
+    height: 35dvh;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
@@ -106,14 +106,14 @@
     overscroll-behavior: contain;
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 2px;
+    gap: 1px;
     align-content: start;
-    padding: 0 2px env(safe-area-inset-bottom);
+    padding: 0 0 env(safe-area-inset-bottom);
   }
 
   &__tile {
     position: relative;
-    aspect-ratio: 1;
+    aspect-ratio: 3 / 4;
     overflow: hidden;
     padding: 0;
     border: none;
