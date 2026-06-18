@@ -1,5 +1,24 @@
 // Shared interaction mixins.
 
+// Frosted-glass surface for the mobile feed. The feed has two backdrops, so two
+// tones — `media` (white text over the video cards) and `light` (the light
+// profile hero) — but both share one blur/hairline-border recipe (incl. the
+// `-webkit-` prefix for iOS) so glass reads consistently across the feed.
+@mixin glass($tone: media) {
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+
+  @if $tone == light {
+    background: rgba(255, 255, 255, 0.5);
+    box-shadow:
+      inset 0 0 0 1px rgba(255, 255, 255, 0.7),
+      0 6px 18px rgba(20, 22, 26, 0.1);
+  } @else {
+    background: rgba(255, 255, 255, 0.1);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.18);
+  }
+}
+
 // Touch-safe "invert"/highlight affordance. The styled state shows on real
 // hover (gated to hover-capable pointers, so a tap on a touchscreen never
 // leaves the highlight stuck) and always on keyboard focus. Pass the visual

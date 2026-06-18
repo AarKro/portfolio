@@ -1,18 +1,19 @@
 @use '../../../styles/tokens' as *;
+@use '../../../styles/interactions' as *;
 
 .feed {
   // The profile is a fixed, tap-only overlay (NOT a swipe card): you tap a tile
   // to open a project; swiping is for the feed alone. Slides down from the top.
-  // A dark, immersive hero (drifting aurora + glowing monogram) that flows into
-  // the black feed; the project grid below is unchanged.
+  // A clean, light hero (TikTok-ish) with the name as a chromatic-split logo;
+  // the project grid below is unchanged.
   &__profile {
     position: fixed;
     inset: 0;
     z-index: 10;
     display: flex;
     flex-direction: column;
-    background: #07080d;
-    color: #f4f6fb;
+    background: radial-gradient(ellipse at 50% 20%, #ffffff, #e7eaef 76%);
+    color: #15161a;
     font-family: $font-feed; // sibling of .feed, so doesn't inherit its font
     -webkit-tap-highlight-color: transparent;
     // the WHOLE page scrolls (not just the grid) when projects overflow
@@ -32,61 +33,6 @@
       transform: translateY(0);
       pointer-events: auto;
     }
-  }
-
-  // ─── Drifting aurora backdrop (decorative) ─────────────────────────────────
-  &__aurora {
-    // fixed (relative to the transformed .feed__profile) so it stays pinned to
-    // the viewport hero while the page scrolls
-    position: fixed;
-    inset: 0;
-    z-index: 0;
-    overflow: hidden;
-    pointer-events: none;
-    // fade the colour out toward the grid so tiles read cleanly
-    mask-image: linear-gradient(to bottom, #000 0%, #000 42%, rgba(0, 0, 0, 0.35) 64%, transparent 80%);
-  }
-
-  &__aurora-blob {
-    position: absolute;
-    width: 78vw;
-    height: 78vw;
-    max-width: 520px;
-    max-height: 520px;
-    border-radius: 50%;
-    filter: blur(58px);
-    opacity: 0.72;
-    will-change: transform;
-
-    &--cyan {
-      top: -14%;
-      left: -18%;
-      background: radial-gradient(circle at 50% 50%, $feed-accent 0%, rgba(37, 244, 238, 0) 68%);
-      animation: feed-aurora-a 22s ease-in-out infinite;
-    }
-
-    &--pink {
-      top: -6%;
-      right: -22%;
-      background: radial-gradient(circle at 50% 50%, $feed-like 0%, rgba(254, 44, 85, 0) 68%);
-      animation: feed-aurora-b 26s ease-in-out infinite;
-    }
-
-    &--violet {
-      top: 16%;
-      left: 24%;
-      background: radial-gradient(circle at 50% 50%, #7c5cff 0%, rgba(124, 92, 255, 0) 68%);
-      opacity: 0.55;
-      animation: feed-aurora-c 19s ease-in-out infinite;
-    }
-  }
-
-  // faint film grain over the colour, for depth
-  &__aurora-grain {
-    position: absolute;
-    inset: -50%;
-    opacity: 0.05;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   }
 
   // ─── Identity hero ─────────────────────────────────────────────────────────
@@ -112,52 +58,32 @@
     gap: 0.6rem;
   }
 
-  // the name sits over a large, faint, floating chromatic "AK" watermark
+  // wrapper drives the staggered entrance; the name inside does the float
+  // (separate elements so the two transforms never fight)
   &__nameplate {
-    position: relative;
     display: grid;
     place-items: center;
-    isolation: isolate; // keep the watermark's negative z-index local
     padding: 0.6rem 0;
   }
 
-  // big "AK" behind the name — cleaned-up echo of public/favicon-mobile.svg
-  &__monogram {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    z-index: -1;
-    font-weight: 900;
-    font-size: clamp(7rem, 38vw, 12rem);
-    line-height: 1;
-    letter-spacing: 0.01em;
-    color: #fff;
-    // TikTok-style chromatic split: cyan + pink offsets behind the white
-    text-shadow:
-      -4px -3px 0 $feed-accent,
-      4px 3px 0 $feed-like;
-    opacity: 0.12;
-    pointer-events: none;
-    white-space: nowrap;
-    animation: feed-monogram-float 7s ease-in-out infinite;
-  }
-
+  // the name AS the logo: TikTok chromatic split (echoes favicon-mobile.svg) +
+  // a gentle float — the monogram treatment applied to the whole name
   &__intro-title {
-    position: relative;
     font-size: clamp(2.5rem, 13vw, 3.6rem);
     font-weight: 800;
-    line-height: 1;
+    line-height: 1.05;
     letter-spacing: -0.01em;
-    background: linear-gradient(180deg, #ffffff 0%, #c7cede 100%);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-    filter: drop-shadow(0 2px 14px rgba(37, 244, 238, 0.18));
+    color: #fff;
+    text-shadow:
+      -2px -1.5px 0 $feed-accent,
+      2px 1.5px 0 $feed-like,
+      0 3px 16px rgba(0, 0, 0, 0.4);
+    animation: feed-name-float 7s ease-in-out infinite;
   }
 
   // tagline, sits below the name
   &__intro-kicker {
-    color: rgba(244, 246, 251, 0.66);
+    color: rgba(0, 0, 0, 0.62);
     font-weight: 500;
     font-size: 1.02rem;
     letter-spacing: 0.01em;
@@ -165,7 +91,7 @@
 
   &__intro-sub {
     max-width: 32ch;
-    color: rgba(244, 246, 251, 0.58);
+    color: rgba(0, 0, 0, 0.55);
     font-size: 0.98rem;
     line-height: 1.4;
   }
@@ -184,11 +110,9 @@
       gap: 0.45rem;
       padding: 0 1.3rem;
       border-radius: 999px;
-      // glassy pill on the dark hero
-      background: rgba(255, 255, 255, 0.07);
-      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12);
-      backdrop-filter: blur(8px);
-      color: #f4f6fb;
+      // frosted glass — shares the feed's glass recipe (light tone)
+      @include glass(light);
+      color: #15161a;
       text-decoration: none;
       font-weight: 600;
       transition: transform 0.12s ease, box-shadow 0.18s ease, background 0.18s ease;
@@ -200,41 +124,35 @@
 
       &:active {
         transform: scale(0.96);
-        background: rgba(255, 255, 255, 0.13);
-        box-shadow: inset 0 0 0 1px rgba(37, 244, 238, 0.6);
+        background: rgba(255, 255, 255, 0.7);
+        box-shadow:
+          inset 0 0 0 1px rgba(37, 244, 238, 0.7),
+          0 6px 18px rgba(20, 22, 26, 0.12);
       }
     }
   }
 
   // ─── Staggered entrance — children rise+fade in once the panel is open ──────
+  // Driven by `animation` (not a transition) so it also plays on initial load,
+  // when the profile mounts already-open (deep link / fresh visit to channel 1).
   &__nameplate,
   &__intro-kicker,
   &__intro-contact,
   &__intro-sub {
     opacity: 0;
-    transform: translateY(14px);
-    transition: opacity 520ms ease, transform 520ms cubic-bezier(0.2, 0.7, 0.2, 1);
   }
 
   &__profile.is-open &__nameplate {
-    opacity: 1;
-    transform: translateY(0);
-    transition-delay: 120ms;
+    animation: feed-rise 520ms cubic-bezier(0.2, 0.7, 0.2, 1) 120ms both;
   }
   &__profile.is-open &__intro-kicker {
-    opacity: 1;
-    transform: translateY(0);
-    transition-delay: 280ms;
+    animation: feed-rise 520ms cubic-bezier(0.2, 0.7, 0.2, 1) 280ms both;
   }
   &__profile.is-open &__intro-contact {
-    opacity: 1;
-    transform: translateY(0);
-    transition-delay: 360ms;
+    animation: feed-rise 520ms cubic-bezier(0.2, 0.7, 0.2, 1) 360ms both;
   }
   &__profile.is-open &__intro-sub {
-    opacity: 1;
-    transform: translateY(0);
-    transition-delay: 440ms;
+    animation: feed-rise 520ms cubic-bezier(0.2, 0.7, 0.2, 1) 440ms both;
   }
 
   // ─── Project grid (UNCHANGED layout) ───────────────────────────────────────
@@ -337,60 +255,41 @@
 }
 
 // ─── Animations ──────────────────────────────────────────────────────────────
-@keyframes feed-aurora-a {
-  0%,
-  100% {
-    transform: translate(0, 0) scale(1);
+// staggered entrance: rise + fade
+@keyframes feed-rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
   }
-  50% {
-    transform: translate(18%, 12%) scale(1.18);
-  }
-}
-
-@keyframes feed-aurora-b {
-  0%,
-  100% {
-    transform: translate(0, 0) scale(1.1);
-  }
-  50% {
-    transform: translate(-16%, 16%) scale(0.92);
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
-@keyframes feed-aurora-c {
+// the name logo drifts gently
+@keyframes feed-name-float {
   0%,
   100% {
-    transform: translate(0, 0) scale(0.95);
+    transform: translateY(0) scale(1);
   }
   50% {
-    transform: translate(12%, -14%) scale(1.2);
-  }
-}
-
-// the watermark drifts gently behind the name (keeps its centring transform)
-@keyframes feed-monogram-float {
-  0%,
-  100% {
-    transform: translate(-50%, -50%) scale(1);
-  }
-  50% {
-    transform: translate(-50%, calc(-50% - 7px)) scale(1.03);
+    transform: translateY(-6px) scale(1.02);
   }
 }
 
 // respect reduced-motion: hold everything still, show the hero immediately
 @media (prefers-reduced-motion: reduce) {
-  .feed__aurora-blob,
-  .feed__monogram {
+  .feed__intro-title {
     animation: none;
   }
 
-  .feed__nameplate,
-  .feed__intro-kicker,
-  .feed__intro-contact,
-  .feed__intro-sub {
+  .feed__profile.is-open .feed__nameplate,
+  .feed__profile.is-open .feed__intro-kicker,
+  .feed__profile.is-open .feed__intro-contact,
+  .feed__profile.is-open .feed__intro-sub {
     opacity: 1;
     transform: none;
-    transition: none;
+    animation: none;
   }
 }

@@ -1,7 +1,6 @@
 @use '../../../styles/tokens' as *;
 
-// Bottom sheet (multi-repo source list). Dark glass, to match the profile hero
-// and the cards' glass pills.
+// Bottom sheet (multi-repo source list). Light, to match the feed's chrome.
 .feed {
   &__sheet-layer {
     position: absolute;
@@ -33,10 +32,8 @@
     right: 0;
     bottom: 0;
     padding: 0.7rem 1.2rem calc(env(safe-area-inset-bottom) + 1.4rem);
-    background: rgba(16, 18, 26, 0.82);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
-    backdrop-filter: blur(18px);
-    color: #f4f6fb;
+    background: #fff;
+    color: #15161a;
     border-radius: 18px 18px 0 0;
     transform: translateY(100%);
     transition: transform 320ms cubic-bezier(0.7, 0, 0.2, 1);
@@ -67,12 +64,12 @@
     height: 4px;
     margin: 0 auto 1rem;
     border-radius: 2px;
-    background: rgba(255, 255, 255, 0.25);
+    background: rgba(0, 0, 0, 0.18);
   }
 
   &__sheet-title {
     margin-bottom: 0.8rem;
-    color: rgba(244, 246, 251, 0.55);
+    color: rgba(0, 0, 0, 0.5);
     font-size: 0.85rem;
     font-weight: 600;
     letter-spacing: 0.06em;
@@ -92,17 +89,14 @@
     min-height: 52px;
     padding: 0 1.1rem;
     border-radius: 12px;
-    // glass pill — matches the profile's social buttons / cards' tech pills
-    background: rgba(255, 255, 255, 0.07);
-    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12);
-    color: #f4f6fb;
+    background: rgba(0, 0, 0, 0.05);
+    color: #15161a;
     text-decoration: none;
     font-weight: 600;
-    transition: background 0.18s ease, box-shadow 0.18s ease;
+    transition: background 0.18s ease;
 
     &:active {
-      background: rgba(255, 255, 255, 0.13);
-      box-shadow: inset 0 0 0 1px rgba(37, 244, 238, 0.6);
+      background: rgba(0, 0, 0, 0.1);
     }
   }
 }
