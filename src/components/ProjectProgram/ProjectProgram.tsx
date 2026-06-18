@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
-import type { Project } from '../../../data/projects';
-import { renderInlineLinks } from '../../InlineLink/InlineLink';
-import { StaticNoise } from '../../StaticNoise/StaticNoise';
+import type { Project } from '../../data/projects';
+import { renderInlineLinks } from '../InlineLink/InlineLink';
+import { StaticNoise } from '../StaticNoise/StaticNoise';
 import './ProjectProgram.scss';
 
 /** Safety net: never show loading noise forever if the teaser never starts */
