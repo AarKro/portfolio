@@ -177,11 +177,14 @@ silhouettes (`icons.tsx`), including the real GitHub/LinkedIn brand marks.
 - Each project card is a full-bleed teaser video (`poster={posterUrl}` shows the
   first frame while it loads) or SMPTE test card, with a right-edge **rail** of
   icon-only actions: a **profile icon at the top** (smooth-scrolls back to card
-  1), then like (fake heart; white → `$feed-like` pink when toggled), open demo,
-  share. The rail sits at the bottom (lowest icon level with the caption); the
-  caption's left inset matches the rail's right inset. Source code isn't a
-  separate rail button — it lives inside the share sheet. Icons are inline SVGs
-  in `icons.tsx` (no icon dependency).
+  1), then like (fake heart; white → `$feed-like` pink when toggled), a **GitHub
+  source** button (single repo → direct link; a bundle like the Discord bots →
+  opens the source sheet; a sourceless channel like Tramly omits it), open demo,
+  and **share**. Share uses the **native OS share sheet** (`navigator.share`)
+  on the card's `#ch-N` deep link, falling back to copying the link (with a
+  transient "Copied"). The rail sits at the bottom (lowest icon level with the
+  caption); the caption's left inset matches the rail's right inset. Icons are
+  inline SVGs in `icons.tsx` (no icon dependency), incl. the GitHub mark.
 - **Video loading** (both views): each clip shows its `posterUrl` first frame
   instantly, and only the active channel ± 1 is fetched — the feed sets
   `preload` per card by distance to the active card; the desktop TV mounts a
@@ -193,10 +196,10 @@ silhouettes (`icons.tsx`), including the real GitHub/LinkedIn brand marks.
   the description and reveals `behindTheScenes` below (the `0fr→1fr` grid-rows
   trick) over a translucent panel (video still shows through). No channel number
   in the caption (the green `CH 0X` was removed for the social look).
-- **Share** (and the multi-repo "code" case, e.g. the Discord bots) opens a
-  `FeedSheet` — a scrim-backed bottom sheet of links. Share = the current
-  project's GitHub first, then Aaron's LinkedIn (a sourceless channel like
-  Tramly is LinkedIn only).
+- The **multi-repo source** case (e.g. the Discord bots) opens a `FeedSheet` —
+  a scrim-backed, drag-to-dismiss bottom sheet listing each repo. (Single-repo
+  source is a plain link; share is native, so the sheet is source-only now.
+  LinkedIn lives on the profile page.)
 - The active card is tracked with an `IntersectionObserver`; only it plays its
   video, and it drives the `#ch-N` hash + `document.title` (consistent with the
   TV, so deep links work).

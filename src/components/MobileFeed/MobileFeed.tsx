@@ -19,11 +19,6 @@ import './MobileFeed.scss';
 
 const SITE_TITLE = 'Aaron Kromer — Frontend Developer & Interaction Designer, Zürich';
 
-const LINKEDIN_LINK: SheetLink = {
-  label: 'LinkedIn',
-  href: 'https://www.linkedin.com/in/aaron-kromer-a3026b193/',
-};
-
 interface SheetLink {
   label: string;
   href: string;
@@ -197,7 +192,8 @@ function FeedCard({ project, channel, isActive, preloadVideo, setRef, onProfile 
   const videoRef = useRef<HTMLVideoElement>(null);
   const [expanded, setExpanded] = useState(false);
   const [liked, setLiked] = useState(false);
-  const [shareOpen, setShareOpen] = useState(false);
+  const [codeOpen, setCodeOpen] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   // Only the card in view plays (battery + mobile single-video limits); leaving
   // a card resets its open panels. play() may reject without a user gesture
@@ -209,20 +205,43 @@ function FeedCard({ project, channel, isActive, preloadVideo, setRef, onProfile 
     } else {
       video?.pause();
       setExpanded(false);
-      setShareOpen(false);
+      setCodeOpen(false);
     }
   }, [isActive]);
 
-  // Share: this project's GitHub first, then Aaron's LinkedIn. A bundled
-  // channel (e.g. the Discord bots) lists each repo; a sourceless one (e.g.
-  // Tramly) is LinkedIn only. The source code lives here in the share sheet —
-  // there's no separate code button on the rail.
-  const githubShareLinks: SheetLink[] = project.githubUrl
-    ? [{ label: 'GitHub', href: project.githubUrl }]
-    : project.repos
-      ? project.repos.map((repo) => ({ label: `GitHub — ${repo.name}`, href: repo.url }))
-      : [];
-  const shareLinks: SheetLink[] = [...githubShareLinks, LINKEDIN_LINK];
+  // The shareable deep link to this card (same #ch-N format as the TV).
+  const shareUrl = `${window.location.origin}${window.location.pathname}#ch-${channel}`;
+
+  // Source code lives on its own rail button. A single repo links straight out;
+  // a bundled channel (the Discord bots) opens a sheet listing each repo.
+  const repoLinks: SheetLink[] = project.repos
+    ? project.repos.map((repo) => ({ label: repo.name, href: repo.url }))
+    : [];
+
+  // Share: hand off to the OS share sheet (Web Share API). Where that's not
+  // available, fall back to copying the link with a brief confirmation.
+  const handleShare = async () => {
+    const data = {
+      title: project.title,
+      text: `${project.title} — from Aaron Kromer's portfolio`,
+      url: shareUrl,
+    };
+    if (navigator.share) {
+      try {
+        await navigator.share(data);
+      } catch {
+        // user dismissed the share sheet — nothing to do
+      }
+    } else if (navigator.clipboard) {
+      try {
+        await navigator.clipboard.writeText(shareUrl);
+        setCopied(true);
+        window.setTimeout(() => setCopied(false), 1600);
+      } catch {
+        // clipboard blocked — ignore
+      }
+    }
+  };
 
   return (
     <section
@@ -270,6 +289,26 @@ function FeedCard({ project, channel, isActive, preloadVideo, setRef, onProfile 
           <HeartIcon />
         </button>
 
+        {project.githubUrl ? (
+          <a
+            className="feed__rail-btn feed__rail-btn--code"
+            href={project.githubUrl}
+            target="_blank"
+            rel="noreferrer"
+            aria-label="View source code"
+          >
+            <GithubIcon />
+          </a>
+        ) : project.repos ? (
+          <button
+            className="feed__rail-btn feed__rail-btn--code"
+            onClick={() => setCodeOpen(true)}
+            aria-label="View source code"
+          >
+            <GithubIcon />
+          </button>
+        ) : null}
+
         {project.demoUrl && (
           <a
             className="feed__rail-btn feed__rail-btn--demo"
@@ -283,8 +322,13 @@ function FeedCard({ project, channel, isActive, preloadVideo, setRef, onProfile 
           </a>
         )}
 
-        <button className="feed__rail-btn" onClick={() => setShareOpen(true)} aria-label="Share">
+        <button
+          className="feed__rail-btn feed__rail-btn--share"
+          onClick={handleShare}
+          aria-label="Share"
+        >
           <ShareIcon />
+          {copied && <span className="feed__rail-label feed__rail-copied">Copied</span>}
         </button>
       </div>
 
@@ -327,10 +371,10 @@ function FeedCard({ project, channel, isActive, preloadVideo, setRef, onProfile 
       </div>
 
       <FeedSheet
-        open={shareOpen}
-        title="Share"
-        links={shareLinks}
-        onClose={() => setShareOpen(false)}
+        open={codeOpen}
+        title="Source code"
+        links={repoLinks}
+        onClose={() => setCodeOpen(false)}
       />
     </section>
   );

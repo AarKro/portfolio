@@ -130,12 +130,32 @@
         height: 23px;
       }
     }
+
+    // source: the GitHub mark, sized up to match the other rail icons
+    &--code svg {
+      width: 26px;
+      height: 26px;
+    }
+
+    // share: anchor for the transient "Copied" fallback label
+    &--share {
+      position: relative;
+    }
   }
 
   &__rail-label {
     font-size: 0.55rem;
     font-weight: 700;
     letter-spacing: 0.06em;
+  }
+
+  // shown only when the Web Share API is unavailable and we copy the link
+  &__rail-copied {
+    position: absolute;
+    top: calc(100% + 1px);
+    left: 50%;
+    transform: translateX(-50%);
+    white-space: nowrap;
   }
 
   // ─── Bottom-left caption (grows upward when expanded) ────────────────────
