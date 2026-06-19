@@ -42,8 +42,8 @@ Per project:
   new-tab link (there is no in-screen iframe — demos are never framed).
 - `videoUrl` (optional) gives the channel a short teaser clip that autoplays
   (muted, looping) full-bleed as the program backdrop. Import the file from
-  `../assets/desktop-videos` so Vite bundles + fingerprints it (`import clip from
-  '../assets/desktop-videos/foo.mp4'; … videoUrl: clip`), don't hand-write a
+  `../assets/videos` so Vite bundles + fingerprints it (`import clip from
+  '../assets/videos/foo_landscape.mp4'; … videoUrl: clip`), don't hand-write a
   path. Compress before adding (see "Adding a teaser clip").
 - `posterUrl` (optional, pairs with `videoUrl`): the clip's first frame as a
   small image. Used as the `<video poster>` (instant frame while the clip loads,
@@ -78,12 +78,13 @@ Per project:
 
 ## Adding a teaser clip
 
-Clips live in `src/assets/desktop-videos/*.mp4` (imported, bundled,
-fingerprinted — not in `public/`); portrait clips for the feed go in
-`mobile-videos/` (none yet). Always compress before committing — raw screen
-recordings are huge (the source for Scholar's Mate was 2360×1594 @ 120fps,
-9.7 MB; the shipped clip is 1066×720 @ 30fps, no audio, 1.3 MB). Recipe with
-ffmpeg:
+Clips live in `src/assets/videos/*.mp4` (imported, bundled, fingerprinted —
+not in `public/`), one folder for both orientations, distinguished by a
+`_landscape` / `_portrait` suffix: the landscape clip drives the CRT (and is
+the `videoUrl` fallback), the portrait one is the feed's `mobileVideoUrl`.
+Always compress before committing — raw screen recordings are huge (the source
+for Scholar's Mate was 2360×1594 @ 120fps, 9.7 MB; the shipped clip is 1066×720
+@ 30fps, no audio, 1.3 MB). Recipe with ffmpeg:
 
 ```
 ffmpeg -i raw.mov -vf "scale=-2:720,fps=30" -c:v libx264 -preset slow \
@@ -94,12 +95,26 @@ ffmpeg -i raw.mov -vf "scale=-2:720,fps=30" -c:v libx264 -preset slow \
 lets it start before fully downloaded, 720p is plenty for the small CRT
 screen. Drop `crf` toward 30 / `scale` to 540 for an even smaller file.
 
-Then grab a **poster** (first frame) into `src/assets/thumbnails/` for
-`posterUrl` — the loading fallback and the feed grid thumbnail. Regenerate
-whenever the clip changes:
+**Portrait variant for the feed (`mobileVideoUrl`):** the feed prefers a 9:16
+portrait clip and falls back to the landscape `videoUrl`. The shipped ones are
+just the landscape clips centre-cropped to portrait (sides cut equally), so no
+re-shoot needed:
 
 ```
-ffmpeg -i desktop-videos/foo.mp4 -frames:v 1 -vf "scale=-2:540" -q:v 4 thumbnails/foo.jpg
+ffmpeg -i videos/foo_landscape.mp4 -vf "crop='trunc(ih*9/16/2)*2':ih" \
+  -c:v libx264 -preset slow -crf 28 -profile:v high -pix_fmt yuv420p \
+  -movflags +faststart -an videos/foo_portrait.mp4
+```
+
+Then grab **posters** (first frame) into `src/assets/thumbnails/`: a landscape
+one from `videoUrl` for `posterUrl` (desktop `<video poster>`) and a portrait
+`*_portrait.jpg` from the cropped clip for `mobilePosterUrl` (the feed card
+poster + the profile grid tile, which prefer it and fall back to `posterUrl`).
+Regenerate whenever the clips change:
+
+```
+ffmpeg -i videos/foo_landscape.mp4 -frames:v 1 -vf "scale=-2:540" -q:v 4 thumbnails/foo_landscape.jpg
+ffmpeg -i videos/foo_portrait.mp4  -frames:v 1 -vf "scale=-2:540" -q:v 4 thumbnails/foo_portrait.jpg
 ```
 
 ## Architecture
@@ -142,9 +157,8 @@ src/
   utils/broadcast.ts        ← SITE_TITLE + formatChannel/broadcastTitle helpers
                               (shared by the TV and the feed; keeps titles in sync)
   assets/                   ← bundled assets, grouped by kind:
-    desktop-videos/         ← landscape teaser clips (the CRT + feed source today)
-    mobile-videos/          ← portrait clips for the feed (empty until recorded)
-    thumbnails/             ← video first-frame posters (loading + grid)
+    videos/                 ← teaser clips, `_landscape` (CRT) + `_portrait` (feed, centre-cropped)
+    thumbnails/             ← video first-frame posters (loading + grid), `_landscape`/`_portrait`
     icons/                  ← *.svg, imported as components via `?react` (svgr)
   styles/_tokens.scss       ← ALL colors and fonts; theme changes happen here
   styles/_interactions.scss ← shared SCSS mixins: `hover-focus` (touch-safe

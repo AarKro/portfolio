@@ -90,8 +90,8 @@ export function FeedCard({ project, channel, isActive, preloadVideo, setRef, onP
         <video
           className="feed__video"
           ref={videoRef}
-          src={project.videoUrl}
-          poster={project.posterUrl}
+          src={project.mobileVideoUrl ?? project.videoUrl}
+          poster={project.mobilePosterUrl ?? project.posterUrl}
           muted
           loop
           playsInline

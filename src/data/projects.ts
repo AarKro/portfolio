@@ -11,10 +11,14 @@
  * Vite bundles + fingerprints it.
  */
 
-import scholarsMateVideo from '../assets/desktop-videos/scholars_mate.mp4';
-import scholarsMatePoster from '../assets/thumbnails/scholars_mate.jpg';
-import wowGraveyard3dVideo from '../assets/desktop-videos/wow_graveyard_3d.mp4';
-import wowGraveyard3dPoster from '../assets/thumbnails/wow_graveyard_3d.jpg';
+import scholarsMateVideo from '../assets/videos/scholars_mate_landscape.mp4';
+import scholarsMateVideoPortrait from '../assets/videos/scholars_mate_portrait.mp4';
+import scholarsMatePoster from '../assets/thumbnails/scholars_mate_landscape.jpg';
+import scholarsMatePosterPortrait from '../assets/thumbnails/scholars_mate_portrait.jpg';
+import wowGraveyard3dVideo from '../assets/videos/wow_graveyard_3d_landscape.mp4';
+import wowGraveyard3dVideoPortrait from '../assets/videos/wow_graveyard_3d_portrait.mp4';
+import wowGraveyard3dPoster from '../assets/thumbnails/wow_graveyard_3d_landscape.jpg';
+import wowGraveyard3dPosterPortrait from '../assets/thumbnails/wow_graveyard_3d_portrait.jpg';
 
 /** A named source-code link, for channels that bundle several repos. */
 export interface RepoLink {
@@ -55,11 +59,24 @@ export interface Project {
    */
   videoUrl?: string;
   /**
+   * Portrait (9:16) variant of `videoUrl` for the mobile feed — the landscape
+   * clip cropped to portrait (sides cut equally). The feed prefers this when
+   * set and falls back to `videoUrl`. Generate it with ffmpeg (see CLAUDE.md
+   * "Adding a teaser clip") and import from ../assets/videos.
+   */
+  mobileVideoUrl?: string;
+  /**
    * First-frame poster for `videoUrl` — shown instantly while the clip loads
    * (the `<video poster>`), and as the project's thumbnail in the feed grid.
    * Generate from the video (see "Adding a teaser clip"); pairs with videoUrl.
    */
   posterUrl?: string;
+  /**
+   * Portrait (9:16) variant of `posterUrl` for the mobile feed — the feed card
+   * `<video poster>` and the profile grid tile prefer this and fall back to
+   * `posterUrl`. Generate from `mobileVideoUrl` (see CLAUDE.md).
+   */
+  mobilePosterUrl?: string;
 }
 
 export const PROJECTS: Project[] = [
@@ -74,7 +91,9 @@ export const PROJECTS: Project[] = [
     githubUrl: 'https://github.com/AarKro/wow-graveyard-3d',
     demoUrl: 'https://aarkro.github.io/wow-graveyard-3d/',
     videoUrl: wowGraveyard3dVideo,
+    mobileVideoUrl: wowGraveyard3dVideoPortrait,
     posterUrl: wowGraveyard3dPoster,
+    mobilePosterUrl: wowGraveyard3dPosterPortrait,
   },
   {
     id: 'scholars-mate',
@@ -87,7 +106,9 @@ export const PROJECTS: Project[] = [
     githubUrl: 'https://github.com/AarKro/scholars-mate',
     demoUrl: 'https://aarkro.github.io/scholars-mate/',
     videoUrl: scholarsMateVideo,
+    mobileVideoUrl: scholarsMateVideoPortrait,
     posterUrl: scholarsMatePoster,
+    mobilePosterUrl: scholarsMatePosterPortrait,
   },
   {
     id: 'peggy-ashcroft',

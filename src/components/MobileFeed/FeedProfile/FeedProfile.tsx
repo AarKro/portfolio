@@ -56,7 +56,12 @@ export function FeedProfile({ open, justViewedChannel, onOpenProject }: FeedProf
               aria-label={`Open ${project.title}`}
             >
               {project.posterUrl ? (
-                <img className="feed__tile-media" src={project.posterUrl} alt="" loading="lazy" />
+                <img
+                  className="feed__tile-media"
+                  src={project.mobilePosterUrl ?? project.posterUrl}
+                  alt=""
+                  loading="lazy"
+                />
               ) : (
                 <span className="feed__tile-testcard" aria-hidden="true" />
               )}
