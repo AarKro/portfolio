@@ -4,7 +4,7 @@ import { CHANNEL_COUNT, type Project } from '../data/projects';
  * The site/SEO title — must stay in sync with the <title> in index.html.
  * Shown when the TV is on the intro channel and on the mobile profile.
  */
-export const SITE_TITLE = 'Aaron Kromer — Frontend Developer & Interaction Designer, Zürich';
+export const SITE_TITLE = 'Aaron Kromer — Frontend Developer & Interaction Designer';
 
 /**
  * Reads the current channel from the URL hash. Channels are shareable links:
