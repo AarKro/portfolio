@@ -21,10 +21,24 @@ export function FeedProfile({ open, justViewedChannel, onOpenProject }: FeedProf
   return (
     <section className={`feed__profile ${open ? 'is-open' : ''}`} aria-hidden={!open}>
       <header className="feed__profile-head">
+        {/* Figma-style geometric shapes — decorative, clipped to the hero only
+            (so they never bleed into the grid or add scroll) */}
+        <div className="feed__shapes" aria-hidden="true">
+          <span className="feed__shape feed__shape--circle-cyan" />
+          <span className="feed__shape feed__shape--ring-pink" />
+          <span className="feed__shape feed__shape--square-violet" />
+          <span className="feed__shape feed__shape--triangle-violet" />
+          <span className="feed__shape feed__shape--pill-amber" />
+          <span className="feed__shape feed__shape--plus-pink" />
+          <span className="feed__shape feed__shape--dot-violet" />
+          <span className="feed__shape feed__shape--dot-cyan" />
+        </div>
         <div className="feed__profile-id">
-          {/* the name as the hero logo: TikTok chromatic split + a gentle float */}
           <div className="feed__nameplate">
-            <h1 className="feed__intro-title">Aaron Kromer</h1>
+            {/* deterministic break: two lines on phones, one on tablets (the
+                <br> is hidden ≥600px) — avoids the wrap flip-flop from a
+                width-scaled font size */}
+            <h1 className="feed__intro-title">Aaron <br className="feed__name-break" />Kromer</h1>
           </div>
           <p className="feed__intro-kicker">Frontend Developer &amp; Interaction Designer</p>
           <p className="feed__intro-contact">

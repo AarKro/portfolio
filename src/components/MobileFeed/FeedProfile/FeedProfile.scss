@@ -12,7 +12,9 @@
     z-index: 10;
     display: flex;
     flex-direction: column;
-    background: radial-gradient(ellipse at 50% 20%, #ffffff, #e7eaef 76%);
+    // very light, but not plain white: a soft cool lavender wash that ties to
+    // the violet/cyan palette without darkening the airy hero.
+    background: radial-gradient(ellipse at 50% 18%, #f6f5fd 0%, #cdc9ff 78%);
     color: #15161a;
     font-family: $font-feed; // sibling of .feed, so doesn't inherit its font
     -webkit-tap-highlight-color: transparent;
@@ -36,6 +38,8 @@
   // pinned just above the grid. The gap grows on tall screens (space-between).
   &__profile-head {
     flex: none;
+    position: relative; // positioning context for the shapes layer
+    overflow: hidden; // clip shapes to the hero — they never reach the grid
     min-height: 40dvh;
     display: flex;
     flex-direction: column;
@@ -45,6 +49,13 @@
     padding: calc(env(safe-area-inset-top) + 2.6rem) clamp(1.4rem, 7vw, 2.6rem) 0.9rem;
   }
 
+  // the identity content sits above the decorative shape field
+  &__profile-id,
+  &__intro-sub {
+    position: relative;
+    z-index: 1;
+  }
+
   &__profile-id {
     display: flex;
     flex-direction: column;
@@ -52,34 +63,163 @@
     gap: 0.6rem;
   }
 
-  // wrapper drives the staggered entrance; the name inside does the float
-  // (separate elements so the two transforms never fight)
+  // ─── Figma-style shape field ───────────────────────────────────────────────
+  // A scatter of bold geometric forms (circle, ring, rounded square, triangle,
+  // pill, plus, dots) in the feed palette + warm accents. Absolutely positioned
+  // so they don't disturb the hero's flex layout, clipped by the head's
+  // overflow, and gently drifting for life.
+  &__shapes {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  &__shape {
+    position: absolute;
+    display: block;
+    will-change: transform;
+  }
+
+  // — filled cyan circle, large, anchored off the top-left
+  &__shape--circle-cyan {
+    width: clamp(120px, 40vw, 210px);
+    aspect-ratio: 1;
+    top: -7%;
+    left: -13%;
+    border-radius: 50%;
+    background: $feed-accent;
+    opacity: 0.85;
+    animation: feed-shape-a 15s ease-in-out infinite alternate;
+  }
+
+  // — pink ring (outline circle), top-right
+  &__shape--ring-pink {
+    width: clamp(72px, 26vw, 150px);
+    aspect-ratio: 1;
+    top: 4%;
+    right: -8%;
+    border-radius: 50%;
+    border: clamp(8px, 2.6vw, 15px) solid $feed-like;
+    animation: feed-shape-b 17s ease-in-out infinite alternate;
+  }
+
+  // — violet rounded square, tilted, right side
+  &__shape--square-violet {
+    width: clamp(58px, 19vw, 108px);
+    aspect-ratio: 1;
+    top: 44%;
+    right: 6%;
+    border-radius: 26%;
+    background: $feed-violet;
+    opacity: 0.9;
+    animation: feed-shape-c 19s ease-in-out infinite alternate;
+  }
+
+  // — violet triangle, left side
+  &__shape--triangle-violet {
+    width: clamp(64px, 22vw, 124px);
+    aspect-ratio: 1;
+    top: 40%;
+    left: -4%;
+    background: $feed-violet;
+    clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
+    animation: feed-shape-b 21s ease-in-out infinite alternate;
+    animation-delay: -4s;
+  }
+
+  // — amber outline pill, lower-left
+  &__shape--pill-amber {
+    width: clamp(78px, 28vw, 150px);
+    height: clamp(34px, 12vw, 64px);
+    bottom: 9%;
+    left: 8%;
+    border-radius: 999px;
+    border: clamp(6px, 2vw, 11px) solid $feed-amber;
+    animation: feed-shape-a 18s ease-in-out infinite alternate;
+    animation-delay: -7s;
+  }
+
+  // — pink plus / cross, upper-mid accent
+  &__shape--plus-pink {
+    width: clamp(30px, 9vw, 52px);
+    aspect-ratio: 1;
+    top: 12%;
+    left: 16%;
+    background: $feed-like;
+    clip-path: polygon(
+      38% 0%, 62% 0%, 62% 38%, 100% 38%, 100% 62%, 62% 62%,
+      62% 100%, 38% 100%, 38% 62%, 0% 62%, 0% 38%, 38% 38%
+    );
+    animation: feed-shape-c 13s ease-in-out infinite alternate;
+    animation-delay: -3s;
+  }
+
+  // — small solid dots, scattered fill
+  &__shape--dot-violet {
+    width: clamp(20px, 6vw, 36px);
+    aspect-ratio: 1;
+    top: 22%;
+    right: 22%;
+    border-radius: 50%;
+    background: $feed-violet;
+    opacity: 0.8;
+    animation: feed-shape-a 12s ease-in-out infinite alternate;
+    animation-delay: -2s;
+  }
+
+  &__shape--dot-cyan {
+    width: clamp(16px, 5vw, 30px);
+    aspect-ratio: 1;
+    bottom: 16%;
+    right: 30%;
+    border-radius: 50%;
+    background: $feed-accent;
+    animation: feed-shape-b 14s ease-in-out infinite alternate;
+    animation-delay: -6s;
+  }
+
   &__nameplate {
     display: grid;
     place-items: center;
     padding: 0.6rem 0;
   }
 
-  // the name AS the logo: TikTok chromatic split (echoes favicon-mobile.svg) +
-  // a gentle float — the monogram treatment applied to the whole name
+  // the name as a plain, clean heading. A soft white halo keeps it legible when
+  // a colour shape drifts behind it.
   &__intro-title {
-    font-size: clamp(2.5rem, 13vw, 3.6rem);
+    font-size: clamp(2.5rem, 12vw, 3.4rem);
     font-weight: 800;
-    line-height: 1.05;
+    line-height: 1.08;
     letter-spacing: -0.01em;
-    color: #fff;
-    text-shadow:
-      -2px -1.5px 0 $feed-accent,
-      2px 1.5px 0 $feed-like,
-      0 3px 16px rgba(0, 0, 0, 0.4);
-    animation: feed-name-float 7s ease-in-out infinite;
+    color: #15161a;
+    text-shadow: 0 1px 22px rgba(255, 255, 255, 0.75);
   }
 
-  // tagline, sits below the name
+  // forced line break inside the name: shown on phones (two lines), hidden on
+  // tablets and up (one line). Keeps the wrap deterministic at every width.
+  &__name-break {
+    display: inline;
+
+    @media (min-width: 600px) {
+      display: none;
+    }
+  }
+
+  // tagline — reads as one of the background shapes, not a UI label: a flat,
+  // solid form in a shape-palette colour (amber, a decorative non-accent hue so
+  // it never looks tappable), dark ink text for high contrast, no shadow/dot.
+  // Always one line — the shape widens to fit (nowrap), font clamps only on the
+  // narrowest phones. Drifts like the shapes (see the .is-open animation rule).
   &__intro-kicker {
-    color: rgba(0, 0, 0, 0.62);
-    font-weight: 500;
-    font-size: 1.02rem;
+    align-self: center; // stay centred
+    white-space: nowrap; // keep the tagline on a single line; the shape grows
+    padding: 0.4rem 0.95rem;
+    border-radius: 0.7rem;
+    background: $feed-amber;
+    color: #15161a;
+    font-weight: 600;
+    font-size: clamp(0.84rem, 4.3vw, 1rem); // full size ≥375px, shrinks on tiny screens
     letter-spacing: 0.01em;
   }
 
@@ -105,8 +245,12 @@
       gap: 0.45rem;
       padding: 0 1.3rem;
       border-radius: 999px;
-      // frosted glass — shares the feed's glass recipe (light tone)
+      // frosted glass — shares the feed's glass recipe (light tone), but a
+      // touch more transparent. The white overlay still keeps the blurred
+      // backdrop light enough that the dark label stays ≥7:1 (AA) even with a
+      // colour shape behind it; the inset white border keeps the edge defined.
       @include glass(light);
+      background: rgba(255, 255, 255, 0.32);
       color: #15161a;
       text-decoration: none;
       font-weight: 600;
@@ -138,10 +282,19 @@
   }
 
   // each element rises+fades in turn (delay = its place in the cluster)
-  @each $part, $delay in (nameplate: 120ms, intro-kicker: 280ms, intro-contact: 360ms, intro-sub: 440ms) {
+  @each $part, $delay in (nameplate: 120ms, intro-contact: 360ms, intro-sub: 440ms) {
     &__profile.is-open &__#{$part} {
       animation: feed-rise 520ms cubic-bezier(0.2, 0.7, 0.2, 1) $delay both;
     }
+  }
+
+  // the tagline rises in like the others, then keeps drifting like the
+  // background shapes. The float starts after the rise finishes; its 0% is the
+  // rest pose, so the hand-off is seamless (no snap).
+  &__profile.is-open &__intro-kicker {
+    animation:
+      feed-rise 520ms cubic-bezier(0.2, 0.7, 0.2, 1) 280ms both,
+      feed-tag-float 16s ease-in-out 0.9s infinite alternate;
   }
 
   // ─── Project grid ──────────────────────────────────────────────────────────
@@ -245,20 +398,35 @@
   }
 }
 
-// the name logo drifts gently
-@keyframes feed-name-float {
-  0%,
-  100% {
-    transform: translateY(0) scale(1);
-  }
-  50% {
-    transform: translateY(-6px) scale(1.02);
-  }
+// shape-field drift: gentle translate + rotate, different vectors per shape,
+// alternate → smooth ping-pong (no jump on repeat). Bold forms, calm motion.
+@keyframes feed-shape-a {
+  0%   { transform: translate3d(0, 0, 0) rotate(0deg); }
+  100% { transform: translate3d(8px, -12px, 0) rotate(9deg); }
+}
+
+@keyframes feed-shape-b {
+  0%   { transform: translate3d(0, 0, 0) rotate(0deg); }
+  100% { transform: translate3d(-10px, 10px, 0) rotate(-11deg); }
+}
+
+// c carries a resting tilt at 0% — used by the square + plus so they sit askew
+@keyframes feed-shape-c {
+  0%   { transform: translate3d(0, 0, 0) rotate(8deg); }
+  100% { transform: translate3d(6px, 9px, 0) rotate(-12deg); }
+}
+
+// tagline float — the same drift idea as the shapes, but gentler rotation so
+// the text stays comfortably readable while it moves with the composition
+@keyframes feed-tag-float {
+  0%   { transform: translate3d(0, 0, 0) rotate(0deg); }
+  100% { transform: translate3d(7px, -9px, 0) rotate(3.5deg); }
 }
 
 // respect reduced-motion: hold everything still, show the hero immediately
 @media (prefers-reduced-motion: reduce) {
-  .feed__intro-title {
+  // freeze the drifting shape field; the forms stay as a still backdrop
+  .feed__shape {
     animation: none;
   }
 
