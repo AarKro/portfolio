@@ -58,7 +58,7 @@ export function FeedProfile({ open, justViewedChannel, onOpenProject }: FeedProf
               {project.posterUrl ? (
                 <img
                   className="feed__tile-media"
-                  src={project.mobilePosterUrl ?? project.posterUrl}
+                  src={project.gridPosterUrl ?? project.mobilePosterUrl ?? project.posterUrl}
                   alt=""
                   loading="lazy"
                 />

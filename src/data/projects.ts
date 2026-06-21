@@ -19,6 +19,28 @@ import wowGraveyard3dVideo from '../assets/videos/wow_graveyard_3d_landscape.mp4
 import wowGraveyard3dVideoPortrait from '../assets/videos/wow_graveyard_3d_portrait.mp4';
 import wowGraveyard3dPoster from '../assets/thumbnails/wow_graveyard_3d_landscape.jpg';
 import wowGraveyard3dPosterPortrait from '../assets/thumbnails/wow_graveyard_3d_portrait.jpg';
+import wowGraveyard3dGridPoster from '../assets/thumbnails/wow_graveyard_3d_grid.jpg';
+import scholarsMateGridPoster from '../assets/thumbnails/scholars_mate_grid.jpg';
+import peggyAshcroftVideo from '../assets/videos/peggy_ashcroft_landscape.mp4';
+import peggyAshcroftVideoPortrait from '../assets/videos/peggy_ashcroft_portrait.mp4';
+import peggyAshcroftPoster from '../assets/thumbnails/peggy_ashcroft_landscape.jpg';
+import peggyAshcroftPosterPortrait from '../assets/thumbnails/peggy_ashcroft_portrait.jpg';
+import peggyAshcroftGridPoster from '../assets/thumbnails/peggy_ashcroft_grid.jpg';
+import zephirFlexVideo from '../assets/videos/zephir-flex_landscape.mp4';
+import zephirFlexVideoPortrait from '../assets/videos/zephir-flex_portrait.mp4';
+import zephirFlexPoster from '../assets/thumbnails/zephir-flex_landscape.jpg';
+import zephirFlexPosterPortrait from '../assets/thumbnails/zephir-flex_portrait.jpg';
+import zephirFlexGridPoster from '../assets/thumbnails/zephir-flex_grid.jpg';
+import sugarcubesVideo from '../assets/videos/sugarcubes_landscape.mp4';
+import sugarcubesVideoPortrait from '../assets/videos/sugarcubes_portrait.mp4';
+import sugarcubesPoster from '../assets/thumbnails/sugarcubes_landscape.jpg';
+import sugarcubesPosterPortrait from '../assets/thumbnails/sugarcubes_portrait.jpg';
+import sugarcubesGridPoster from '../assets/thumbnails/sugarcubes_grid.jpg';
+import cssToolboxVideo from '../assets/videos/css_toolbox_landscape.mp4';
+import cssToolboxVideoPortrait from '../assets/videos/css_toolbox_portrait.mp4';
+import cssToolboxPoster from '../assets/thumbnails/css_toolbox_landscape.jpg';
+import cssToolboxPosterPortrait from '../assets/thumbnails/css_toolbox_portrait.jpg';
+import cssToolboxGridPoster from '../assets/thumbnails/css_toolbox_grid.jpg';
 
 /** A named source-code link, for channels that bundle several repos. */
 export interface RepoLink {
@@ -77,6 +99,15 @@ export interface Project {
    * `posterUrl`. Generate from `mobileVideoUrl` (see CLAUDE.md).
    */
   mobilePosterUrl?: string;
+  /**
+   * Portrait poster for the mobile profile grid tile ONLY — grabbed a moment
+   * into the clip (1.5s) so the tile previews real content rather than the
+   * first frame (which is often an intro/title card). The grid prefers this and
+   * falls back to `mobilePosterUrl` / `posterUrl`. It is NOT used as a `<video
+   * poster>` (those stay first-frame to match the clip's opening). Generate at
+   * `-ss 1.5` from `*_portrait.mp4` (see CLAUDE.md "Adding a teaser clip").
+   */
+  gridPosterUrl?: string;
 }
 
 export const PROJECTS: Project[] = [
@@ -94,6 +125,7 @@ export const PROJECTS: Project[] = [
     mobileVideoUrl: wowGraveyard3dVideoPortrait,
     posterUrl: wowGraveyard3dPoster,
     mobilePosterUrl: wowGraveyard3dPosterPortrait,
+    gridPosterUrl: wowGraveyard3dGridPoster,
   },
   {
     id: 'scholars-mate',
@@ -109,6 +141,7 @@ export const PROJECTS: Project[] = [
     mobileVideoUrl: scholarsMateVideoPortrait,
     posterUrl: scholarsMatePoster,
     mobilePosterUrl: scholarsMatePosterPortrait,
+    gridPosterUrl: scholarsMateGridPoster,
   },
   {
     id: 'peggy-ashcroft',
@@ -120,6 +153,11 @@ export const PROJECTS: Project[] = [
       'Built for a Responsive Design & Accessibility brief — hand-rolled hooks drive the scroll-spy navigation and sticky header, with the whole layout designed mobile-up and accessibility-first.',
     githubUrl: 'https://github.com/AarKro/peggy-ashcroft',
     demoUrl: 'https://aarkro.github.io/peggy-ashcroft/',
+    videoUrl: peggyAshcroftVideo,
+    mobileVideoUrl: peggyAshcroftVideoPortrait,
+    posterUrl: peggyAshcroftPoster,
+    mobilePosterUrl: peggyAshcroftPosterPortrait,
+    gridPosterUrl: peggyAshcroftGridPoster,
   },
   {
     id: 'zephir-flex',
@@ -131,6 +169,11 @@ export const PROJECTS: Project[] = [
       'The font is mine too, not just the site — this page is its official specimen.',
     githubUrl: 'https://github.com/AarKro/zephir-flex',
     demoUrl: 'https://aarkro.github.io/zephir-flex/',
+    videoUrl: zephirFlexVideo,
+    mobileVideoUrl: zephirFlexVideoPortrait,
+    posterUrl: zephirFlexPoster,
+    mobilePosterUrl: zephirFlexPosterPortrait,
+    gridPosterUrl: zephirFlexGridPoster,
   },
   {
     id: 'sugarcubes',
@@ -142,16 +185,27 @@ export const PROJECTS: Project[] = [
       'Hand-built in plain HTML, CSS and JavaScript — the whole page is a faithful translation of a print poster into the browser.',
     githubUrl: 'https://github.com/AarKro/modul_webtech',
     demoUrl: 'https://aarkro.github.io/modul_webtech/sugarcubes/sugarcubes.html',
+    videoUrl: sugarcubesVideo,
+    mobileVideoUrl: sugarcubesVideoPortrait,
+    posterUrl: sugarcubesPoster,
+    mobilePosterUrl: sugarcubesPosterPortrait,
+    gridPosterUrl: sugarcubesGridPoster,
   },
   {
     id: 'css-toolbox',
     title: 'CSS Toolbox',
     description:
-      'A browser extension in the works: it drops an overlay of CSS and colour tools straight onto any site you are visiting. Still on the workbench — more tools (and some Figma-designed UI) on the way.',
-    tech: ['TypeScript', 'React', 'Browser Extension'],
+      'A Figma prototype for a browser extension: it drops an overlay of CSS and colour tools straight onto any site you are visiting. This channel is the interactive design itself — click through the prototype to see how the tool would feel in the browser.',
+    tech: ['Figma', 'UI Design', 'Prototype'],
     behindTheScenes:
-      'A Chrome extension built on Vite + CRXJS — content scripts inject a React overlay directly into the page you are browsing.',
-    githubUrl: 'https://github.com/AarKro/css-toolbox',
+      'Designed start to finish in Figma as a clickable prototype — the whole tool overlay and its flows mapped out before a line of code.',
+    demoUrl:
+      'https://www.figma.com/proto/5SfRSVnselzgMdOXUHzGxJ/CSS-Toolbox?node-id=79-2083&p=f&viewport=309%2C309%2C0.05&t=b8LCt5BqsEUP6NZh-1&scaling=scale-down&content-scaling=fixed&starting-point-node-id=79%3A2083&page-id=0%3A1',
+    videoUrl: cssToolboxVideo,
+    mobileVideoUrl: cssToolboxVideoPortrait,
+    posterUrl: cssToolboxPoster,
+    mobilePosterUrl: cssToolboxPosterPortrait,
+    gridPosterUrl: cssToolboxGridPoster,
   },
   {
     id: 'discord-bots',
