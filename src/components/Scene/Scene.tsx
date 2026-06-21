@@ -15,6 +15,7 @@ import {
   buildRoom,
 } from './room/buildRoom';
 import { populateChessPieces } from './room/chessPieces';
+import { setupPainting } from './room/painting';
 import './Scene.scss';
 
 /** Camera pull-back after powering off (seconds) */
@@ -24,6 +25,8 @@ const LEAVE_DURATION = 1.15;
 const WALK_SPEED = 3;
 /** Max distance (m) from which the TV can be clicked */
 const TV_REACH = 4;
+/** Max distance (m) from which the easel canvas / palette can be used */
+const PAINT_REACH = 3;
 /** Fraction of the viewport the DOM TV fills at the closeup framing */
 const FIT_HEIGHT = 0.82;
 const FIT_WIDTH = 0.9;
@@ -112,6 +115,7 @@ export function Scene({ mode, onArrivedInRoom, onArrivedAtTV, onTVClicked, child
     );
 
     const { tvGroup, tvBody } = buildRoom(scene);
+    const painter = setupPainting(scene);
 
     const tvObject = new CSS3DObject(tvHost);
     tvObject.scale.setScalar(WORLD_PER_PX);
@@ -185,6 +189,7 @@ export function Scene({ mode, onArrivedInRoom, onArrivedAtTV, onTVClicked, child
     const screenCenter = new THREE.Vector2(0, 0);
     const keys = new Set<string>();
     let flight: CameraFlight | null = null;
+    let isPainting = false; // mouse button held while aiming at the easel canvas
 
     const showCrosshair = (visible: boolean) =>
       crosshairRef.current?.classList.toggle('scene__crosshair--visible', visible);
@@ -250,6 +255,33 @@ export function Scene({ mode, onArrivedInRoom, onArrivedAtTV, onTVClicked, child
       if (hit && hit.distance <= TV_REACH) callbacksRef.current.onTVClicked();
     };
     container.addEventListener('click', onClick);
+
+    // Painting the easel: while walking the room (pointer-locked), aiming at a
+    // palette dab swaps the brush colour, and aiming at the canvas + holding the
+    // button lays paint. The actual strokes happen in the loop (so dragging the
+    // crosshair across the canvas draws continuously); this just starts/stops them.
+    const onPointerDown = () => {
+      if (flight || modeRef.current !== 'room' || !controls.isLocked || !painter) return;
+      raycaster.setFromCamera(screenCenter, camera);
+      const dab = raycaster.intersectObjects(painter.dabs, false)[0];
+      if (dab && dab.distance <= PAINT_REACH) {
+        painter.setColor(dab.object.userData.paintColor);
+        return;
+      }
+      const canvasHit = raycaster.intersectObject(painter.surface, false)[0];
+      if (canvasHit?.uv && canvasHit.distance <= PAINT_REACH) {
+        isPainting = true;
+        painter.liftBrush();
+        painter.paint(canvasHit.uv);
+      }
+    };
+    const onPointerUp = () => {
+      if (!isPainting) return;
+      isPainting = false;
+      painter?.liftBrush();
+    };
+    container.addEventListener('pointerdown', onPointerDown);
+    window.addEventListener('pointerup', onPointerUp);
 
     const onLock = () => {
       // during the to-room flight the crosshair waits for arrival
@@ -320,13 +352,25 @@ export function Scene({ mode, onArrivedInRoom, onArrivedAtTV, onTVClicked, child
         camera.position.z = THREE.MathUtils.clamp(camera.position.z, BOUNDS.minZ, BOUNDS.maxZ);
         camera.position.y = EYE_HEIGHT;
 
-        // highlight the crosshair when the TV is in reach
+        // crosshair turns amber over anything interactive: the TV (click to
+        // return), the easel canvas, or the palette dabs (paint)
         raycaster.setFromCamera(screenCenter, camera);
-        const hit = raycaster.intersectObject(tvGroup, true)[0];
-        crosshairRef.current?.classList.toggle(
-          'scene__crosshair--target',
-          !!hit && hit.distance <= TV_REACH,
-        );
+        const tvHit = raycaster.intersectObject(tvGroup, true)[0];
+        let targetable = !!tvHit && tvHit.distance <= TV_REACH;
+
+        if (painter) {
+          if (isPainting) {
+            const stroke = raycaster.intersectObject(painter.surface, false)[0];
+            if (stroke?.uv && stroke.distance <= PAINT_REACH) painter.paint(stroke.uv);
+            else painter.liftBrush(); // wandered off the canvas: break the stroke
+          }
+          if (!targetable) {
+            const paintHit = raycaster.intersectObjects([painter.surface, ...painter.dabs], false)[0];
+            targetable = !!paintHit && paintHit.distance <= PAINT_REACH;
+          }
+        }
+
+        crosshairRef.current?.classList.toggle('scene__crosshair--target', targetable);
       }
 
       if (needsRender) {
@@ -341,6 +385,8 @@ export function Scene({ mode, onArrivedInRoom, onArrivedAtTV, onTVClicked, child
       cancelAnimationFrame(raf);
       resizeObserver.disconnect();
       container.removeEventListener('click', onClick);
+      container.removeEventListener('pointerdown', onPointerDown);
+      window.removeEventListener('pointerup', onPointerUp);
       controls.removeEventListener('lock', onLock);
       controls.removeEventListener('unlock', onUnlock);
       window.removeEventListener('keydown', onKeyDown);

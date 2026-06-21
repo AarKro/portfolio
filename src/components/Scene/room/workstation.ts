@@ -57,7 +57,7 @@ export function addWorkstation(scene: THREE.Scene): void {
   // with a clear gap so it doesn't clip the desk
   const chair = makeChair();
   chair.position.set(2.0, 0, 0.0); // a little to the left along the desk, clear of it
-  chair.rotation.y = Math.PI / 2;
+  chair.rotation.y = Math.PI / 2 - 0.18; // swivelled a few degrees off-square, as if just left
   scene.add(chair);
 
   // a small potted plant on the LEFT end of the desktop
