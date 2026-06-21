@@ -13,7 +13,8 @@ import {
   WALKING_FOV,
   WORLD_PER_PX,
   buildRoom,
-} from './buildRoom';
+} from './room/buildRoom';
+import { populateChessPieces } from './room/chessPieces';
 import './Scene.scss';
 
 /** Camera pull-back after powering off (seconds) */
@@ -122,6 +123,17 @@ export function Scene({ mode, onArrivedInRoom, onArrivedAtTV, onTVClicked, child
     // slide, phosphor flicker — lives in the browser-composited CSS3D layer
     // and keeps animating without us re-rendering three.
     let needsRender = true;
+
+    // Load the GLTF chess pieces onto the procedural board (async); draw a frame
+    // once they're in so render-on-demand shows them.
+    const chessSet = scene.getObjectByName('chessSet');
+    if (chessSet) {
+      populateChessPieces(chessSet)
+        .then(() => {
+          needsRender = true;
+        })
+        .catch((error) => console.error('chess pieces failed to load', error));
+    }
 
     // Measures the DOM TV and aligns the 3D world to it: the CSS3D object,
     // the wooden body behind the cabinet, and the closeup camera framing.
