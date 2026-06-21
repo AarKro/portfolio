@@ -27,7 +27,7 @@ export function IntroProgram({ tuneTo }: IntroProgramProps) {
       <p className="intro__subtitle">
         Frontend Developer &amp; Interaction Designer.
         <br />
-        {program}: my projects, on every channel.
+        {program}: my pet projects, on every channel.
       </p>
 
       <p className="intro__hint">

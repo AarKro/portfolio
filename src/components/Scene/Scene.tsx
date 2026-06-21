@@ -144,8 +144,11 @@ export function Scene({ mode, onArrivedInRoom, onArrivedAtTV, onTVClicked, child
       // inset the box so its sharp corners stay hidden behind the DOM
       // cabinet's 22px rounded corners (need ≥ r·(1−1/√2) ≈ 7px)
       const cornerInset = 10 * WORLD_PER_PX;
-      tvBody.scale.set(cabinetWidth - 2 * cornerInset, cabinetHeight - 2 * cornerInset, 0.5);
-      tvBody.position.set(0, cabinetCenterY, TV_FRONT_Z - 0.251);
+      // thin front slab right behind the DOM bezel; the CRT rear shell (built in
+      // buildRoom) provides the deep tube behind it
+      const bodyDepth = 0.16;
+      tvBody.scale.set(cabinetWidth - 2 * cornerInset, cabinetHeight - 2 * cornerInset, bodyDepth);
+      tvBody.position.set(0, cabinetCenterY, TV_FRONT_Z - bodyDepth / 2 - 0.001);
 
       // closeup framing: cabinet fills FIT_HEIGHT/FIT_WIDTH of the viewport
       const halfFovTan = Math.tan(THREE.MathUtils.degToRad(CLOSEUP_FOV / 2));
@@ -349,12 +352,17 @@ export function Scene({ mode, onArrivedInRoom, onArrivedAtTV, onTVClicked, child
     // rebuilt — live props are read through modeRef/callbacksRef instead.
   }, []);
 
-  // mode transitions trigger camera flights; the DOM TV is only clickable
+  // mode transitions trigger camera flights; the DOM TV is only interactive
   // while the camera is parked in front of it
   useEffect(() => {
     if (mode === 'to-room') apiRef.current?.flyToRoom();
     if (mode === 'to-tv') apiRef.current?.flyToTV();
-    tvHost.style.pointerEvents = mode === 'tv' ? 'auto' : 'none';
+    const parked = mode === 'tv';
+    tvHost.style.pointerEvents = parked ? 'auto' : 'none';
+    // `inert` (not just pointer-events) so the TV can't keep keyboard focus
+    // while walking — otherwise a still-focused PWR button would toggle power
+    // on Space/Enter and the power-off would yank the camera back to standing.
+    tvHost.inert = !parked;
   }, [mode, tvHost]);
 
   return (
