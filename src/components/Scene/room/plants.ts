@@ -7,6 +7,14 @@ import * as THREE from 'three';
 import { cylinder } from './primitives';
 import { COL } from './palette';
 
+// Shared across every bushy leaf in the scene: one unit icosahedron (scaled
+// per-leaf) and three green materials, instead of a fresh geometry + material
+// for each of the ~50 leaves.
+const LEAF_GEOMETRY = new THREE.IcosahedronGeometry(1, 0);
+const LEAF_MATERIALS = [COL.leaf, COL.leafDark, COL.leafLight].map(
+  (color) => new THREE.MeshStandardMaterial({ color, roughness: 0.85, flatShading: true }),
+);
+
 export function makePlant(
   kind: 'tall' | 'bushy',
   scale = 1,
@@ -48,8 +56,7 @@ export function makePlant(
     }
   } else {
     // a bulky leafy mound — randomized lobe count, placement, size and green
-    // shade, so every bushy plant is a bit different
-    const greens = [COL.leaf, COL.leafDark, COL.leafLight];
+    // shade, so every bushy plant is a bit different (shared geometry/materials)
     const clumps = 6 + Math.floor(Math.random() * 4); // 6–9 lobes
     const spread = (0.16 + Math.random() * 0.09) * scale;
     for (let i = 0; i < clumps; i++) {
@@ -57,20 +64,16 @@ export function makePlant(
       const angle = Math.random() * Math.PI * 2;
       const rad = Math.random() * spread;
       const leaf = new THREE.Mesh(
-        new THREE.IcosahedronGeometry(r, 0),
-        new THREE.MeshStandardMaterial({
-          color: greens[Math.floor(Math.random() * greens.length)],
-          roughness: 0.85,
-          flatShading: true,
-        }),
+        LEAF_GEOMETRY,
+        LEAF_MATERIALS[Math.floor(Math.random() * LEAF_MATERIALS.length)],
       );
       leaf.castShadow = true;
       leaf.position.set(
         Math.cos(angle) * rad,
-        soilTop + (0.0 + Math.random() * 0.34) * scale, // sit lower, nestled on the pot (no hover)
+        soilTop + Math.random() * 0.34 * scale, // sit lower, nestled on the pot (no hover)
         Math.sin(angle) * rad,
       );
-      leaf.scale.set(1, 0.8 + Math.random() * 0.25, 1);
+      leaf.scale.set(r, r * (0.8 + Math.random() * 0.25), r);
       leaf.rotation.y = Math.random() * Math.PI;
       plant.add(leaf);
     }

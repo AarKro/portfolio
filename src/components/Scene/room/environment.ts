@@ -6,6 +6,7 @@
  * occlude it everywhere except through the two windows.
  */
 import * as THREE from 'three';
+import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 
 export function addEnvironment(scene: THREE.Scene): void {
   const sunPosition = new THREE.Vector3(-11, 5.5, 9);
@@ -54,10 +55,12 @@ export function addEnvironment(scene: THREE.Scene): void {
   // fluffy cumulus clouds, each one procedurally varied so no two look alike:
   // different lobe counts, sizes, horizontal spread, stretch, tilt and a faint
   // warm/cool near-white tint. Flattened bottoms read more cloud-like.
-  const cloudGeometry = new THREE.SphereGeometry(1, 16, 12);
+  // each cloud's puffs are baked into ONE merged geometry → one draw call per
+  // cloud (instead of ~10). Unlit MeshBasic, so the non-uniform puff scaling
+  // mangling normals doesn't matter.
+  const puffTemplate = new THREE.SphereGeometry(1, 16, 12);
   const rand = (a: number, b: number) => a + Math.random() * (b - a);
   const makeCloud = (scale: number) => {
-    const cloud = new THREE.Group();
     // near-white with a subtle warm or cool cast (never greenish)
     const hue = Math.random() < 0.5 ? rand(0.07, 0.12) : rand(0.55, 0.62);
     const material = new THREE.MeshBasicMaterial({
@@ -65,23 +68,25 @@ export function addEnvironment(scene: THREE.Scene): void {
     });
     const spread = rand(2.0, 3.8);
     const lobes = 5 + Math.floor(rand(0, 4));
+    const puffs: THREE.BufferGeometry[] = [];
+    const addPuff = (px: number, py: number, pz: number, sx: number, sy: number, sz: number) => {
+      const g = puffTemplate.clone().scale(sx, sy, sz);
+      g.translate(px, py, pz);
+      puffs.push(g);
+    };
     for (let i = 0; i < lobes; i++) {
       const t = lobes === 1 ? 0 : i / (lobes - 1) - 0.5; // −0.5..0.5 along the base
       const r = Math.max(0.35, rand(0.6, 1.0) - Math.abs(t) * 0.7); // fatter middle
-      const puff = new THREE.Mesh(cloudGeometry, material);
-      puff.position.set(t * spread, rand(-0.1, 0.25), rand(-0.4, 0.4));
-      puff.scale.set(r, r * rand(0.6, 0.78), r);
-      cloud.add(puff);
+      addPuff(t * spread, rand(-0.1, 0.25), rand(-0.4, 0.4), r, r * rand(0.6, 0.78), r);
     }
     // a few smaller puffs piled on top for height/fluff
     const tops = 1 + Math.floor(rand(0, 3));
     for (let i = 0; i < tops; i++) {
       const r = rand(0.4, 0.7);
-      const puff = new THREE.Mesh(cloudGeometry, material);
-      puff.position.set(rand(-spread * 0.4, spread * 0.4), rand(0.45, 0.9), rand(-0.3, 0.3));
-      puff.scale.set(r, r * 0.7, r);
-      cloud.add(puff);
+      addPuff(rand(-spread * 0.4, spread * 0.4), rand(0.45, 0.9), rand(-0.3, 0.3), r, r * 0.7, r);
     }
+    const cloud = new THREE.Mesh(mergeGeometries(puffs), material);
+    puffs.forEach((g) => g.dispose());
     cloud.scale.set(scale * rand(0.9, 1.25), scale * rand(0.82, 1.08), scale);
     cloud.rotation.y = rand(0, Math.PI * 2);
     return cloud;

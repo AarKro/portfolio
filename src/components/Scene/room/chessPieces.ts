@@ -1,6 +1,6 @@
 /**
  * Loads the chess pieces — one self-contained .glb per piece type, split out of
- * the original model (see src/assets/model/*.glb) — and places a full set onto
+ * the original model (see src/assets/models/*.glb) — and places a full set onto
  * the procedural board built by makeChessSet.
  *
  * Each piece file is already baked upright with its base at y=0 and centred over
@@ -11,12 +11,12 @@
  */
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-import pawnUrl from '../../../assets/model/pawn.glb?url';
-import rookUrl from '../../../assets/model/rook.glb?url';
-import knightUrl from '../../../assets/model/knight.glb?url';
-import bishopUrl from '../../../assets/model/bishop.glb?url';
-import queenUrl from '../../../assets/model/queen.glb?url';
-import kingUrl from '../../../assets/model/king.glb?url';
+import pawnUrl from '../../../assets/models/pawn.glb?url';
+import rookUrl from '../../../assets/models/rook.glb?url';
+import knightUrl from '../../../assets/models/knight.glb?url';
+import bishopUrl from '../../../assets/models/bishop.glb?url';
+import queenUrl from '../../../assets/models/queen.glb?url';
+import kingUrl from '../../../assets/models/king.glb?url';
 
 const PIECE_URLS: Record<string, string> = {
   pawn: pawnUrl,
