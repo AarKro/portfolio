@@ -5,7 +5,7 @@
  * named 'canvas') so a paintable texture can be wired onto it later.
  */
 import * as THREE from 'three';
-import { box, cylinder, sphere } from './primitives';
+import { box, cylinder, sphere } from '../primitives';
 
 // tripod easel holding a big canvas, built at origin facing +Z
 function makeEasel(): THREE.Group {

@@ -8,9 +8,9 @@
  * sides/back. `tvGroup` is the click target.
  */
 import * as THREE from 'three';
-import { box, cylinder } from './primitives';
-import { COL } from './palette';
-import { TV_FRONT_Z } from './constants';
+import { box, cylinder } from '../primitives';
+import { COL } from '../palette';
+import { TV_FRONT_Z } from '../constants';
 
 export function addTv(scene: THREE.Scene): { tvGroup: THREE.Group; tvBody: THREE.Mesh } {
   const tvGroup = new THREE.Group();

@@ -1,7 +1,7 @@
 /** The seating area: the rug and the plain sofa (the spot you "got up" from). */
 import * as THREE from 'three';
-import { box } from './primitives';
-import { COL } from './palette';
+import { box } from '../primitives';
+import { COL } from '../palette';
 
 export function addSeating(scene: THREE.Scene): void {
   // rug under the seating area

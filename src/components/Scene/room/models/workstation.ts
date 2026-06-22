@@ -3,12 +3,12 @@
  * chair, a small plant + the chess board + a book and pens on the top.
  */
 import * as THREE from 'three';
-import { box, cylinder } from './primitives';
-import { COL } from './palette';
-import { ROOM_HALF } from './constants';
+import { box, cylinder } from '../primitives';
+import { COL } from '../palette';
+import { ROOM_HALF } from '../constants';
 import { makeChair } from './chair';
 import { makePlant } from './plants';
-import { makeChessSet } from './chess';
+import { makeChessSet } from '../chess/chess';
 
 // closed book lying flat, base at y=0 (cream pages between covers, spine on −X)
 function makeBook(coverColor: number): THREE.Group {
@@ -66,11 +66,18 @@ export function addWorkstation(scene: THREE.Scene): void {
   deskPlant.rotation.y = 0.8;
   scene.add(deskPlant);
 
-  // a chess set on the RIGHT end of the desktop, rotated so the white side
-  // (local −Z) faces −X, toward the centre of the room. Pieces load at runtime.
+  // a chess set on the RIGHT end of the desktop. Rotated so the white pieces sit
+  // on the player's side (you approach the desk facing +X) with the two armies
+  // running front-to-back and a1 (dark) in white's bottom-left. The board group
+  // is centred on its own origin and the pieces are its children, so this spins
+  // board + pieces together in place (pieces stay on their squares). Pieces load
+  // at runtime.
   const chessSet = makeChessSet();
   chessSet.position.set(2.75, 0.765, 0.8); // centred on the desk depth
-  chessSet.rotation.y = Math.PI / 2;
+  // base orientation (π/2) puts white on the player's side; the extra +5° gives
+  // it a slightly casual, askew placement on the desk (counter-clockwise seen
+  // from above)
+  chessSet.rotation.y = Math.PI / 2 + THREE.MathUtils.degToRad(5);
   scene.add(chessSet);
 
   // a book and a few pens in the middle of the desk so it isn't bare

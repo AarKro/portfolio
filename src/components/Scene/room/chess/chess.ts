@@ -10,13 +10,17 @@
  * piece meshes between squareCoord() positions as moves are played.
  */
 import * as THREE from 'three';
-import { box } from './primitives';
+import { box } from '../primitives';
 
 export const CHESS_SQ = 0.07; // square size (m)
 const FILES = 'abcdefgh';
 
 export function squareCoord(file: number, rank: number): [number, number] {
-  return [(file - 3.5) * CHESS_SQ, (rank - 3.5) * CHESS_SQ];
+  // The file axis is negated so the board isn't mirrored: this puts white's a1
+  // (a dark square) on white's LEFT, as the rules require ("light square on the
+  // right"). Tiles AND pieces both resolve their position through here, so they
+  // stay in lock-step. Rank still runs white(0..1) → black(6..7) along +z.
+  return [(3.5 - file) * CHESS_SQ, (rank - 3.5) * CHESS_SQ];
 }
 
 export function makeChessSet(): THREE.Group {

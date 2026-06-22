@@ -4,8 +4,8 @@
  * cluster around the room.
  */
 import * as THREE from 'three';
-import { cylinder } from './primitives';
-import { COL } from './palette';
+import { cylinder } from '../primitives';
+import { COL } from '../palette';
 
 // Shared across every bushy leaf in the scene: one unit icosahedron (scaled
 // per-leaf) and three green materials, instead of a fresh geometry + material

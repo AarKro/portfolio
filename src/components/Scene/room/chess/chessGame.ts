@@ -22,10 +22,18 @@ import { BOARD_TOP_Y, type ChessPieces } from './chessPieces';
 const FILES = 'abcdefgh';
 /** How close (m) the crosshair hit must be for a click to count as "at the board" */
 const REACH = 2.2;
-/** Plies the AI looks ahead (its own move + this many replies). Higher = stronger/slower. */
-const SEARCH_DEPTH = 3;
+/** Plies the AI looks ahead (its own move + this many replies). Kept low (2) on
+ *  purpose: a deeper search froze the main thread while "thinking". 2 still sees
+ *  the immediate recapture, so it doesn't hang its pieces for free, but stays
+ *  effectively instant — deliberately a weak, rudimentary opponent. */
+const SEARCH_DEPTH = 2;
 const PIECE_VALUE: Record<string, number> = { p: 1, n: 3, b: 3, r: 5, q: 9, k: 0 };
 const CHECKMATE = 1000;
+/** Random eval noise (± pawns) added to each candidate move, to weaken/vary the
+ *  AI on purpose. Big enough that it'll sometimes pick an inaccuracy among
+ *  near-equal moves, but well under a minor piece (3) so it never randomly hangs
+ *  real material to a clear recapture. */
+const AI_NOISE = 0.7;
 /** Seconds for a piece to glide between squares */
 const MOVE_DURATION = 0.34;
 /** Height (m) of the little hop a moving piece makes, so it clears its neighbours */
@@ -59,18 +67,20 @@ export function createChessGame(
   const squareCoord = set.userData.squareCoord as (file: number, rank: number) => [number, number];
   const chess = new Chess();
 
-  // a highlighted-target material/geometry, reused across all the glowing discs
-  const discGeo = new THREE.CircleGeometry(assets.scale * 0.3, 24);
+  // a highlighted-target material/geometry, reused across all the markers. Full
+  // squares (not circles), so a capture square stays visible as a ring around
+  // the enemy piece sitting on it. Green = move, red = capture.
+  const tileGeo = new THREE.PlaneGeometry(assets.scale * 0.98, assets.scale * 0.98);
   const moveMat = new THREE.MeshBasicMaterial({
     color: 0x46e07a,
     transparent: true,
-    opacity: 0.62,
+    opacity: 0.5,
     depthWrite: false,
   });
   const captureMat = new THREE.MeshBasicMaterial({
     color: 0xe0563c,
     transparent: true,
-    opacity: 0.66,
+    opacity: 0.55,
     depthWrite: false,
   });
   // a glowing copy of the white material for the currently-selected piece
@@ -119,12 +129,12 @@ export function createChessGame(
     for (const move of moves) {
       const isCapture = move.flags.includes('c') || move.flags.includes('e');
       legalTargets.set(move.to, isCapture);
-      const disc = new THREE.Mesh(discGeo, isCapture ? captureMat : moveMat);
-      disc.rotation.x = -Math.PI / 2; // lie flat on the board
+      const marker = new THREE.Mesh(tileGeo, isCapture ? captureMat : moveMat);
+      marker.rotation.x = -Math.PI / 2; // lie flat on the board
       const pos = localOf(move.to);
-      disc.position.set(pos.x, BOARD_TOP_Y + 0.002, pos.z);
-      disc.userData = { square: move.to };
-      highlights.add(disc);
+      marker.position.set(pos.x, BOARD_TOP_Y + 0.002, pos.z);
+      marker.userData = { square: move.to };
+      highlights.add(marker);
     }
     requestRender();
   }
@@ -265,7 +275,7 @@ export function createChessGame(
     let bestScore = Infinity; // black minimises white's advantage
     for (const move of moves) {
       chess.move(move);
-      const score = search(SEARCH_DEPTH - 1, -Infinity, Infinity) + (Math.random() * 0.06 - 0.03);
+      const score = search(SEARCH_DEPTH - 1, -Infinity, Infinity) + (Math.random() * 2 - 1) * AI_NOISE;
       chess.undo();
       if (score < bestScore) {
         bestScore = score;

@@ -14,9 +14,9 @@ import {
   WORLD_PER_PX,
   buildRoom,
 } from './room/buildRoom';
-import { populateChessPieces } from './room/chessPieces';
-import { createChessGame, type ChessGame } from './room/chessGame';
-import { setupPainting } from './room/painting';
+import { populateChessPieces } from './room/chess/chessPieces';
+import { createChessGame, type ChessGame } from './room/chess/chessGame';
+import { setupPainting } from './room/painting/painting';
 import './Scene.scss';
 
 /** Camera pull-back after powering off (seconds) */

@@ -15,12 +15,12 @@
  */
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-import pawnUrl from '../../../assets/models/pawn.glb?url';
-import rookUrl from '../../../assets/models/rook.glb?url';
-import knightUrl from '../../../assets/models/knight.glb?url';
-import bishopUrl from '../../../assets/models/bishop.glb?url';
-import queenUrl from '../../../assets/models/queen.glb?url';
-import kingUrl from '../../../assets/models/king.glb?url';
+import pawnUrl from '../../../../assets/models/pawn.glb?url';
+import rookUrl from '../../../../assets/models/rook.glb?url';
+import knightUrl from '../../../../assets/models/knight.glb?url';
+import bishopUrl from '../../../../assets/models/bishop.glb?url';
+import queenUrl from '../../../../assets/models/queen.glb?url';
+import kingUrl from '../../../../assets/models/king.glb?url';
 
 const PIECE_URLS: Record<string, string> = {
   pawn: pawnUrl,
@@ -64,6 +64,38 @@ function geometryOf(gltf: { scene: THREE.Object3D }): THREE.BufferGeometry | nul
   return geo;
 }
 
+/**
+ * Adds a view-dependent Fresnel rim to a MeshStandardMaterial: glancing-angle
+ * faces (a piece's silhouette edge) pick up `color`, so each piece's outline
+ * glows softly and reads against the board and its neighbours — what tells a
+ * knight from a bishop is the contour. Implemented by injecting into the lit
+ * shader (adds to the emissive term using the view-space normal + view dir), so
+ * it costs nothing extra and survives material.clone() (the selected-piece glow).
+ */
+function addFresnelRim(material: THREE.MeshStandardMaterial, color: number, strength: number, power = 3) {
+  material.onBeforeCompile = (shader) => {
+    shader.uniforms.uRimColor = { value: new THREE.Color(color) };
+    shader.uniforms.uRimStrength = { value: strength };
+    shader.uniforms.uRimPower = { value: power };
+    shader.fragmentShader = shader.fragmentShader
+      .replace(
+        '#include <common>',
+        `#include <common>
+uniform vec3 uRimColor;
+uniform float uRimStrength;
+uniform float uRimPower;`,
+      )
+      .replace(
+        '#include <emissivemap_fragment>',
+        `#include <emissivemap_fragment>
+{
+  float rim = pow(1.0 - clamp(dot(normal, normalize(vViewPosition)), 0.0, 1.0), uRimPower);
+  totalEmissiveRadiance += uRimColor * rim * uRimStrength;
+}`,
+      );
+  };
+}
+
 export async function populateChessPieces(set: THREE.Object3D): Promise<ChessPieces | null> {
   const squareSize = set.userData.squareSize as number;
   const squareCoord = set.userData.squareCoord as (file: number, rank: number) => [number, number];
@@ -79,8 +111,14 @@ export async function populateChessPieces(set: THREE.Object3D): Promise<ChessPie
   );
 
   const scale = squareSize; // model is 1 unit per square
-  const white = new THREE.MeshStandardMaterial({ color: 0xefe7d4, roughness: 0.55, metalness: 0.05 });
-  const black = new THREE.MeshStandardMaterial({ color: 0x23262c, roughness: 0.5, metalness: 0.05 });
+  // Glossier finish (lower roughness) so the pieces catch form-revealing
+  // highlights from the board light; the "black" side is a lifted graphite
+  // rather than near-black for the same reason. A faint Fresnel rim outlines
+  // every piece — stronger and cooler on the dark side, where it's needed most.
+  const white = new THREE.MeshStandardMaterial({ color: 0xeae0cb, roughness: 0.42, metalness: 0.08 });
+  const black = new THREE.MeshStandardMaterial({ color: 0x3e424a, roughness: 0.34, metalness: 0.12 });
+  addFresnelRim(white, 0xfff4e0, 0.28);
+  addFresnelRim(black, 0xb0bece, 0.85);
 
   const pieces = new Map<string, THREE.Mesh>();
   const place = (file: number, rank: number, type: string, color: 'white' | 'black') => {

@@ -10,8 +10,8 @@
  */
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
-import { CEILING_Y, ROOM_HALF, WALL_T } from './constants';
-import { COL } from './palette';
+import { CEILING_Y, ROOM_HALF, WALL_T } from '../constants';
+import { COL } from '../palette';
 
 const wallTop = CEILING_Y + 0.15;
 const wallBottom = -0.15;

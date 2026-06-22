@@ -11,13 +11,13 @@
  * looking onto a golden-hour sky.
  */
 import * as THREE from 'three';
-import { addShell } from './shell';
-import { addSeating } from './seating';
-import { addWorkstation } from './workstation';
-import { addPlants } from './plants';
-import { addArtCorner } from './artCorner';
-import { addEnvironment } from './environment';
-import { addTv } from './tv';
+import { addShell } from './models/shell';
+import { addSeating } from './models/seating';
+import { addWorkstation } from './models/workstation';
+import { addPlants } from './models/plants';
+import { addArtCorner } from './models/artCorner';
+import { addEnvironment } from './models/environment';
+import { addTv } from './models/tv';
 
 export {
   BOUNDS,

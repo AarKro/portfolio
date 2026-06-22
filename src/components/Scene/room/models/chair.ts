@@ -1,7 +1,7 @@
 /** A simple office chair (seat, back, post, 5-star castor base), built at origin. */
 import * as THREE from 'three';
-import { box, cylinder } from './primitives';
-import { COL } from './palette';
+import { box, cylinder } from '../primitives';
+import { COL } from '../palette';
 
 export function makeChair(): THREE.Group {
   const chair = new THREE.Group();
