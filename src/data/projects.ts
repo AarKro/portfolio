@@ -223,13 +223,14 @@ export const PROJECTS: Project[] = [
   },
   {
     id: 'tramly',
-    title: 'Tramly',
+    title: 'Zügli',
     description:
       'A tiny tram departure board for your desk. An ESP32 build that lights up the next trams the way the signs at the stop do — still on the soldering bench.',
     tech: ['ESP32', 'Arduino', 'Hardware'],
+    githubUrl: 'https://github.com/AarKro/zugli',
+    demoUrl: 'https://aarkro.github.io/zugli/',
     behindTheScenes:
       'Built on an ESP32-S3, with the display chosen to mimic a real transit departure board — amber pixels and all.',
-    // No source or demo link yet — a website will be added here later.
   },
 ];
 
