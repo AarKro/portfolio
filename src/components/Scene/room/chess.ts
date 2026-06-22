@@ -1,13 +1,13 @@
 /**
  * The chess board (the 32 pieces are loaded from GLTF at runtime — see
- * chessPieces.ts). Built to be made into a real game later, so the structure is
- * queryable rather than baked:
+ * chessPieces.ts). It's a real, playable game (chessGame.ts drives it), so the
+ * structure is queryable rather than baked:
  *   • the returned group is named 'chessSet' and carries userData.squareSize +
  *     userData.squareCoord(file,rank) → local (x,z) of a square centre
  *   • each square tile is in the 'squares' subgroup with userData.square ('e4')
  *   • each loaded piece mesh has userData = { kind:'piece', type, color, square }
- * Future logic can getObjectByName('chessSet'), read these, and move the piece
- * meshes between squareCoord() positions.
+ * chessGame.ts does getObjectByName('chessSet'), reads these, and slides the
+ * piece meshes between squareCoord() positions as moves are played.
  */
 import * as THREE from 'three';
 import { box } from './primitives';

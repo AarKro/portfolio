@@ -15,6 +15,7 @@ import {
   buildRoom,
 } from './room/buildRoom';
 import { populateChessPieces } from './room/chessPieces';
+import { createChessGame, type ChessGame } from './room/chessGame';
 import './Scene.scss';
 
 /** Camera pull-back after powering off (seconds) */
@@ -124,12 +125,19 @@ export function Scene({ mode, onArrivedInRoom, onArrivedAtTV, onTVClicked, child
     // and keeps animating without us re-rendering three.
     let needsRender = true;
 
-    // Load the GLTF chess pieces onto the procedural board (async); draw a frame
-    // once they're in so render-on-demand shows them.
+    // Load the GLTF chess pieces onto the procedural board (async), then wire up
+    // the playable game (player = white, a small AI = black). Draw a frame once
+    // they're in so render-on-demand shows them.
+    let chessGame: ChessGame | null = null;
     const chessSet = scene.getObjectByName('chessSet');
     if (chessSet) {
       populateChessPieces(chessSet)
-        .then(() => {
+        .then((loaded) => {
+          if (loaded) {
+            chessGame = createChessGame(chessSet, loaded, () => {
+              needsRender = true;
+            });
+          }
           needsRender = true;
         })
         .catch((error) => console.error('chess pieces failed to load', error));
@@ -246,6 +254,8 @@ export function Scene({ mode, onArrivedInRoom, onArrivedAtTV, onTVClicked, child
         return;
       }
       raycaster.setFromCamera(screenCenter, camera);
+      // the chess board gets first dibs (it's nowhere near the TV anyway)
+      if (chessGame?.tryClick(raycaster)) return;
       const hit = raycaster.intersectObject(tvGroup, true)[0];
       if (hit && hit.distance <= TV_REACH) callbacksRef.current.onTVClicked();
     };
@@ -320,14 +330,18 @@ export function Scene({ mode, onArrivedInRoom, onArrivedAtTV, onTVClicked, child
         camera.position.z = THREE.MathUtils.clamp(camera.position.z, BOUNDS.minZ, BOUNDS.maxZ);
         camera.position.y = EYE_HEIGHT;
 
-        // highlight the crosshair when the TV is in reach
+        // highlight the crosshair over a clickable target (the TV, or a chess piece/move)
         raycaster.setFromCamera(screenCenter, camera);
         const hit = raycaster.intersectObject(tvGroup, true)[0];
+        const tvInReach = !!hit && hit.distance <= TV_REACH;
         crosshairRef.current?.classList.toggle(
           'scene__crosshair--target',
-          !!hit && hit.distance <= TV_REACH,
+          tvInReach || !!chessGame?.isInteractive(raycaster),
         );
       }
+
+      // chess move/AI animations drive their own frames while a piece is sliding
+      if (chessGame?.update(delta)) needsRender = true;
 
       if (needsRender) {
         renderer.render(scene, camera);

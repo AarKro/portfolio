@@ -8,6 +8,10 @@
  * straight onto the board's `squareSize`. The board group exposes `squareSize`
  * and `squareCoord(file,rank)` via userData (see chess.ts); pieces are added as
  * its children so they inherit the board's position/rotation on the desk.
+ *
+ * Returns the live set so the game controller (chessGame.ts) can move/capture
+ * pieces: a `pieces` map keyed by algebraic square ('e2') and the shared
+ * geometry/materials needed to spawn a promoted queen.
  */
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
@@ -29,7 +33,20 @@ const PIECE_URLS: Record<string, string> = {
 const FILES = 'abcdefgh';
 const BACK_RANK = ['rook', 'knight', 'bishop', 'queen', 'king', 'bishop', 'knight', 'rook'];
 /** Top of the board tiles (matches the procedural board in chess.ts) */
-const BOARD_TOP_Y = 0.033;
+export const BOARD_TOP_Y = 0.033;
+
+/** Everything the game controller needs to render moves on the loaded set. */
+export interface PieceAssets {
+  geoms: Record<string, THREE.BufferGeometry>;
+  white: THREE.Material;
+  black: THREE.Material;
+  scale: number;
+}
+export interface ChessPieces {
+  /** algebraic square ('e2') → the piece mesh currently on it */
+  pieces: Map<string, THREE.Mesh>;
+  assets: PieceAssets;
+}
 
 /** Pull the (single) mesh geometry out of a loaded piece file, recentred. */
 function geometryOf(gltf: { scene: THREE.Object3D }): THREE.BufferGeometry | null {
@@ -47,10 +64,10 @@ function geometryOf(gltf: { scene: THREE.Object3D }): THREE.BufferGeometry | nul
   return geo;
 }
 
-export async function populateChessPieces(set: THREE.Object3D): Promise<void> {
+export async function populateChessPieces(set: THREE.Object3D): Promise<ChessPieces | null> {
   const squareSize = set.userData.squareSize as number;
   const squareCoord = set.userData.squareCoord as (file: number, rank: number) => [number, number];
-  if (!squareSize || !squareCoord) return;
+  if (!squareSize || !squareCoord) return null;
 
   const loader = new GLTFLoader();
   const geoms: Record<string, THREE.BufferGeometry> = {};
@@ -65,6 +82,7 @@ export async function populateChessPieces(set: THREE.Object3D): Promise<void> {
   const white = new THREE.MeshStandardMaterial({ color: 0xefe7d4, roughness: 0.55, metalness: 0.05 });
   const black = new THREE.MeshStandardMaterial({ color: 0x23262c, roughness: 0.5, metalness: 0.05 });
 
+  const pieces = new Map<string, THREE.Mesh>();
   const place = (file: number, rank: number, type: string, color: 'white' | 'black') => {
     const geo = geoms[type];
     if (!geo) return;
@@ -75,8 +93,10 @@ export async function populateChessPieces(set: THREE.Object3D): Promise<void> {
     if (color === 'black') mesh.rotation.y = Math.PI; // face the opposing side
     mesh.castShadow = true;
     mesh.receiveShadow = true;
-    mesh.userData = { kind: 'piece', type, color, square: FILES[file] + (rank + 1) };
+    const square = FILES[file] + (rank + 1);
+    mesh.userData = { kind: 'piece', type, color, square };
     set.add(mesh);
+    pieces.set(square, mesh);
   };
 
   for (let file = 0; file < 8; file++) {
@@ -85,4 +105,6 @@ export async function populateChessPieces(set: THREE.Object3D): Promise<void> {
     place(file, 6, 'pawn', 'black');
     place(file, 7, BACK_RANK[file], 'black');
   }
+
+  return { pieces, assets: { geoms, white, black, scale } };
 }
