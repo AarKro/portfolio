@@ -92,9 +92,19 @@ export function createChessGame(
   highlights.name = 'chessHighlights';
   set.add(highlights);
 
+  // win celebration: a quad over every tile that strobes through the rainbow
+  // (filled in by startDisco on a win, animated in update)
+  const disco = new THREE.Group();
+  disco.name = 'chessDisco';
+  set.add(disco);
+
   let selected: string | null = null; // selected square, or null
   let legalTargets = new Map<string, boolean>(); // target square → isCapture
   let busy = false; // a move (player + AI reply) is in flight; ignore clicks
+  let discoActive = false; // the win light-show is running
+  let discoTime = 0;
+  let bannerSprite: THREE.Sprite | null = null; // the floating outcome text
+  let bannerWin = false; // tint the banner through the rainbow (win) vs static
   const tweens: Tween[] = [];
 
   /** Local board position of an algebraic square ('e4'). */
@@ -211,21 +221,95 @@ export function createChessGame(
     }
   }
 
+  /** Light the whole board up disco-style: one additive quad per tile, hue
+   *  strobing across the board (animated in update). Used only on a player win. */
+  function startDisco() {
+    if (discoActive) return;
+    discoActive = true;
+    for (let file = 0; file < 8; file++) {
+      for (let rank = 0; rank < 8; rank++) {
+        const material = new THREE.MeshBasicMaterial({
+          transparent: true,
+          opacity: 0.85,
+          blending: THREE.AdditiveBlending,
+          depthWrite: false,
+        });
+        const tile = new THREE.Mesh(tileGeo, material);
+        tile.rotation.x = -Math.PI / 2;
+        const [x, z] = squareCoord(file, rank);
+        tile.position.set(x, BOARD_TOP_Y + 0.003, z);
+        tile.userData = { phase: file + rank };
+        disco.add(tile);
+      }
+    }
+  }
+
+  /** Float the outcome text in the room as a billboarded sprite above the board
+   *  (white text + dark outline on a transparent canvas). The material colour is
+   *  tinted: static amber for a draw/loss, cycled through the rainbow for a win
+   *  (see update). A Sprite always faces the camera, so it reads from anywhere. */
+  function showBanner(text: string, win: boolean) {
+    const W = 1024;
+    const H = 256;
+    const canvas = document.createElement('canvas');
+    canvas.width = W;
+    canvas.height = H;
+    const ctx = canvas.getContext('2d')!;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    let fontSize = 180;
+    ctx.font = `${fontSize}px 'VT323', monospace`;
+    while (ctx.measureText(text).width > W - 48 && fontSize > 24) {
+      fontSize -= 6;
+      ctx.font = `${fontSize}px 'VT323', monospace`;
+    }
+    ctx.lineWidth = 10;
+    ctx.strokeStyle = 'rgba(0, 0, 0, 0.6)'; // dark outline survives the colour tint
+    ctx.strokeText(text, W / 2, H / 2);
+    ctx.fillStyle = '#ffffff';
+    ctx.fillText(text, W / 2, H / 2);
+
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.colorSpace = THREE.SRGBColorSpace;
+    texture.anisotropy = 4;
+    const material = new THREE.SpriteMaterial({ map: texture, transparent: true, depthWrite: false });
+    if (!win) material.color.set(0xffb454); // amber for draw/loss (win is tinted in update)
+
+    bannerWin = win;
+    bannerSprite = new THREE.Sprite(material);
+    bannerSprite.scale.set(0.62, 0.62 * (H / W), 1);
+    bannerSprite.position.set(0, 0.34, 0); // local: hover above the board centre
+    bannerSprite.renderOrder = 999;
+    set.add(bannerSprite);
+    requestRender();
+  }
+
+  /** End-of-game signal: a win lights the board up disco-style; either way the
+   *  outcome text floats above the board. Returns true if the game is over. */
   function announceIfOver(): boolean {
     if (!chess.isGameOver()) return false;
-    let message: string;
+    let text: string;
+    let win = false;
     if (chess.isCheckmate()) {
-      message = chess.turn() === 'b' ? 'Checkmate — you win! 🎉' : 'Checkmate — black wins.';
+      // the side to move is the one that's been checkmated
+      if (chess.turn() === 'b') {
+        text = 'CHECKMATE — YOU WIN';
+        win = true;
+      } else {
+        text = 'CHECKMATE — YOU LOSE';
+      }
     } else if (chess.isStalemate()) {
-      message = 'Stalemate — draw.';
+      text = 'STALEMATE — DRAW';
     } else if (chess.isThreefoldRepetition()) {
-      message = 'Draw by threefold repetition.';
+      text = 'DRAW — REPETITION';
     } else if (chess.isInsufficientMaterial()) {
-      message = 'Draw — insufficient material.';
+      text = 'DRAW — INSUFFICIENT MATERIAL';
     } else {
-      message = 'Draw.';
+      text = 'DRAW';
     }
-    setTimeout(() => alert(message), 60); // let the final slide paint first
+    clearSelection(); // tidy any leftover highlights
+    if (win) startDisco();
+    showBanner(text, win);
     return true;
   }
 
@@ -363,20 +447,39 @@ export function createChessGame(
   }
 
   function update(delta: number): boolean {
-    if (tweens.length === 0) return false;
+    let active = false;
+
     for (let i = tweens.length - 1; i >= 0; i--) {
+      active = true;
       const tween = tweens[i];
       tween.elapsed += delta;
       const t = Math.min(tween.elapsed / MOVE_DURATION, 1);
       const eased = easeInOut(t);
       tween.mesh.position.lerpVectors(tween.from, tween.to, eased);
-      tween.mesh.position.y = THREE.MathUtils.lerp(tween.from.y, tween.to.y, eased) + Math.sin(t * Math.PI) * HOP;
+      tween.mesh.position.y =
+        THREE.MathUtils.lerp(tween.from.y, tween.to.y, eased) + Math.sin(t * Math.PI) * HOP;
       if (t >= 1) {
         tweens.splice(i, 1);
         tween.onDone?.();
       }
     }
-    return true; // a tween moved this frame — keep drawing
+
+    if (discoActive) {
+      discoTime += delta;
+      for (const tile of disco.children as THREE.Mesh[]) {
+        const phase = tile.userData.phase as number;
+        const hue = (discoTime * 0.45 + phase * 0.07) % 1; // rainbow rolls across the board
+        const light = 0.5 + 0.18 * Math.sin(discoTime * 7 - phase * 0.6); // strobe brightness
+        (tile.material as THREE.MeshBasicMaterial).color.setHSL(hue, 1, light);
+      }
+      // the win banner rides the same rainbow as the board
+      if (bannerSprite && bannerWin) {
+        (bannerSprite.material as THREE.SpriteMaterial).color.setHSL((discoTime * 0.45) % 1, 1, 0.62);
+      }
+      active = true;
+    }
+
+    return active; // keep drawing while a piece slides or the board is partying
   }
 
   return { tryClick, isInteractive, update };
