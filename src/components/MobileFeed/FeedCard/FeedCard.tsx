@@ -10,6 +10,30 @@ import ProfileIcon from '../../../assets/icons/profile.svg?react';
 import ShareIcon from '../../../assets/icons/share.svg?react';
 import './FeedCard.scss';
 
+// Likes are a bit of fun, not real data — but persisting them in localStorage
+// (one shared key holding the set of liked channels) keeps the heart filled
+// across reloads, which is what people expect from a TikTok-style feed.
+const LIKES_KEY = 'feed:likes';
+
+function readLikedChannels(): Set<number> {
+  try {
+    const raw = localStorage.getItem(LIKES_KEY);
+    return new Set(raw ? (JSON.parse(raw) as number[]) : []);
+  } catch {
+    return new Set(); // storage blocked (private mode) — likes stay in-memory
+  }
+}
+
+function persistLike(channel: number, liked: boolean) {
+  try {
+    const set = readLikedChannels();
+    liked ? set.add(channel) : set.delete(channel);
+    localStorage.setItem(LIKES_KEY, JSON.stringify([...set]));
+  } catch {
+    // storage unavailable / quota — the in-memory state still updates
+  }
+}
+
 interface FeedCardProps {
   project: Project;
   channel: number;
@@ -28,7 +52,7 @@ interface FeedCardProps {
 export function FeedCard({ project, channel, isActive, preloadVideo, setRef, onProfile }: FeedCardProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [expanded, setExpanded] = useState(false);
-  const [liked, setLiked] = useState(false);
+  const [liked, setLiked] = useState(() => readLikedChannels().has(channel));
   const [codeOpen, setCodeOpen] = useState(false);
   const [copied, setCopied] = useState(false);
 
@@ -119,7 +143,13 @@ export function FeedCard({ project, channel, isActive, preloadVideo, setRef, onP
 
         <button
           className={`feed__rail-btn feed__rail-btn--like ${liked ? 'is-liked' : ''}`}
-          onClick={() => setLiked((v) => !v)}
+          onClick={() =>
+            setLiked((v) => {
+              const next = !v;
+              persistLike(channel, next);
+              return next;
+            })
+          }
           aria-pressed={liked}
           aria-label={liked ? 'Unlike' : 'Like'}
         >
