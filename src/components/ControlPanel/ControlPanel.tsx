@@ -49,11 +49,6 @@ export function ControlPanel({ tv }: ControlPanelProps) {
           PWR <span className="controls__power-icon" aria-hidden="true">⏻</span>
         </button>
       </div>
-
-      <div className="controls__knobs" aria-hidden="true">
-        <span className="controls__knob" />
-        <span className="controls__knob" />
-      </div>
     </div>
   );
 }
