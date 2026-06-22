@@ -120,6 +120,12 @@
     // share: anchor for the transient "Copied" fallback label
     &--share {
       position: relative;
+
+      // the paper-plane's mass sits low-left of its box, so it reads as
+      // off-centre even when boxed-centred — nudge the glyph right to balance
+      svg {
+        transform: translateX(2px);
+      }
     }
   }
 
