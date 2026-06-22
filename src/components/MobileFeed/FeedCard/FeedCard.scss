@@ -12,7 +12,7 @@
 
   // ─── Backdrop ──────────────────────────────────────────────────────────────
   &__video,
-  &__testcard {
+  &__placeholder {
     position: absolute;
     inset: 0;
     width: 100%;
@@ -24,27 +24,134 @@
     background: #000;
   }
 
-  &__testcard {
-    display: flex;
-    align-items: center;
-    justify-content: center;
+  // No-clip backdrop: the profile page's Figma-style shape field, so a channel
+  // without a teaser still reads as part of the feed's identity (the CRT
+  // test-card stays on the TV — it would look broken in this social context).
+  // Kept on a dark violet ground so the white caption + rail stay legible.
+  &__placeholder {
+    overflow: hidden;
+    display: grid;
+    place-items: center;
+    background:
+      radial-gradient(120% 85% at 50% 30%, rgba($feed-violet, 0.55), transparent 62%),
+      linear-gradient(160deg, #1a1530 0%, #0c0b16 60%, #07070d 100%);
   }
 
-  &__testcard-bars {
+  // the shape field — same vocabulary + drift keyframes as FeedProfile, tuned to
+  // a full-height card and dimmed a touch so the centred title stays the hero
+  &__placeholder-shapes {
     position: absolute;
     inset: 0;
-    opacity: 0.8;
-    @include smpte-bars;
+    pointer-events: none;
   }
 
-  &__testcard-caption {
+  &__placeholder-shape {
+    position: absolute;
+    display: block;
+    will-change: transform;
+
+    @media (prefers-reduced-motion: reduce) {
+      animation: none;
+    }
+  }
+
+  &__placeholder-shape--circle {
+    width: clamp(140px, 46vw, 260px);
+    aspect-ratio: 1;
+    top: 6%;
+    left: -16%;
+    border-radius: 50%;
+    background: $feed-accent;
+    opacity: 0.8;
+    animation: feed-shape-a 15s ease-in-out infinite alternate;
+  }
+
+  &__placeholder-shape--ring {
+    width: clamp(90px, 32vw, 190px);
+    aspect-ratio: 1;
+    top: 9%;
+    right: -12%;
+    border-radius: 50%;
+    border: clamp(10px, 3vw, 18px) solid $feed-like;
+    opacity: 0.85;
+    animation: feed-shape-b 17s ease-in-out infinite alternate;
+  }
+
+  &__placeholder-shape--square {
+    width: clamp(70px, 22vw, 130px);
+    aspect-ratio: 1;
+    top: 58%;
+    right: 8%;
+    border-radius: 26%;
+    background: $feed-violet;
+    opacity: 0.9;
+    animation: feed-shape-c 19s ease-in-out infinite alternate;
+  }
+
+  &__placeholder-shape--triangle {
+    width: clamp(78px, 26vw, 150px);
+    aspect-ratio: 1;
+    top: 62%;
+    left: -2%;
+    background: $feed-violet;
+    opacity: 0.85;
+    clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
+    animation: feed-shape-b 21s ease-in-out infinite alternate;
+    animation-delay: -4s;
+  }
+
+  &__placeholder-shape--pill {
+    width: clamp(96px, 32vw, 180px);
+    height: clamp(40px, 14vw, 76px);
+    bottom: 16%;
+    left: 10%;
+    border-radius: 999px;
+    border: clamp(8px, 2.4vw, 13px) solid $feed-amber;
+    opacity: 0.85;
+    animation: feed-shape-a 18s ease-in-out infinite alternate;
+    animation-delay: -7s;
+  }
+
+  &__placeholder-shape--plus {
+    width: clamp(34px, 10vw, 60px);
+    aspect-ratio: 1;
+    top: 16%;
+    left: 18%;
+    background: $feed-like;
+    clip-path: polygon(
+      38% 0%, 62% 0%, 62% 38%, 100% 38%, 100% 62%, 62% 62%,
+      62% 100%, 38% 100%, 38% 62%, 0% 62%, 0% 38%, 38% 38%
+    );
+    animation: feed-shape-c 13s ease-in-out infinite alternate;
+    animation-delay: -3s;
+  }
+
+  &__placeholder-shape--dot {
+    width: clamp(22px, 7vw, 40px);
+    aspect-ratio: 1;
+    top: 28%;
+    right: 24%;
+    border-radius: 50%;
+    background: $feed-accent;
+    opacity: 0.85;
+    animation: feed-shape-a 12s ease-in-out infinite alternate;
+    animation-delay: -2s;
+  }
+
+  // the project title is the hero, like the name on the profile hero
+  &__placeholder-title {
     position: relative;
-    margin-bottom: 18%;
-    padding: 0.3em 1em;
-    background: rgba(8, 11, 8, 0.82);
-    letter-spacing: 0.12em;
-    font-size: 0.95rem;
-    font-family: $font-screen;
+    z-index: 1;
+    margin-bottom: 16%;
+    padding: 0 1.2rem;
+    text-align: center;
+    font-family: $font-feed;
+    font-weight: 800;
+    font-size: clamp(2.6rem, 12vw, 4rem);
+    line-height: 1.06;
+    letter-spacing: -0.02em;
+    color: #f6f6f9;
+    text-shadow: 0 2px 30px rgba(0, 0, 0, 0.6);
   }
 
   // legibility gradient behind the caption
@@ -162,10 +269,13 @@
       pointer-events: none;
       opacity: 0;
       transition: opacity 280ms ease;
+      // stays near-opaque well up the panel so the top lines of a long, fully
+      // expanded description (description + behind-the-scenes) stay readable
       background: linear-gradient(
         to top,
-        rgba(0, 0, 0, 0.72) 0%,
-        rgba(0, 0, 0, 0.55) 45%,
+        rgba(0, 0, 0, 0.9) 0%,
+        rgba(0, 0, 0, 0.85) 45%,
+        rgba(0, 0, 0, 0.7) 72%,
         rgba(0, 0, 0, 0) 100%
       );
     }

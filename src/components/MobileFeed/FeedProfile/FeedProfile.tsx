@@ -77,7 +77,11 @@ export function FeedProfile({ open, justViewedChannel, onOpenProject }: FeedProf
                   loading="lazy"
                 />
               ) : (
-                <span className="feed__tile-testcard" aria-hidden="true" />
+                <span className="feed__tile-placeholder" aria-hidden="true">
+                  <span className="feed__tile-shape feed__tile-shape--circle" />
+                  <span className="feed__tile-shape feed__tile-shape--ring" />
+                  <span className="feed__tile-shape feed__tile-shape--square" />
+                </span>
               )}
               <span className="feed__tile-title">{project.title}</span>
               {justViewedChannel === channel && <span className="feed__tile-badge">Just viewed</span>}

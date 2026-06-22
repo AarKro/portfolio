@@ -376,12 +376,50 @@
     pointer-events: none;
   }
 
-  // mini SMPTE test card for projects without a teaser clip
-  &__tile-testcard {
+  // compact shape-field thumbnail for projects without a teaser clip — a tile
+  // -sized echo of the feed card's no-clip placeholder, so the two match
+  &__tile-placeholder {
     position: absolute;
     inset: 0;
+    overflow: hidden;
+    background:
+      radial-gradient(120% 90% at 50% 26%, rgba($feed-violet, 0.6), transparent 65%),
+      linear-gradient(160deg, #1a1530 0%, #0c0b16 70%);
+  }
+
+  &__tile-shape {
+    position: absolute;
+    display: block;
+  }
+
+  &__tile-shape--circle {
+    width: 58%;
+    aspect-ratio: 1;
+    top: -16%;
+    left: -20%;
+    border-radius: 50%;
+    background: $feed-accent;
     opacity: 0.8;
-    @include smpte-bars;
+  }
+
+  &__tile-shape--ring {
+    width: 44%;
+    aspect-ratio: 1;
+    top: 7%;
+    right: -14%;
+    border-radius: 50%;
+    border: clamp(5px, 1.8vw, 9px) solid $feed-like;
+    opacity: 0.85;
+  }
+
+  &__tile-shape--square {
+    width: 34%;
+    aspect-ratio: 1;
+    bottom: 14%;
+    right: 9%;
+    border-radius: 26%;
+    background: $feed-violet;
+    opacity: 0.9;
   }
 }
 
