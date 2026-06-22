@@ -5,9 +5,7 @@ export const COL = {
   wall: 0xe9e3d6,
   baseboard: 0xcdc6b8,
   rug: 0x9a8f78,
-  couch: 0xc4bdac,
-  couchDark: 0xb1a995,
-  couchLeg: 0x2c241c,
+  couch: 0xb3a690, // the couch model's texture is stripped for this flat tone
   console: 0x6f5236,
   consoleLeg: 0x241a12,
   crtCabinet: 0x46362a,
