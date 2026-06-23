@@ -94,9 +94,11 @@ scripts/encode-clip.sh <name> <landscape-original> <portrait-original>
 Output (per `<name>`): `_landscape.mp4` + `_landscape_av1.mp4`,
 `_portrait.mp4` + `_portrait_av1.mp4` in `src/assets/videos/`, and
 `_landscape.jpg` / `_portrait.jpg` / `_grid.jpg` posters in
-`src/assets/thumbnails/`. Tunables via env: `HEIGHT` (default 720 — plenty for
-the small CRT), `FPS` (30), `H264_CRF` (23), `AV1_CRF` (28). Higher quality →
-lower CRF (bigger files).
+`src/assets/thumbnails/`. Tunables via env: `HEIGHT_LANDSCAPE` (720 — the CRT is
+small) and `HEIGHT_PORTRAIT` (1280 — the feed plays full-screen on phones, so it
+gets more pixels; `HEIGHT` overrides both), `FPS` (30), `H264_CRF` (23),
+`AV1_CRF` (28), `AV1_PRESET` (4 — SVT-AV1 speed dial, lower = slower but better
+quality per byte). Higher quality → lower CRF (bigger files).
 
 **Black bars are trimmed automatically.** Each source is run through ffmpeg
 `cropdetect` and the detected letterbox/pillarbox is baked into the encode pass

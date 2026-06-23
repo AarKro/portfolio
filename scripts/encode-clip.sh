@@ -34,17 +34,24 @@
 # as part of the encode (no separate re-compress). See AUTOCROP / CROP below.
 #
 # Tunables (override via env):
-#   HEIGHT (720)  FPS (30)  H264_CRF (23)  AV1_CRF (28)
-#     Higher quality -> lower CRF (bigger files).  Smaller files -> higher CRF.
+#   HEIGHT_LANDSCAPE (720)  HEIGHT_PORTRAIT (1280)  FPS (30)
+#     Separate heights on purpose: the CRT is small (720 is plenty), but the feed
+#     plays the portrait clip FULL-SCREEN on phones, so it gets more pixels.
+#     Setting HEIGHT overrides both at once.
+#   H264_CRF (23)  AV1_CRF (28)  AV1_PRESET (4)
+#     Higher quality -> lower CRF (bigger files). AV1_PRESET is the SVT-AV1 speed
+#     dial: lower = slower encode, better quality per byte.
 #   AUTOCROP (1)  CROP (auto)
 #     AUTOCROP=0 skips black-bar detection; CROP=W:H:X:Y forces an exact crop;
 #     CROP=none keeps the bars.
 set -euo pipefail
 
-HEIGHT="${HEIGHT:-720}"     # output height; 720p is plenty for the small CRT
+HEIGHT_LANDSCAPE="${HEIGHT_LANDSCAPE:-${HEIGHT:-720}}"   # CRT is small; 720 is plenty
+HEIGHT_PORTRAIT="${HEIGHT_PORTRAIT:-${HEIGHT:-1280}}"    # feed is full-screen; give it pixels
 FPS="${FPS:-30}"
 H264_CRF="${H264_CRF:-23}"  # was 28 on the old clips; AV1 lets us afford better H.264 too
 AV1_CRF="${AV1_CRF:-28}"    # SVT-AV1 scale (0-63); ~28 ≈ visually transparent here
+AV1_PRESET="${AV1_PRESET:-4}"  # SVT-AV1 preset: lower = slower, better quality/byte
 
 if [ "$#" -lt 2 ]; then
   sed -n '3,17p' "$0"   # print the usage header
@@ -66,7 +73,7 @@ mkdir -p "$VID" "$THUMB"
 # Pick whichever AV1 encoder this ffmpeg build has (SVT is faster; aom is the
 # reference). The CLI flags differ, so each gets its own arg set.
 if ffmpeg -hide_banner -encoders 2>/dev/null | grep -q libsvtav1; then
-  AV1_ARGS=(-c:v libsvtav1 -preset 6 -crf "$AV1_CRF")
+  AV1_ARGS=(-c:v libsvtav1 -preset "$AV1_PRESET" -crf "$AV1_CRF")
 elif ffmpeg -hide_banner -encoders 2>/dev/null | grep -q libaom-av1; then
   AV1_ARGS=(-c:v libaom-av1 -crf "$AV1_CRF" -b:v 0 -cpu-used 4 -row-mt 1)
 else
@@ -103,7 +110,7 @@ detect_crop() {  # $1 = source → prints "crop=W:H:X:Y," (trailing comma) or no
 # Portrait-from-landscape additionally takes the centre 9:16 after de-barring.
 RATIO_CROP="crop='trunc(ih*9/16/2)*2':ih"
 LAND_BARS="$(detect_crop "$LAND_SRC")"
-LAND_VF="${LAND_BARS}scale=-2:${HEIGHT},fps=${FPS}"
+LAND_VF="${LAND_BARS}scale=-2:${HEIGHT_LANDSCAPE},fps=${FPS}"
 
 echo "→ landscape H.264"
 ffmpeg -y -i "$LAND_SRC" -vf "$LAND_VF" "${H264_ARGS[@]}" "${COMMON[@]}" "$VID/${NAME}_landscape.mp4"
@@ -112,11 +119,11 @@ ffmpeg -y -i "$LAND_SRC" -vf "$LAND_VF" "${AV1_ARGS[@]}"  "${COMMON[@]}" "$VID/$
 
 if [ -n "$PORT_SRC" ]; then
   PORT_IN="$PORT_SRC"
-  PORT_VF="$(detect_crop "$PORT_SRC")scale=-2:${HEIGHT},fps=${FPS}"
+  PORT_VF="$(detect_crop "$PORT_SRC")scale=-2:${HEIGHT_PORTRAIT},fps=${FPS}"
 else
   PORT_IN="$LAND_SRC"
   # reuse the landscape source's bar-trim, then take the centre 9:16 from it
-  PORT_VF="${LAND_BARS}${RATIO_CROP},scale=-2:${HEIGHT},fps=${FPS}"
+  PORT_VF="${LAND_BARS}${RATIO_CROP},scale=-2:${HEIGHT_PORTRAIT},fps=${FPS}"
   echo "⚠️  no portrait original given — centre-cropping 9:16 from the landscape clip."
   echo "    The feed is full-screen vertical; a dedicated portrait recording looks"
   echo "    much better. Pass one as the 3rd argument when you have it."
