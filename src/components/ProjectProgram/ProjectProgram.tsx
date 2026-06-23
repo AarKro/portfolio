@@ -95,7 +95,12 @@ export function ProjectProgram({ project, channel }: ProjectProgramProps) {
       {/* Backdrop: the teaser clip, or a full-bleed test card when there's none */}
       {project.videoUrl ? (
         <>
+          {/* Key by project so the element remounts on channel change —
+              swapping <source> children alone won't reselect the source
+              without a manual video.load(), so navigation would otherwise
+              keep showing the previous (or no) clip until the load timeout. */}
           <video
+            key={project.id}
             className="program__video"
             poster={project.posterUrl}
             muted

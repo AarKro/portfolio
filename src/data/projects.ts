@@ -12,32 +12,44 @@
  */
 
 import scholarsMateVideo from '../assets/videos/scholars_mate_landscape.mp4';
+import scholarsMateVideoAv1 from '../assets/videos/scholars_mate_landscape_av1.mp4';
 import scholarsMateVideoPortrait from '../assets/videos/scholars_mate_portrait.mp4';
+import scholarsMateVideoPortraitAv1 from '../assets/videos/scholars_mate_portrait_av1.mp4';
 import scholarsMatePoster from '../assets/thumbnails/scholars_mate_landscape.jpg';
 import scholarsMatePosterPortrait from '../assets/thumbnails/scholars_mate_portrait.jpg';
 import wowGraveyard3dVideo from '../assets/videos/wow_graveyard_3d_landscape.mp4';
+import wowGraveyard3dVideoAv1 from '../assets/videos/wow_graveyard_3d_landscape_av1.mp4';
 import wowGraveyard3dVideoPortrait from '../assets/videos/wow_graveyard_3d_portrait.mp4';
+import wowGraveyard3dVideoPortraitAv1 from '../assets/videos/wow_graveyard_3d_portrait_av1.mp4';
 import wowGraveyard3dPoster from '../assets/thumbnails/wow_graveyard_3d_landscape.jpg';
 import wowGraveyard3dPosterPortrait from '../assets/thumbnails/wow_graveyard_3d_portrait.jpg';
 import wowGraveyard3dGridPoster from '../assets/thumbnails/wow_graveyard_3d_grid.jpg';
 import scholarsMateGridPoster from '../assets/thumbnails/scholars_mate_grid.jpg';
 import peggyAshcroftVideo from '../assets/videos/peggy_ashcroft_landscape.mp4';
+import peggyAshcroftVideoAv1 from '../assets/videos/peggy_ashcroft_landscape_av1.mp4';
 import peggyAshcroftVideoPortrait from '../assets/videos/peggy_ashcroft_portrait.mp4';
+import peggyAshcroftVideoPortraitAv1 from '../assets/videos/peggy_ashcroft_portrait_av1.mp4';
 import peggyAshcroftPoster from '../assets/thumbnails/peggy_ashcroft_landscape.jpg';
 import peggyAshcroftPosterPortrait from '../assets/thumbnails/peggy_ashcroft_portrait.jpg';
 import peggyAshcroftGridPoster from '../assets/thumbnails/peggy_ashcroft_grid.jpg';
 import zephirFlexVideo from '../assets/videos/zephir-flex_landscape.mp4';
+import zephirFlexVideoAv1 from '../assets/videos/zephir-flex_landscape_av1.mp4';
 import zephirFlexVideoPortrait from '../assets/videos/zephir-flex_portrait.mp4';
+import zephirFlexVideoPortraitAv1 from '../assets/videos/zephir-flex_portrait_av1.mp4';
 import zephirFlexPoster from '../assets/thumbnails/zephir-flex_landscape.jpg';
 import zephirFlexPosterPortrait from '../assets/thumbnails/zephir-flex_portrait.jpg';
 import zephirFlexGridPoster from '../assets/thumbnails/zephir-flex_grid.jpg';
 import sugarcubesVideo from '../assets/videos/sugarcubes_landscape.mp4';
+import sugarcubesVideoAv1 from '../assets/videos/sugarcubes_landscape_av1.mp4';
 import sugarcubesVideoPortrait from '../assets/videos/sugarcubes_portrait.mp4';
+import sugarcubesVideoPortraitAv1 from '../assets/videos/sugarcubes_portrait_av1.mp4';
 import sugarcubesPoster from '../assets/thumbnails/sugarcubes_landscape.jpg';
 import sugarcubesPosterPortrait from '../assets/thumbnails/sugarcubes_portrait.jpg';
 import sugarcubesGridPoster from '../assets/thumbnails/sugarcubes_grid.jpg';
 import cssToolboxVideo from '../assets/videos/css_toolbox_landscape.mp4';
+import cssToolboxVideoAv1 from '../assets/videos/css_toolbox_landscape_av1.mp4';
 import cssToolboxVideoPortrait from '../assets/videos/css_toolbox_portrait.mp4';
+import cssToolboxVideoPortraitAv1 from '../assets/videos/css_toolbox_portrait_av1.mp4';
 import cssToolboxPoster from '../assets/thumbnails/css_toolbox_landscape.jpg';
 import cssToolboxPosterPortrait from '../assets/thumbnails/css_toolbox_portrait.jpg';
 import cssToolboxGridPoster from '../assets/thumbnails/css_toolbox_grid.jpg';
@@ -136,8 +148,8 @@ export const PROJECTS: Project[] = [
       'A 3D remake of my original [2D graveyard](https://github.com/AarKro/wow-graveyard) — three.js this time, with a postprocessing pipeline of volumetric godrays and simplex-noise terrain to set the mood.',
     githubUrl: 'https://github.com/AarKro/wow-graveyard-3d',
     demoUrl: 'https://aarkro.github.io/wow-graveyard-3d/',
-    videoUrl: { h264: wowGraveyard3dVideo },
-    mobileVideoUrl: { h264: wowGraveyard3dVideoPortrait },
+    videoUrl: { av1: wowGraveyard3dVideoAv1, h264: wowGraveyard3dVideo },
+    mobileVideoUrl: { av1: wowGraveyard3dVideoPortraitAv1, h264: wowGraveyard3dVideoPortrait },
     posterUrl: wowGraveyard3dPoster,
     mobilePosterUrl: wowGraveyard3dPosterPortrait,
     gridPosterUrl: wowGraveyard3dGridPoster,
@@ -152,8 +164,8 @@ export const PROJECTS: Project[] = [
       'Scrolling drives the story: each section advances the same four-move sequence one step at a time.',
     githubUrl: 'https://github.com/AarKro/scholars-mate',
     demoUrl: 'https://aarkro.github.io/scholars-mate/',
-    videoUrl: { h264: scholarsMateVideo },
-    mobileVideoUrl: { h264: scholarsMateVideoPortrait },
+    videoUrl: { av1: scholarsMateVideoAv1, h264: scholarsMateVideo },
+    mobileVideoUrl: { av1: scholarsMateVideoPortraitAv1, h264: scholarsMateVideoPortrait },
     posterUrl: scholarsMatePoster,
     mobilePosterUrl: scholarsMatePosterPortrait,
     gridPosterUrl: scholarsMateGridPoster,
@@ -168,8 +180,8 @@ export const PROJECTS: Project[] = [
       'Built for a Responsive Design & Accessibility brief — hand-rolled hooks drive the scroll-spy navigation and sticky header, with the whole layout designed mobile-up and accessibility-first.',
     githubUrl: 'https://github.com/AarKro/peggy-ashcroft',
     demoUrl: 'https://aarkro.github.io/peggy-ashcroft/',
-    videoUrl: { h264: peggyAshcroftVideo },
-    mobileVideoUrl: { h264: peggyAshcroftVideoPortrait },
+    videoUrl: { av1: peggyAshcroftVideoAv1, h264: peggyAshcroftVideo },
+    mobileVideoUrl: { av1: peggyAshcroftVideoPortraitAv1, h264: peggyAshcroftVideoPortrait },
     posterUrl: peggyAshcroftPoster,
     mobilePosterUrl: peggyAshcroftPosterPortrait,
     gridPosterUrl: peggyAshcroftGridPoster,
@@ -184,8 +196,8 @@ export const PROJECTS: Project[] = [
       'The font is mine too, not just the site — this page is its official specimen.',
     githubUrl: 'https://github.com/AarKro/zephir-flex',
     demoUrl: 'https://aarkro.github.io/zephir-flex/',
-    videoUrl: { h264: zephirFlexVideo },
-    mobileVideoUrl: { h264: zephirFlexVideoPortrait },
+    videoUrl: { av1: zephirFlexVideoAv1, h264: zephirFlexVideo },
+    mobileVideoUrl: { av1: zephirFlexVideoPortraitAv1, h264: zephirFlexVideoPortrait },
     posterUrl: zephirFlexPoster,
     mobilePosterUrl: zephirFlexPosterPortrait,
     gridPosterUrl: zephirFlexGridPoster,
@@ -200,8 +212,8 @@ export const PROJECTS: Project[] = [
       'Hand-built in plain HTML, CSS and JavaScript — the whole page is a faithful translation of a print poster into the browser.',
     githubUrl: 'https://github.com/AarKro/modul_webtech',
     demoUrl: 'https://aarkro.github.io/modul_webtech/sugarcubes/sugarcubes.html',
-    videoUrl: { h264: sugarcubesVideo },
-    mobileVideoUrl: { h264: sugarcubesVideoPortrait },
+    videoUrl: { av1: sugarcubesVideoAv1, h264: sugarcubesVideo },
+    mobileVideoUrl: { av1: sugarcubesVideoPortraitAv1, h264: sugarcubesVideoPortrait },
     posterUrl: sugarcubesPoster,
     mobilePosterUrl: sugarcubesPosterPortrait,
     gridPosterUrl: sugarcubesGridPoster,
@@ -216,8 +228,8 @@ export const PROJECTS: Project[] = [
       'Designed start to finish in Figma as a clickable prototype — the whole tool overlay and its flows mapped out before a line of code.',
     demoUrl:
       'https://www.figma.com/proto/5SfRSVnselzgMdOXUHzGxJ/CSS-Toolbox?node-id=79-2083&p=f&viewport=309%2C309%2C0.05&t=b8LCt5BqsEUP6NZh-1&scaling=scale-down&content-scaling=fixed&starting-point-node-id=79%3A2083&page-id=0%3A1',
-    videoUrl: { h264: cssToolboxVideo },
-    mobileVideoUrl: { h264: cssToolboxVideoPortrait },
+    videoUrl: { av1: cssToolboxVideoAv1, h264: cssToolboxVideo },
+    mobileVideoUrl: { av1: cssToolboxVideoPortraitAv1, h264: cssToolboxVideoPortrait },
     posterUrl: cssToolboxPoster,
     mobilePosterUrl: cssToolboxPosterPortrait,
     gridPosterUrl: cssToolboxGridPoster,
