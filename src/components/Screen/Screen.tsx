@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { FIRST_PROJECT_CHANNEL, PROJECTS } from '../../data/projects';
+import { FIRST_PROJECT_CHANNEL, PROJECTS, type VideoSources } from '../../data/projects';
 import { broadcastTitle, formatChannel } from '../../utils/broadcast';
 import type { TVState } from '../../hooks/useTV';
 import { useSwipe } from '../../hooks/useSwipe';
@@ -30,9 +30,9 @@ export function Screen({ tv }: ScreenProps) {
 
   // Warm the clips on either side of the current channel so CH ▲/▼ lands on an
   // already-buffered video (out-of-range indices fall through to undefined).
-  const neighborVideoUrls = [channel - 1, channel + 1]
+  const neighborVideoSources = [channel - 1, channel + 1]
     .map((ch) => PROJECTS[ch - FIRST_PROJECT_CHANNEL]?.videoUrl)
-    .filter((url): url is string => Boolean(url));
+    .filter((s): s is VideoSources => Boolean(s));
 
   // Visitors who deep-link past the intro never see the explainer,
   // so show them the arrow-keys hint once.
@@ -97,7 +97,7 @@ export function Screen({ tv }: ScreenProps) {
         <div className="screen__glare" aria-hidden="true" />
       </div>
 
-      {poweredOn && <VideoPreloader urls={neighborVideoUrls} />}
+      {poweredOn && <VideoPreloader sources={neighborVideoSources} />}
     </div>
   );
 }

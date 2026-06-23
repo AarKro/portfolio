@@ -84,20 +84,26 @@ not in `public/`), one folder for both orientations, distinguished by a
 the `videoUrl` fallback), the portrait one is the feed's `mobileVideoUrl`.
 
 **Use `scripts/encode-clip.sh` — don't hand-roll ffmpeg.** It takes the
-**original recording** and emits every file a clip needs, in both codecs:
+**original recording(s)** and emits every file a clip needs, in both codecs:
 
 ```
-scripts/encode-clip.sh <name> <landscape-original> [portrait-original]
-# e.g. scripts/encode-clip.sh scholars_mate ~/raw/scholars_mate.mov
+scripts/encode-clip.sh <name> <landscape-original> <portrait-original>
+# e.g. scripts/encode-clip.sh peggy_ashcroft ~/raw/peggy_land.mov ~/raw/peggy_port.mov
 ```
 
 Output (per `<name>`): `_landscape.mp4` + `_landscape_av1.mp4`,
 `_portrait.mp4` + `_portrait_av1.mp4` in `src/assets/videos/`, and
-`_landscape.jpg` + `_portrait.jpg` posters in `src/assets/thumbnails/`. If no
-portrait original is given it centre-crops 9:16 from the landscape one (sides
-cut equally), same as the shipped clips. Tunables via env: `HEIGHT` (default
-720 — plenty for the small CRT), `FPS` (30), `H264_CRF` (23), `AV1_CRF` (28).
-Higher quality → lower CRF (bigger files).
+`_landscape.jpg` / `_portrait.jpg` / `_grid.jpg` posters in
+`src/assets/thumbnails/`. Tunables via env: `HEIGHT` (default 720 — plenty for
+the small CRT), `FPS` (30), `H264_CRF` (23), `AV1_CRF` (28). Higher quality →
+lower CRF (bigger files).
+
+**Portrait should be its own recording, not a crop.** The feed is full-screen
+9:16, so the portrait clip wants framing composed for vertical — pass a
+dedicated portrait original as the 3rd argument. If you omit it the script
+falls back to centre-cropping 9:16 from the landscape clip (sides cut equally,
+as the early shipped clips did) and prints a loud warning; treat that as a
+stopgap, not the goal.
 
 **Encode from the ORIGINAL, never from a shipped clip.** Re-encoding an
 already-compressed file can't recover detail that CRF + downscale already threw
@@ -106,28 +112,25 @@ source was 2360×1594 @ 120fps, 9.7 MB) and are **not** kept in the repo; they
 live on Aaron's machine. To regenerate or improve a clip's quality, get the
 original first, then run the script.
 
-**Two codecs, picked by the browser** (the script emits both; wiring them into
-the components is a pending step — see below). AV1 reaches the same visual
-quality as H.264 in ~30–50% fewer bytes, so clips can look better without
-growing. The plan: each `<video>` lists the AV1 file first and the H.264 file
-as a `<source>` fallback (`type="video/mp4; codecs=\"av01.0.05M.08\""` then
-plain `type="video/mp4"`); the browser plays the first it can decode — modern
-engines (Chrome, Firefox, Safari 17.4+) take AV1, everything else falls through
-to H.264. No JS, no bandwidth detection. `-an` strips audio (clips play muted),
-`+faststart` lets them start before fully downloaded.
-
-> **Pending `<source>` refactor:** today each `<video>` still takes a single
-> `src` string (`videoUrl: string`), so only the H.264 files are used. To
-> switch on the AV1 encodes, the `videoUrl` / `mobileVideoUrl` fields must carry
-> both URLs and the three `<video>` sites — `ProjectProgram.tsx`,
-> `FeedCard.tsx`, `VideoPreloader.tsx` — must render `<source>` children
-> (AV1 first, H.264 fallback) instead of `src`. Do this once the AV1 files
-> exist; until then the script's AV1 outputs sit unused.
+**Two codecs, picked by the browser.** AV1 reaches the same visual quality as
+H.264 in ~30–50% fewer bytes, so clips can look better without growing. Each
+`Project`'s `videoUrl` / `mobileVideoUrl` is a `VideoSources` object
+(`{ av1?, h264 }`), and the shared `ClipSources` component renders the AV1 file
+first as a `<source>` (`type="video/mp4; codecs=\"av01.0.05M.08\""`) with the
+H.264 file (`type="video/mp4"`) as the fallback; the browser plays the first it
+can decode — modern engines (Chrome, Firefox, Safari 17.4+) take AV1, everything
+else falls through to H.264. No JS, no bandwidth detection. The three `<video>`
+sites (`ProjectProgram`, `FeedCard`, `VideoPreloader`) all render
+`<ClipSources>` children. `av1` is **optional**: a clip ships H.264-only until
+re-encoded, then you just add the `av1:` URL to its entry in `projects.ts` and
+it lights up everywhere. `-an` strips audio (clips play muted), `+faststart`
+lets them start before fully downloaded.
 
 Posters are the first frame (codec-agnostic): the landscape one is `posterUrl`
 (desktop `<video poster>`), the portrait one is `mobilePosterUrl` (feed card
-poster + profile grid tile, which prefer it and fall back to `posterUrl`). The
-script regenerates both; re-run it whenever the clips change.
+poster), and `_grid.jpg` — grabbed 1.5s in — is `gridPosterUrl` (profile-grid
+tile, so it previews real content not a title card). The script regenerates all
+three; re-run it whenever the clips change.
 
 ## Architecture
 
@@ -156,6 +159,8 @@ src/
                               (teaser-or-testcard backdrop + bug +
                               slide-up teletext page)
     InlineLink/             ← inline `[label](url)` text-link renderer
+    ClipSources/            ← <source> children for a <video>: AV1 first, H.264
+                              fallback (shared by the 3 <video> sites)
     MobileFeed/             ← phones AND tablets: vertical TikTok-style feed of
                               the same projects (no three.js). Each sub-part is
                               its own folder (Component.tsx + Component.scss):

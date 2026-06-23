@@ -3,6 +3,7 @@ import type { Project } from '../../data/projects';
 import { formatChannel } from '../../utils/broadcast';
 import { renderInlineLinks } from '../InlineLink/InlineLink';
 import { StaticNoise } from '../StaticNoise/StaticNoise';
+import { ClipSources } from '../ClipSources/ClipSources';
 import './ProjectProgram.scss';
 
 /** Safety net: never show loading noise forever if the teaser never starts */
@@ -96,7 +97,6 @@ export function ProjectProgram({ project, channel }: ProjectProgramProps) {
         <>
           <video
             className="program__video"
-            src={project.videoUrl}
             poster={project.posterUrl}
             muted
             loop
@@ -104,7 +104,9 @@ export function ProjectProgram({ project, channel }: ProjectProgramProps) {
             playsInline
             preload="auto"
             onPlaying={() => setVideoLoading(false)}
-          />
+          >
+            <ClipSources sources={project.videoUrl} />
+          </video>
           <StaticNoise active={videoLoading} />
         </>
       ) : (

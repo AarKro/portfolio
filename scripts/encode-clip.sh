@@ -4,22 +4,26 @@
 # ships, plus posters. Run this on the raw screen-capture (NOT on an already-
 # compressed clip — re-encoding a compressed file can't recover lost detail).
 #
-#   scripts/encode-clip.sh <name> <landscape-original> [portrait-original]
+#   scripts/encode-clip.sh <name> <landscape-original> <portrait-original>
 #
 # Examples:
-#   scripts/encode-clip.sh scholars_mate ~/raw/scholars_mate.mov
 #   scripts/encode-clip.sh peggy_ashcroft ~/raw/peggy_land.mov ~/raw/peggy_port.mov
+#   scripts/encode-clip.sh scholars_mate ~/raw/scholars_mate.mov   # crop fallback (warns)
 #
-# If no portrait original is given, the portrait clip is centre-cropped (9:16)
-# from the landscape original, same as the shipped clips.
+# PASS A DEDICATED PORTRAIT RECORDING. The feed is full-screen 9:16, so portrait
+# wants its own framing (composed for vertical), not a centre-crop of the
+# landscape clip — cropping throws away the sides and usually mis-frames the
+# subject. If you omit the portrait original the script still runs, but it
+# centre-crops 9:16 from the landscape one and prints a loud warning.
 #
 # Produces, for <name>:
 #   src/assets/videos/<name>_landscape.mp4       H.264  (universal fallback)
 #   src/assets/videos/<name>_landscape_av1.mp4   AV1    (modern browsers; ~30-50% smaller)
 #   src/assets/videos/<name>_portrait.mp4        H.264
 #   src/assets/videos/<name>_portrait_av1.mp4    AV1
-#   src/assets/thumbnails/<name>_landscape.jpg   poster (posterUrl)
-#   src/assets/thumbnails/<name>_portrait.jpg    poster (mobilePosterUrl)
+#   src/assets/thumbnails/<name>_landscape.jpg   poster (posterUrl, first frame)
+#   src/assets/thumbnails/<name>_portrait.jpg    poster (mobilePosterUrl, first frame)
+#   src/assets/thumbnails/<name>_grid.jpg        profile-grid tile (gridPosterUrl, @1.5s)
 #
 # The two codecs are the point: AV1 hits the same visual quality as H.264 in far
 # fewer bytes, so you can raise quality (lower CRF) and still land near today's
@@ -78,16 +82,24 @@ if [ -n "$PORT_SRC" ]; then
   PORT_IN="$PORT_SRC";        PORT_VF="scale=-2:${HEIGHT},fps=${FPS}"
 else
   PORT_IN="$LAND_SRC";        PORT_VF="${PORT_CROP},scale=-2:${HEIGHT},fps=${FPS}"
+  echo "⚠️  no portrait original given — centre-cropping 9:16 from the landscape clip."
+  echo "    The feed is full-screen vertical; a dedicated portrait recording looks"
+  echo "    much better. Pass one as the 3rd argument when you have it."
 fi
 echo "→ portrait H.264"
 ffmpeg -y -i "$PORT_IN" -vf "$PORT_VF" "${H264_ARGS[@]}" "${COMMON[@]}" "$VID/${NAME}_portrait.mp4"
 echo "→ portrait AV1"
 ffmpeg -y -i "$PORT_IN" -vf "$PORT_VF" "${AV1_ARGS[@]}"  "${COMMON[@]}" "$VID/${NAME}_portrait_av1.mp4"
 
-# Posters: first frame of each H.264 encode (codec-agnostic, so one each is fine).
+# Posters (first frame, codec-agnostic — one each is fine):
+#   *_landscape.jpg / *_portrait.jpg  = <video poster> (posterUrl / mobilePosterUrl)
+#   *_grid.jpg                        = profile-grid tile (gridPosterUrl), grabbed
+#                                       1.5s in so the tile previews real content,
+#                                       not an intro/title first frame.
 echo "→ posters"
 ffmpeg -y -i "$VID/${NAME}_landscape.mp4" -frames:v 1 -vf "scale=-2:540" -q:v 4 "$THUMB/${NAME}_landscape.jpg"
 ffmpeg -y -i "$VID/${NAME}_portrait.mp4"  -frames:v 1 -vf "scale=-2:540" -q:v 4 "$THUMB/${NAME}_portrait.jpg"
+ffmpeg -y -ss 1.5 -i "$VID/${NAME}_portrait.mp4" -frames:v 1 -vf "scale=-2:540" -q:v 4 "$THUMB/${NAME}_grid.jpg"
 
 echo
 echo "done. files for '${NAME}':"
