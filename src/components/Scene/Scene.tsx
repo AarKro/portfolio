@@ -28,6 +28,8 @@ const WALK_SPEED = 3;
 const TV_REACH = 4;
 /** Max distance (m) from which the easel canvas / palette can be used */
 const PAINT_REACH = 3;
+/** Max distance (m) from which the short-story paper can be picked up */
+const PAPER_REACH = 3;
 /** Fraction of the viewport the DOM TV fills at the closeup framing */
 const FIT_HEIGHT = 0.82;
 const FIT_WIDTH = 0.9;
@@ -42,6 +44,8 @@ interface SceneProps {
   onArrivedAtTV: () => void;
   /** Visitor clicked the TV while walking around */
   onTVClicked: () => void;
+  /** Visitor clicked the short-story paper on the couch */
+  onPaperClicked: () => void;
   /** The DOM TV (TVSet) — projected onto the 3D TV body via CSS3D */
   children: ReactNode;
 }
@@ -71,7 +75,14 @@ function quaternionLookingAt(from: THREE.Vector3, target: THREE.Vector3): THREE.
  * body). "Website mode" is nothing more than the camera parked right in
  * front of the TV — so the power-off pull-back is inherently seamless.
  */
-export function Scene({ mode, onArrivedInRoom, onArrivedAtTV, onTVClicked, children }: SceneProps) {
+export function Scene({
+  mode,
+  onArrivedInRoom,
+  onArrivedAtTV,
+  onTVClicked,
+  onPaperClicked,
+  children,
+}: SceneProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const crosshairRef = useRef<HTMLDivElement>(null);
   const apiRef = useRef<{ flyToRoom: () => void; flyToTV: () => void } | null>(null);
@@ -85,8 +96,8 @@ export function Scene({ mode, onArrivedInRoom, onArrivedAtTV, onTVClicked, child
 
   const modeRef = useRef(mode);
   modeRef.current = mode;
-  const callbacksRef = useRef({ onArrivedInRoom, onArrivedAtTV, onTVClicked });
-  callbacksRef.current = { onArrivedInRoom, onArrivedAtTV, onTVClicked };
+  const callbacksRef = useRef({ onArrivedInRoom, onArrivedAtTV, onTVClicked, onPaperClicked });
+  callbacksRef.current = { onArrivedInRoom, onArrivedAtTV, onTVClicked, onPaperClicked };
 
   useEffect(() => {
     const container = containerRef.current!;
@@ -117,6 +128,7 @@ export function Scene({ mode, onArrivedInRoom, onArrivedAtTV, onTVClicked, child
 
     const { tvGroup, tvBody } = buildRoom(scene);
     const painter = setupPainting(scene);
+    const storyPaper = scene.getObjectByName('storyPaper');
 
     const tvObject = new CSS3DObject(tvHost);
     tvObject.scale.setScalar(WORLD_PER_PX);
@@ -261,6 +273,16 @@ export function Scene({ mode, onArrivedInRoom, onArrivedAtTV, onTVClicked, child
       raycaster.setFromCamera(screenCenter, camera);
       // the chess board gets first dibs (it's nowhere near the TV anyway)
       if (chessGame?.tryClick(raycaster)) return;
+      // the story paper on the couch: free the cursor so the reader can scroll
+      if (storyPaper) {
+        const paperHit = raycaster.intersectObject(storyPaper, true)[0];
+        if (paperHit && paperHit.distance <= PAPER_REACH) {
+          controls.unlock();
+          showCrosshair(false);
+          callbacksRef.current.onPaperClicked();
+          return;
+        }
+      }
       const hit = raycaster.intersectObject(tvGroup, true)[0];
       if (hit && hit.distance <= TV_REACH) callbacksRef.current.onTVClicked();
     };
@@ -369,6 +391,11 @@ export function Scene({ mode, onArrivedInRoom, onArrivedAtTV, onTVClicked, child
         let targetable = !!tvHit && tvHit.distance <= TV_REACH;
 
         if (!targetable && chessGame?.isInteractive(raycaster)) targetable = true;
+
+        if (!targetable && storyPaper) {
+          const paperHit = raycaster.intersectObject(storyPaper, true)[0];
+          targetable = !!paperHit && paperHit.distance <= PAPER_REACH;
+        }
 
         if (painter) {
           if (isPainting) {

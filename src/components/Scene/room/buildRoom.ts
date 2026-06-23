@@ -18,6 +18,7 @@ import { addPlants } from './models/plants';
 import { addArtCorner } from './models/artCorner';
 import { addEnvironment } from './models/environment';
 import { addTv } from './models/tv';
+import { addPaper } from './models/paper';
 
 export {
   BOUNDS,
@@ -37,5 +38,6 @@ export function buildRoom(scene: THREE.Scene): { tvGroup: THREE.Group; tvBody: T
   addPlants(scene);
   addArtCorner(scene);
   addEnvironment(scene);
+  addPaper(scene);
   return addTv(scene);
 }

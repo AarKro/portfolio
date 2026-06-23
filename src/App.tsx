@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { PROJECTS } from './data/projects';
 import { Scene, type ViewMode } from './components/Scene/Scene';
 import { TVSet } from './components/TVSet/TVSet';
+import { StoryReader } from './components/StoryReader/StoryReader';
 import { MobileFeed } from './components/MobileFeed/MobileFeed';
 import { useDeviceTier } from './hooks/useDeviceTier';
 import { stripInlineLinks } from './components/InlineLink/InlineLink';
@@ -22,6 +23,8 @@ import './App.scss';
 export function App() {
   const tier = useDeviceTier();
   const [mode, setMode] = useState<ViewMode>('tv');
+  // the short-story "Ich." reader, opened by clicking the paper on the couch
+  const [storyOpen, setStoryOpen] = useState(false);
 
   // Favicon follows the experience: the CRT TV on desktop, the AK monogram
   // (social style) on the mobile feed.
@@ -43,10 +46,13 @@ export function App() {
           onArrivedInRoom={() => setMode('room')}
           onArrivedAtTV={() => setMode('tv')}
           onTVClicked={() => setMode('to-tv')}
+          onPaperClicked={() => setStoryOpen(true)}
         >
           <TVSet onPoweredOff={() => setMode('to-room')} />
         </Scene>
       )}
+
+      {tier !== 'mobile' && <StoryReader open={storyOpen} onClose={() => setStoryOpen(false)} />}
 
       {/*
         Crawlable text version of the broadcast. Project content only appears
