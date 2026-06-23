@@ -14,8 +14,7 @@ import {
   WORLD_PER_PX,
   buildRoom,
 } from './room/buildRoom';
-import { populateChessPieces } from './room/chess/chessPieces';
-import { createChessGame, type ChessGame } from './room/chess/chessGame';
+import type { ChessGame } from './room/chess/chessGame';
 import { setupPainting } from './room/painting/painting';
 import './Scene.scss';
 
@@ -92,6 +91,7 @@ export function Scene({
     flyToRoom: () => void;
     flyToTV: () => void;
     relockPointer: () => void;
+    loadChess: () => void;
   } | null>(null);
 
   // the DOM TV lives in this detached div; CSS3DRenderer adopts it
@@ -148,23 +148,33 @@ export function Scene({
     // and keeps animating without us re-rendering three.
     let needsRender = true;
 
-    // Load the GLTF chess pieces onto the procedural board (async), then wire up
+    // The chess game is the only thing pulling chess.js, and the board is
+    // nowhere in view until the visitor powers the TV off and walks into the
+    // room. So load it lazily on the first power-off (apiRef.loadChess, fired
+    // from the mode effect): dynamic-import the game + GLTF-piece loaders (a
+    // separate chunk), drop the pieces onto the procedural board, then wire up
     // the playable game (player = white, a small AI = black). Draw a frame once
     // they're in so render-on-demand shows them.
     let chessGame: ChessGame | null = null;
-    const chessSet = scene.getObjectByName('chessSet');
-    if (chessSet) {
-      populateChessPieces(chessSet)
-        .then((loaded) => {
-          if (loaded) {
-            chessGame = createChessGame(chessSet, loaded, () => {
-              needsRender = true;
-            });
-          }
-          needsRender = true;
-        })
-        .catch((error) => console.error('chess pieces failed to load', error));
-    }
+    let chessRequested = false;
+    const loadChess = () => {
+      if (chessRequested) return;
+      chessRequested = true;
+      const chessSet = scene.getObjectByName('chessSet');
+      if (!chessSet) return;
+      Promise.all([import('./room/chess/chessPieces'), import('./room/chess/chessGame')])
+        .then(([{ populateChessPieces }, { createChessGame }]) =>
+          populateChessPieces(chessSet).then((loaded) => {
+            if (loaded) {
+              chessGame = createChessGame(chessSet, loaded, () => {
+                needsRender = true;
+              });
+            }
+            needsRender = true;
+          }),
+        )
+        .catch((error) => console.error('chess failed to load', error));
+    };
 
     // Measures the DOM TV and aligns the 3D world to it: the CSS3D object,
     // the wooden body behind the cabinet, and the closeup camera framing.
@@ -275,6 +285,7 @@ export function Scene({
       relockPointer: () => {
         if (modeRef.current === 'room' && !controls.isLocked) controls.lock();
       },
+      loadChess,
     };
 
     const onClick = () => {
@@ -468,7 +479,11 @@ export function Scene({
   // mode transitions trigger camera flights; the DOM TV is only interactive
   // while the camera is parked in front of it
   useEffect(() => {
-    if (mode === 'to-room') apiRef.current?.flyToRoom();
+    if (mode === 'to-room') {
+      // first power-off: pull the chess chunk in while the camera flies back
+      apiRef.current?.loadChess();
+      apiRef.current?.flyToRoom();
+    }
     if (mode === 'to-tv') apiRef.current?.flyToTV();
     const parked = mode === 'tv';
     tvHost.style.pointerEvents = parked ? 'auto' : 'none';

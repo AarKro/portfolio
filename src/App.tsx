@@ -1,30 +1,32 @@
-import { useEffect, useState } from 'react';
+import { lazy, Suspense, useEffect } from 'react';
 import { PROJECTS } from './data/projects';
-import { Scene, type ViewMode } from './components/Scene/Scene';
-import { TVSet } from './components/TVSet/TVSet';
-import { StoryReader } from './components/StoryReader/StoryReader';
-import { MobileFeed } from './components/MobileFeed/MobileFeed';
 import { useDeviceTier } from './hooks/useDeviceTier';
 import { stripInlineLinks } from './components/InlineLink/InlineLink';
 import './App.scss';
 
 /**
- * Two experiences (see useDeviceTier):
- *  - desktop → the full 3D living room (Scene) with the DOM TV projected onto
- *    the 3D TV body; powering off flies the camera back into the walkable room.
- *  - mobile  → a vertical feed UI (phones AND tablets); no three.js at all.
+ * Two experiences (see useDeviceTier), each code-split so a visitor downloads
+ * only their branch:
+ *  - desktop → the full 3D living room (Scene + the DOM TV). Its chunk carries
+ *    three.js and defers a further chunk (chess.js) until the TV is powered off.
+ *  - mobile  → a vertical feed UI (phones AND tablets); ships no three.js.
  *
- * The camera modes (desktop) just describe the camera:
- * tv      → parked in front of the TV: the portfolio, fully interactive
- * to-room → user powered off: camera pulls back from the glass
- * room    → first-person walking (WASD + pointer lock)
- * to-tv   → user clicked the TV: camera flies back to the website framing
+ * useDeviceTier reads the tier synchronously on first paint, so the correct
+ * chunk is requested immediately — no wrong-experience flash. While a chunk
+ * loads, the Suspense fallback is empty: `.app` already paints the dark scene
+ * colour, so nothing flickers.
  */
+const DesktopExperience = lazy(() =>
+  import('./components/DesktopExperience/DesktopExperience').then((m) => ({
+    default: m.DesktopExperience,
+  })),
+);
+const MobileFeed = lazy(() =>
+  import('./components/MobileFeed/MobileFeed').then((m) => ({ default: m.MobileFeed })),
+);
+
 export function App() {
   const tier = useDeviceTier();
-  const [mode, setMode] = useState<ViewMode>('tv');
-  // the short-story "Ich." reader, opened by clicking the paper on the couch
-  const [storyOpen, setStoryOpen] = useState(false);
 
   // Favicon follows the experience: the CRT TV on desktop, the AK monogram
   // (social style) on the mobile feed.
@@ -38,22 +40,9 @@ export function App() {
 
   return (
     <main className="app">
-      {tier === 'mobile' ? (
-        <MobileFeed />
-      ) : (
-        <Scene
-          mode={mode}
-          storyOpen={storyOpen}
-          onArrivedInRoom={() => setMode('room')}
-          onArrivedAtTV={() => setMode('tv')}
-          onTVClicked={() => setMode('to-tv')}
-          onPaperClicked={() => setStoryOpen(true)}
-        >
-          <TVSet onPoweredOff={() => setMode('to-room')} />
-        </Scene>
-      )}
-
-      {tier !== 'mobile' && <StoryReader open={storyOpen} onClose={() => setStoryOpen(false)} />}
+      <Suspense fallback={null}>
+        {tier === 'mobile' ? <MobileFeed /> : <DesktopExperience />}
+      </Suspense>
 
       {/*
         Crawlable text version of the broadcast. Project content only appears
