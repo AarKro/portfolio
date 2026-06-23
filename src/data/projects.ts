@@ -50,6 +50,20 @@ export interface RepoLink {
   url: string;
 }
 
+/**
+ * A teaser clip in both codecs. Each `<video>` offers AV1 first and H.264 as a
+ * `<source>` fallback, so the browser plays the best it can decode (see the
+ * `ClipSources` component and CLAUDE.md "Adding a teaser clip"). `av1` is
+ * optional: until a clip has been re-encoded with `scripts/encode-clip.sh`,
+ * only the H.264 file ships and every browser uses it.
+ */
+export interface VideoSources {
+  /** AV1 encode (`*_av1.mp4`) — smaller at equal quality; preferred when present. */
+  av1?: string;
+  /** H.264 encode (`*.mp4`) — the universal fallback, always present. */
+  h264: string;
+}
+
 export interface Project {
   /** Stable identifier, used as React key */
   id: string;
@@ -77,16 +91,17 @@ export interface Project {
   /**
    * Teaser clip that autoplays as this channel's program backdrop (muted,
    * looping). When omitted, the channel shows a full-bleed SMPTE test card.
-   * Import the asset from ../assets so Vite bundles it.
+   * Carries both codec encodes (`{ av1?, h264 }`); import the assets from
+   * ../assets so Vite bundles them.
    */
-  videoUrl?: string;
+  videoUrl?: VideoSources;
   /**
-   * Portrait (9:16) variant of `videoUrl` for the mobile feed — the landscape
-   * clip cropped to portrait (sides cut equally). The feed prefers this when
-   * set and falls back to `videoUrl`. Generate it with ffmpeg (see CLAUDE.md
-   * "Adding a teaser clip") and import from ../assets/videos.
+   * Portrait (9:16) variant of `videoUrl` for the mobile feed — ideally a
+   * dedicated portrait recording, not a crop of the landscape clip (see CLAUDE.md
+   * "Adding a teaser clip"). The feed prefers this when set and falls back to
+   * `videoUrl`. Same `{ av1?, h264 }` shape; import from ../assets/videos.
    */
-  mobileVideoUrl?: string;
+  mobileVideoUrl?: VideoSources;
   /**
    * First-frame poster for `videoUrl` — shown instantly while the clip loads
    * (the `<video poster>`), and as the project's thumbnail in the feed grid.
@@ -121,8 +136,8 @@ export const PROJECTS: Project[] = [
       'A 3D remake of my original [2D graveyard](https://github.com/AarKro/wow-graveyard) — three.js this time, with a postprocessing pipeline of volumetric godrays and simplex-noise terrain to set the mood.',
     githubUrl: 'https://github.com/AarKro/wow-graveyard-3d',
     demoUrl: 'https://aarkro.github.io/wow-graveyard-3d/',
-    videoUrl: wowGraveyard3dVideo,
-    mobileVideoUrl: wowGraveyard3dVideoPortrait,
+    videoUrl: { h264: wowGraveyard3dVideo },
+    mobileVideoUrl: { h264: wowGraveyard3dVideoPortrait },
     posterUrl: wowGraveyard3dPoster,
     mobilePosterUrl: wowGraveyard3dPosterPortrait,
     gridPosterUrl: wowGraveyard3dGridPoster,
@@ -137,8 +152,8 @@ export const PROJECTS: Project[] = [
       'Scrolling drives the story: each section advances the same four-move sequence one step at a time.',
     githubUrl: 'https://github.com/AarKro/scholars-mate',
     demoUrl: 'https://aarkro.github.io/scholars-mate/',
-    videoUrl: scholarsMateVideo,
-    mobileVideoUrl: scholarsMateVideoPortrait,
+    videoUrl: { h264: scholarsMateVideo },
+    mobileVideoUrl: { h264: scholarsMateVideoPortrait },
     posterUrl: scholarsMatePoster,
     mobilePosterUrl: scholarsMatePosterPortrait,
     gridPosterUrl: scholarsMateGridPoster,
@@ -153,8 +168,8 @@ export const PROJECTS: Project[] = [
       'Built for a Responsive Design & Accessibility brief — hand-rolled hooks drive the scroll-spy navigation and sticky header, with the whole layout designed mobile-up and accessibility-first.',
     githubUrl: 'https://github.com/AarKro/peggy-ashcroft',
     demoUrl: 'https://aarkro.github.io/peggy-ashcroft/',
-    videoUrl: peggyAshcroftVideo,
-    mobileVideoUrl: peggyAshcroftVideoPortrait,
+    videoUrl: { h264: peggyAshcroftVideo },
+    mobileVideoUrl: { h264: peggyAshcroftVideoPortrait },
     posterUrl: peggyAshcroftPoster,
     mobilePosterUrl: peggyAshcroftPosterPortrait,
     gridPosterUrl: peggyAshcroftGridPoster,
@@ -169,8 +184,8 @@ export const PROJECTS: Project[] = [
       'The font is mine too, not just the site — this page is its official specimen.',
     githubUrl: 'https://github.com/AarKro/zephir-flex',
     demoUrl: 'https://aarkro.github.io/zephir-flex/',
-    videoUrl: zephirFlexVideo,
-    mobileVideoUrl: zephirFlexVideoPortrait,
+    videoUrl: { h264: zephirFlexVideo },
+    mobileVideoUrl: { h264: zephirFlexVideoPortrait },
     posterUrl: zephirFlexPoster,
     mobilePosterUrl: zephirFlexPosterPortrait,
     gridPosterUrl: zephirFlexGridPoster,
@@ -185,8 +200,8 @@ export const PROJECTS: Project[] = [
       'Hand-built in plain HTML, CSS and JavaScript — the whole page is a faithful translation of a print poster into the browser.',
     githubUrl: 'https://github.com/AarKro/modul_webtech',
     demoUrl: 'https://aarkro.github.io/modul_webtech/sugarcubes/sugarcubes.html',
-    videoUrl: sugarcubesVideo,
-    mobileVideoUrl: sugarcubesVideoPortrait,
+    videoUrl: { h264: sugarcubesVideo },
+    mobileVideoUrl: { h264: sugarcubesVideoPortrait },
     posterUrl: sugarcubesPoster,
     mobilePosterUrl: sugarcubesPosterPortrait,
     gridPosterUrl: sugarcubesGridPoster,
@@ -201,8 +216,8 @@ export const PROJECTS: Project[] = [
       'Designed start to finish in Figma as a clickable prototype — the whole tool overlay and its flows mapped out before a line of code.',
     demoUrl:
       'https://www.figma.com/proto/5SfRSVnselzgMdOXUHzGxJ/CSS-Toolbox?node-id=79-2083&p=f&viewport=309%2C309%2C0.05&t=b8LCt5BqsEUP6NZh-1&scaling=scale-down&content-scaling=fixed&starting-point-node-id=79%3A2083&page-id=0%3A1',
-    videoUrl: cssToolboxVideo,
-    mobileVideoUrl: cssToolboxVideoPortrait,
+    videoUrl: { h264: cssToolboxVideo },
+    mobileVideoUrl: { h264: cssToolboxVideoPortrait },
     posterUrl: cssToolboxPoster,
     mobilePosterUrl: cssToolboxPosterPortrait,
     gridPosterUrl: cssToolboxGridPoster,

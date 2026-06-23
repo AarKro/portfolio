@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import type { Project } from '../../../data/projects';
 import { renderInlineLinks } from '../../InlineLink/InlineLink';
+import { ClipSources } from '../../ClipSources/ClipSources';
 import { FeedSheet, type SheetLink } from '../FeedSheet/FeedSheet';
 import ChevronIcon from '../../../assets/icons/chevron.svg?react';
 import DemoIcon from '../../../assets/icons/demo.svg?react';
@@ -114,13 +115,14 @@ export function FeedCard({ project, channel, isActive, preloadVideo, setRef, onP
         <video
           className="feed__video"
           ref={videoRef}
-          src={project.mobileVideoUrl ?? project.videoUrl}
           poster={project.mobilePosterUrl ?? project.posterUrl}
           muted
           loop
           playsInline
           preload={preloadVideo ? 'auto' : 'none'}
-        />
+        >
+          <ClipSources sources={project.mobileVideoUrl ?? project.videoUrl} />
+        </video>
       ) : (
         <div className="feed__placeholder" aria-hidden="true">
           {/* same Figma-style shape field as the profile page, so a clip-less

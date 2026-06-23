@@ -82,40 +82,63 @@ Clips live in `src/assets/videos/*.mp4` (imported, bundled, fingerprinted —
 not in `public/`), one folder for both orientations, distinguished by a
 `_landscape` / `_portrait` suffix: the landscape clip drives the CRT (and is
 the `videoUrl` fallback), the portrait one is the feed's `mobileVideoUrl`.
-Always compress before committing — raw screen recordings are huge (the source
-for Scholar's Mate was 2360×1594 @ 120fps, 9.7 MB; the shipped clip is 1066×720
-@ 30fps, no audio, 1.3 MB). Recipe with ffmpeg:
+
+**Use `scripts/encode-clip.sh` — don't hand-roll ffmpeg.** It takes the
+**original recording(s)** and emits every file a clip needs, in both codecs:
 
 ```
-ffmpeg -i raw.mov -vf "scale=-2:720,fps=30" -c:v libx264 -preset slow \
-  -crf 28 -profile:v high -pix_fmt yuv420p -movflags +faststart -an out.mp4
+scripts/encode-clip.sh <name> <landscape-original> <portrait-original>
+# e.g. scripts/encode-clip.sh peggy_ashcroft ~/raw/peggy_land.mov ~/raw/peggy_port.mov
 ```
 
-`-an` strips audio (clips play muted — see behaviour notes), `+faststart`
-lets it start before fully downloaded, 720p is plenty for the small CRT
-screen. Drop `crf` toward 30 / `scale` to 540 for an even smaller file.
+Output (per `<name>`): `_landscape.mp4` + `_landscape_av1.mp4`,
+`_portrait.mp4` + `_portrait_av1.mp4` in `src/assets/videos/`, and
+`_landscape.jpg` / `_portrait.jpg` / `_grid.jpg` posters in
+`src/assets/thumbnails/`. Tunables via env: `HEIGHT_LANDSCAPE` (720 — the CRT is
+small) and `HEIGHT_PORTRAIT` (1280 — the feed plays full-screen on phones, so it
+gets more pixels; `HEIGHT` overrides both), `FPS` (30), `H264_CRF` (23),
+`AV1_CRF` (28), `AV1_PRESET` (4 — SVT-AV1 speed dial, lower = slower but better
+quality per byte). Higher quality → lower CRF (bigger files).
 
-**Portrait variant for the feed (`mobileVideoUrl`):** the feed prefers a 9:16
-portrait clip and falls back to the landscape `videoUrl`. The shipped ones are
-just the landscape clips centre-cropped to portrait (sides cut equally), so no
-re-shoot needed:
+**Black bars are trimmed automatically.** Each source is run through ffmpeg
+`cropdetect` and the detected letterbox/pillarbox is baked into the encode pass
+(not re-cropped afterwards — that would re-compress). Override per run:
+`AUTOCROP=0` skips detection, `CROP=W:H:X:Y` forces an exact crop, `CROP=none`
+keeps the bars.
 
-```
-ffmpeg -i videos/foo_landscape.mp4 -vf "crop='trunc(ih*9/16/2)*2':ih" \
-  -c:v libx264 -preset slow -crf 28 -profile:v high -pix_fmt yuv420p \
-  -movflags +faststart -an videos/foo_portrait.mp4
-```
+**Portrait should be its own recording, not a crop.** The feed is full-screen
+9:16, so the portrait clip wants framing composed for vertical — pass a
+dedicated portrait original as the 3rd argument. If you omit it the script
+falls back to centre-cropping 9:16 from the landscape clip (sides cut equally,
+as the early shipped clips did) and prints a loud warning; treat that as a
+stopgap, not the goal.
 
-Then grab **posters** (first frame) into `src/assets/thumbnails/`: a landscape
-one from `videoUrl` for `posterUrl` (desktop `<video poster>`) and a portrait
-`*_portrait.jpg` from the cropped clip for `mobilePosterUrl` (the feed card
-poster + the profile grid tile, which prefer it and fall back to `posterUrl`).
-Regenerate whenever the clips change:
+**Encode from the ORIGINAL, never from a shipped clip.** Re-encoding an
+already-compressed file can't recover detail that CRF + downscale already threw
+away — it only loses more. Raw screen captures are huge (the Scholar's Mate
+source was 2360×1594 @ 120fps, 9.7 MB) and are **not** kept in the repo; they
+live on Aaron's machine. To regenerate or improve a clip's quality, get the
+original first, then run the script.
 
-```
-ffmpeg -i videos/foo_landscape.mp4 -frames:v 1 -vf "scale=-2:540" -q:v 4 thumbnails/foo_landscape.jpg
-ffmpeg -i videos/foo_portrait.mp4  -frames:v 1 -vf "scale=-2:540" -q:v 4 thumbnails/foo_portrait.jpg
-```
+**Two codecs, picked by the browser.** AV1 reaches the same visual quality as
+H.264 in ~30–50% fewer bytes, so clips can look better without growing. Each
+`Project`'s `videoUrl` / `mobileVideoUrl` is a `VideoSources` object
+(`{ av1?, h264 }`), and the shared `ClipSources` component renders the AV1 file
+first as a `<source>` (`type="video/mp4; codecs=\"av01.0.05M.08\""`) with the
+H.264 file (`type="video/mp4"`) as the fallback; the browser plays the first it
+can decode — modern engines (Chrome, Firefox, Safari 17.4+) take AV1, everything
+else falls through to H.264. No JS, no bandwidth detection. The three `<video>`
+sites (`ProjectProgram`, `FeedCard`, `VideoPreloader`) all render
+`<ClipSources>` children. `av1` is **optional**: a clip ships H.264-only until
+re-encoded, then you just add the `av1:` URL to its entry in `projects.ts` and
+it lights up everywhere. `-an` strips audio (clips play muted), `+faststart`
+lets them start before fully downloaded.
+
+Posters are the first frame (codec-agnostic): the landscape one is `posterUrl`
+(desktop `<video poster>`), the portrait one is `mobilePosterUrl` (feed card
+poster), and `_grid.jpg` — grabbed 1.5s in — is `gridPosterUrl` (profile-grid
+tile, so it previews real content not a title card). The script regenerates all
+three; re-run it whenever the clips change.
 
 ## Architecture
 
@@ -144,6 +167,8 @@ src/
                               (teaser-or-testcard backdrop + bug +
                               slide-up teletext page)
     InlineLink/             ← inline `[label](url)` text-link renderer
+    ClipSources/            ← <source> children for a <video>: AV1 first, H.264
+                              fallback (shared by the 3 <video> sites)
     MobileFeed/             ← phones AND tablets: vertical TikTok-style feed of
                               the same projects (no three.js). Each sub-part is
                               its own folder (Component.tsx + Component.scss):
