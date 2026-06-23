@@ -43,6 +43,7 @@ export function App() {
       ) : (
         <Scene
           mode={mode}
+          storyOpen={storyOpen}
           onArrivedInRoom={() => setMode('room')}
           onArrivedAtTV={() => setMode('tv')}
           onTVClicked={() => setMode('to-tv')}

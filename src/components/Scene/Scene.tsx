@@ -38,6 +38,8 @@ export type ViewMode = 'tv' | 'to-room' | 'room' | 'to-tv';
 
 interface SceneProps {
   mode: ViewMode;
+  /** The short-story reader is open (clicking the paper freed the cursor) */
+  storyOpen: boolean;
   /** Pull-back flight finished: visitor is standing in the room */
   onArrivedInRoom: () => void;
   /** Fly-in flight finished: visitor is back at the website framing */
@@ -77,6 +79,7 @@ function quaternionLookingAt(from: THREE.Vector3, target: THREE.Vector3): THREE.
  */
 export function Scene({
   mode,
+  storyOpen,
   onArrivedInRoom,
   onArrivedAtTV,
   onTVClicked,
@@ -85,7 +88,11 @@ export function Scene({
 }: SceneProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const crosshairRef = useRef<HTMLDivElement>(null);
-  const apiRef = useRef<{ flyToRoom: () => void; flyToTV: () => void } | null>(null);
+  const apiRef = useRef<{
+    flyToRoom: () => void;
+    flyToTV: () => void;
+    relockPointer: () => void;
+  } | null>(null);
 
   // the DOM TV lives in this detached div; CSS3DRenderer adopts it
   const [tvHost] = useState(() => {
@@ -261,6 +268,12 @@ export function Scene({
         );
         controls.unlock();
         showCrosshair(false);
+      },
+      // closing the story puts us right back to walking, so grab the pointer
+      // again (the close click's user activation is still fresh) — no need to
+      // click the scene to re-lock
+      relockPointer: () => {
+        if (modeRef.current === 'room' && !controls.isLocked) controls.lock();
       },
     };
 
@@ -464,6 +477,14 @@ export function Scene({
     // on Space/Enter and the power-off would yank the camera back to standing.
     tvHost.inert = !parked;
   }, [mode, tvHost]);
+
+  // closing the short-story reader re-establishes pointer lock so the visitor
+  // is back in mouselook immediately (relockPointer no-ops unless we're walking)
+  const storyWasOpen = useRef(storyOpen);
+  useEffect(() => {
+    if (storyWasOpen.current && !storyOpen) apiRef.current?.relockPointer();
+    storyWasOpen.current = storyOpen;
+  }, [storyOpen]);
 
   return (
     <>
