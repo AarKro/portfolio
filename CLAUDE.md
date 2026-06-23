@@ -98,6 +98,12 @@ Output (per `<name>`): `_landscape.mp4` + `_landscape_av1.mp4`,
 the small CRT), `FPS` (30), `H264_CRF` (23), `AV1_CRF` (28). Higher quality →
 lower CRF (bigger files).
 
+**Black bars are trimmed automatically.** Each source is run through ffmpeg
+`cropdetect` and the detected letterbox/pillarbox is baked into the encode pass
+(not re-cropped afterwards — that would re-compress). Override per run:
+`AUTOCROP=0` skips detection, `CROP=W:H:X:Y` forces an exact crop, `CROP=none`
+keeps the bars.
+
 **Portrait should be its own recording, not a crop.** The feed is full-screen
 9:16, so the portrait clip wants framing composed for vertical — pass a
 dedicated portrait original as the 3rd argument. If you omit it the script
