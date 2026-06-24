@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { FIRST_PROJECT_CHANNEL, PROJECTS } from '../../data/projects';
 import { broadcastTitle, channelFromHash } from '../../utils/broadcast';
-import { orderedNeighborClips } from '../../utils/preload';
+import { orderedNeighborClips, PRELOAD_RADIUS } from '../../utils/preload';
 import { VideoPreloader } from '../VideoPreloader/VideoPreloader';
 import { FeedCard } from './FeedCard/FeedCard';
 import { FeedProfile } from './FeedProfile/FeedProfile';
@@ -88,6 +88,9 @@ export function MobileFeed() {
               project={project}
               channel={channel}
               isActive={!profileOpen && activeChannel === channel}
+              // same ±PRELOAD_RADIUS window the clips use — gates the poster
+              // image so only nearby cards fetch their placeholder frame
+              inWindow={Math.abs(channel - activeChannel) <= PRELOAD_RADIUS}
               setRef={setSectionRef(channel)}
               onProfile={openProfile}
             />

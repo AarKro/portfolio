@@ -39,6 +39,13 @@ interface FeedCardProps {
   project: Project;
   channel: number;
   isActive: boolean;
+  /**
+   * Whether this card is within the preload window of the active one. Gates the
+   * `poster` image so far-off cards don't eager-load it — the image equivalent
+   * of the clip windowing (browsers fetch `<video poster>` for every card on
+   * mount otherwise, regardless of `preload`).
+   */
+  inWindow: boolean;
   setRef: (el: HTMLElement | null) => void;
   /** Jump back to the profile page, badging the card we came from. */
   onProfile: (fromChannel: number) => void;
@@ -52,7 +59,7 @@ interface FeedCardProps {
  * warmed ahead of time by the shared <VideoPreloader> in MobileFeed (same
  * policy as the desktop TV), so this component owns no preload logic.
  */
-export function FeedCard({ project, channel, isActive, setRef, onProfile }: FeedCardProps) {
+export function FeedCard({ project, channel, isActive, inWindow, setRef, onProfile }: FeedCardProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [expanded, setExpanded] = useState(false);
   const [liked, setLiked] = useState(() => readLikedChannels().has(channel));
@@ -151,7 +158,11 @@ export function FeedCard({ project, channel, isActive, setRef, onProfile }: Feed
         <video
           className="feed__video"
           ref={videoRef}
-          poster={project.mobilePosterUrl ?? project.posterUrl}
+          // poster is windowed like the clip: only cards within ±PRELOAD_RADIUS
+          // carry it, so distant cards don't eager-fetch their placeholder frame
+          // (browsers load `poster` on mount regardless of `preload`). A card
+          // enters the window before it scrolls into view, so the frame is ready.
+          poster={inWindow ? (project.mobilePosterUrl ?? project.posterUrl) : undefined}
           muted
           loop
           playsInline
