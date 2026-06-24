@@ -35,12 +35,17 @@ function persistLike(channel: number, liked: boolean) {
   }
 }
 
+// How far ahead we fetch clips (in cards) and how much each successive ring is
+// held back, so the active clip's download starts first, then ±1, then ±2.
+const PRELOAD_RADIUS = 2;
+const PRELOAD_STAGGER_MS = 350;
+
 interface FeedCardProps {
   project: Project;
   channel: number;
   isActive: boolean;
-  /** Whether to fetch this card's video ahead of time (active ± 1). */
-  preloadVideo: boolean;
+  /** Distance (in cards) from the active card; drives the preload window. */
+  preloadDistance: number;
   setRef: (el: HTMLElement | null) => void;
   /** Jump back to the profile page, badging the card we came from. */
   onProfile: (fromChannel: number) => void;
@@ -50,13 +55,27 @@ interface FeedCardProps {
  * One project card in the feed: a full-bleed teaser video (or test card), a
  * right-edge rail of icon actions, and a tap-to-expand caption.
  */
-export function FeedCard({ project, channel, isActive, preloadVideo, setRef, onProfile }: FeedCardProps) {
+export function FeedCard({ project, channel, isActive, preloadDistance, setRef, onProfile }: FeedCardProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [expanded, setExpanded] = useState(false);
   const [liked, setLiked] = useState(() => readLikedChannels().has(channel));
   const [codeOpen, setCodeOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const [loadingSlow, setLoadingSlow] = useState(false);
+  // Whether this card's clip is allowed to fetch yet. Cards enter the preload
+  // window staggered by distance so the active clip grabs bandwidth first; once
+  // fetching starts we keep it on until the card leaves the window (don't abort).
+  const [preloadOn, setPreloadOn] = useState(false);
+
+  useEffect(() => {
+    if (preloadDistance > PRELOAD_RADIUS) {
+      setPreloadOn(false); // out of range — stop fetching, free bandwidth
+      return;
+    }
+    if (preloadOn) return; // already fetching — don't restart it
+    const timer = window.setTimeout(() => setPreloadOn(true), preloadDistance * PRELOAD_STAGGER_MS);
+    return () => window.clearTimeout(timer);
+  }, [preloadDistance, preloadOn]);
 
   // Only the card in view plays (battery + mobile single-video limits); leaving
   // a card resets its open panels. play() may reject without a user gesture
@@ -153,7 +172,7 @@ export function FeedCard({ project, channel, isActive, preloadVideo, setRef, onP
           muted
           loop
           playsInline
-          preload={preloadVideo ? 'auto' : 'none'}
+          preload={preloadOn ? 'auto' : 'none'}
         >
           <ClipSources sources={project.mobileVideoUrl ?? project.videoUrl} />
         </video>
