@@ -161,7 +161,8 @@ src/
     ControlPanel/           ← physical buttons strip (CH ▼/▲, power, decor)
     StaticNoise/            ← canvas noise; animates only while `active`
     VideoPreloader/         ← off-screen <video preload="auto"> to warm the
-                              prev/next channels' clips ahead of time
+                              clips within ±2 channels ahead of time, mounted
+                              staggered in priority order (caller-sorted)
     IntroProgram/           ← channel 1 (intro + clickable TV guide)
     ProjectProgram/         ← project channels: one "broadcast" layout
                               (teaser-or-testcard backdrop + bug +
@@ -255,10 +256,14 @@ via `?react`), including the real GitHub/LinkedIn brand marks.
   transient "Copied"). The rail sits at the bottom (lowest icon level with the
   caption); the caption's left inset matches the rail's right inset.
 - **Video loading** (both views): each clip shows its `posterUrl` first frame
-  instantly, and only the active channel ± 1 is fetched — the feed sets
-  `preload` per card by distance to the active card; the desktop TV mounts a
-  `VideoPreloader` for the prev/next channels. So clips load on demand in a
-  small window, not all up front.
+  instantly, and only the channels within ±2 of the active one are fetched, in
+  priority order — nearest first, and the forward channel ahead of the
+  equidistant previous one (current, +1, −1, +2, −2). The feed sets `preload`
+  per card on a stagger keyed to that rank; the desktop TV passes the same
+  forward-first ordered list to `VideoPreloader`, which mounts the clips
+  staggered so earlier ones grab bandwidth first. So clips load on demand in a
+  small window, not all up front. A feed card whose clip is still buffering
+  after 2s shows a small cyan spinner beside its title.
 - The **caption** (bottom-left): title on its own line, tags below, then a
   one-line **synopsis** — the `description` clipped to a single line with an
   ellipsis and an expand caret aligned to that line. Tapping the caret un-clips

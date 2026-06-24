@@ -125,9 +125,10 @@ export function MobileFeed() {
               project={project}
               channel={channel}
               isActive={!profileOpen && activeChannel === channel}
-              // how many cards away from the active one — drives the preload
-              // window (±2) and its loading priority (closer = sooner)
-              preloadDistance={Math.abs(channel - activeChannel)}
+              // signed offset from the active card: drives the preload window
+              // (±2) and its priority — nearer first, and forward (+) ahead of
+              // the same distance behind (−)
+              preloadDelta={channel - activeChannel}
               setRef={setSectionRef(channel)}
               onProfile={openProfile}
             />

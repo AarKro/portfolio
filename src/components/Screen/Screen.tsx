@@ -28,9 +28,12 @@ export function Screen({ tv }: ScreenProps) {
   const { channel, poweredOn, staticVisible, osdVisible } = tv;
   const project = channel >= FIRST_PROJECT_CHANNEL ? PROJECTS[channel - FIRST_PROJECT_CHANNEL] : null;
 
-  // Warm the clips on either side of the current channel so CH ▲/▼ lands on an
-  // already-buffered video (out-of-range indices fall through to undefined).
-  const neighborVideoSources = [channel - 1, channel + 1]
+  // Warm the clips within two channels of the current one so CH ▲/▼ lands on an
+  // already-buffered video. Ordered by loading priority — nearer first, and
+  // forward (the next channel) ahead of the equidistant previous one (+1, −1,
+  // +2, −2); VideoPreloader staggers their fetches in that order. Out-of-range
+  // indices fall through to undefined.
+  const neighborVideoSources = [channel + 1, channel - 1, channel + 2, channel - 2]
     .map((ch) => PROJECTS[ch - FIRST_PROJECT_CHANNEL]?.videoUrl)
     .filter((s): s is VideoSources => Boolean(s));
 

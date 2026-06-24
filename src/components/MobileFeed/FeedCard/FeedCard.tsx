@@ -44,18 +44,29 @@ interface FeedCardProps {
   project: Project;
   channel: number;
   isActive: boolean;
-  /** Distance (in cards) from the active card; drives the preload window. */
-  preloadDistance: number;
+  /** Signed offset from the active card; drives the preload window + priority. */
+  preloadDelta: number;
   setRef: (el: HTMLElement | null) => void;
   /** Jump back to the profile page, badging the card we came from. */
   onProfile: (fromChannel: number) => void;
 }
 
 /**
+ * Loading order for a card at `delta` cards from the active one: the active
+ * clip first, then forward neighbours ahead of equidistant ones behind
+ * (current, +1, −1, +2, −2 → ranks 0,1,2,3,4). Drives the preload stagger so
+ * the clips you're about to scroll into grab bandwidth first.
+ */
+function preloadRank(delta: number): number {
+  if (delta === 0) return 0;
+  return (Math.abs(delta) - 1) * 2 + (delta < 0 ? 1 : 0) + 1;
+}
+
+/**
  * One project card in the feed: a full-bleed teaser video (or test card), a
  * right-edge rail of icon actions, and a tap-to-expand caption.
  */
-export function FeedCard({ project, channel, isActive, preloadDistance, setRef, onProfile }: FeedCardProps) {
+export function FeedCard({ project, channel, isActive, preloadDelta, setRef, onProfile }: FeedCardProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [expanded, setExpanded] = useState(false);
   const [liked, setLiked] = useState(() => readLikedChannels().has(channel));
@@ -68,14 +79,14 @@ export function FeedCard({ project, channel, isActive, preloadDistance, setRef, 
   const [preloadOn, setPreloadOn] = useState(false);
 
   useEffect(() => {
-    if (preloadDistance > PRELOAD_RADIUS) {
+    if (Math.abs(preloadDelta) > PRELOAD_RADIUS) {
       setPreloadOn(false); // out of range — stop fetching, free bandwidth
       return;
     }
     if (preloadOn) return; // already fetching — don't restart it
-    const timer = window.setTimeout(() => setPreloadOn(true), preloadDistance * PRELOAD_STAGGER_MS);
+    const timer = window.setTimeout(() => setPreloadOn(true), preloadRank(preloadDelta) * PRELOAD_STAGGER_MS);
     return () => window.clearTimeout(timer);
-  }, [preloadDistance, preloadOn]);
+  }, [preloadDelta, preloadOn]);
 
   // Only the card in view plays (battery + mobile single-video limits); leaving
   // a card resets its open panels. play() may reject without a user gesture
