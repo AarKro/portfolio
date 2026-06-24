@@ -299,6 +299,25 @@
     text-shadow: 0 1px 8px rgba(0, 0, 0, 0.6);
   }
 
+  // on-brand loading spinner: a cyan-accent ring, sits inline to the right of
+  // the title once a clip has been buffering for >2s (see FeedCard.tsx)
+  &__spinner {
+    display: inline-block;
+    vertical-align: middle;
+    width: 0.78em;
+    height: 0.78em;
+    margin-left: 0.5em;
+    border-radius: 50%;
+    border: 2px solid rgba($feed-accent, 0.3);
+    border-top-color: $feed-accent;
+    filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.55));
+    animation: feed-spin 0.7s linear infinite, feed-spinner-in 0.2s ease both;
+
+    @media (prefers-reduced-motion: reduce) {
+      animation: feed-spinner-in 0.2s ease both;
+    }
+  }
+
   &__tech {
     list-style: none;
     display: flex;
@@ -413,6 +432,21 @@
     @include hover-focus {
       color: #fff;
     }
+  }
+}
+
+@keyframes feed-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes feed-spinner-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
   }
 }
 

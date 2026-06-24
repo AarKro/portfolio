@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { FIRST_PROJECT_CHANNEL, PROJECTS } from '../../data/projects';
 import { broadcastTitle, channelFromHash } from '../../utils/broadcast';
+import { orderedNeighborClips } from '../../utils/preload';
+import { VideoPreloader } from '../VideoPreloader/VideoPreloader';
 import { FeedCard } from './FeedCard/FeedCard';
 import { FeedProfile } from './FeedProfile/FeedProfile';
 import './MobileFeed.scss';
@@ -12,6 +14,7 @@ import './MobileFeed.scss';
  * title track what's shown so deep links and SEO stay consistent with the TV.
  */
 export function MobileFeed() {
+  const feedRef = useRef<HTMLDivElement>(null);
   const sectionsRef = useRef<(HTMLElement | null)[]>([]);
   // Channel 1 is the profile, which is a tap-only overlay (NOT a swipe card):
   // `profileOpen` toggles it; `activeChannel` always tracks a project (2..N).
@@ -42,6 +45,45 @@ export function MobileFeed() {
     );
     sectionsRef.current.forEach((section) => section && observer.observe(section));
     return () => observer.disconnect();
+  }, []);
+
+  // Infinite loop: at either end of the feed, an over-drag past the boundary
+  // wraps around (last → first, first → last). We compare the scroll position
+  // captured at touch-START (already at the boundary) against the drag delta,
+  // so advancing ONTO the last card isn't mistaken for over-dragging off it.
+  useEffect(() => {
+    const feed = feedRef.current;
+    if (!feed) return;
+
+    const EDGE = 4; // px tolerance for "sitting at a boundary"
+    const WRAP = 55; // px of over-drag needed to trigger the wrap
+    const lastChannel = FIRST_PROJECT_CHANNEL + PROJECTS.length - 1;
+    let startY = 0;
+    let startedAtTop = false;
+    let startedAtBottom = false;
+
+    const onTouchStart = (event: TouchEvent) => {
+      startY = event.touches[0].clientY;
+      startedAtTop = feed.scrollTop <= EDGE;
+      startedAtBottom = feed.scrollTop + feed.clientHeight >= feed.scrollHeight - EDGE;
+    };
+    const onTouchEnd = (event: TouchEvent) => {
+      const dy = event.changedTouches[0].clientY - startY;
+      if (startedAtBottom && dy <= -WRAP) {
+        // dragged up while already at the end → loop back to the first card
+        sectionsRef.current[FIRST_PROJECT_CHANNEL - 1]?.scrollIntoView();
+      } else if (startedAtTop && dy >= WRAP) {
+        // dragged down while already at the start → loop to the last card
+        sectionsRef.current[lastChannel - 1]?.scrollIntoView();
+      }
+    };
+
+    feed.addEventListener('touchstart', onTouchStart, { passive: true });
+    feed.addEventListener('touchend', onTouchEnd, { passive: true });
+    return () => {
+      feed.removeEventListener('touchstart', onTouchStart);
+      feed.removeEventListener('touchend', onTouchEnd);
+    };
   }, []);
 
   // Mirror to the URL hash + tab title — the profile is channel 1
@@ -76,7 +118,7 @@ export function MobileFeed() {
 
   return (
     <>
-      <div className="feed">
+      <div className="feed" ref={feedRef}>
         {PROJECTS.map((project, index) => {
           const channel = index + FIRST_PROJECT_CHANNEL;
           return (
@@ -85,14 +127,21 @@ export function MobileFeed() {
               project={project}
               channel={channel}
               isActive={!profileOpen && activeChannel === channel}
-              // preload the active card and its immediate neighbours only
-              preloadVideo={Math.abs(channel - activeChannel) <= 1}
               setRef={setSectionRef(channel)}
               onProfile={openProfile}
             />
           );
         })}
       </div>
+
+      {/* Warm the clips around the active card ahead of time — same shared
+          policy + component as the desktop TV (portrait sources here). */}
+      <VideoPreloader
+        sources={orderedNeighborClips(activeChannel, (ch) => {
+          const p = PROJECTS[ch - FIRST_PROJECT_CHANNEL];
+          return p?.mobileVideoUrl ?? p?.videoUrl;
+        })}
+      />
 
       <FeedProfile
         open={profileOpen}
