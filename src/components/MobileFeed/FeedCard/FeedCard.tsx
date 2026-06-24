@@ -56,6 +56,7 @@ export function FeedCard({ project, channel, isActive, preloadVideo, setRef, onP
   const [liked, setLiked] = useState(() => readLikedChannels().has(channel));
   const [codeOpen, setCodeOpen] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [loadingSlow, setLoadingSlow] = useState(false);
 
   // Only the card in view plays (battery + mobile single-video limits); leaving
   // a card resets its open panels. play() may reject without a user gesture
@@ -70,6 +71,39 @@ export function FeedCard({ project, channel, isActive, preloadVideo, setRef, onP
       setCodeOpen(false);
     }
   }, [isActive]);
+
+  // Mobile networks make these clips slow to start; show a small on-brand
+  // spinner once the active card has been waiting on its video for >2s, and
+  // clear it the moment playback (re)starts. Only the active card can spin.
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!isActive || !project.videoUrl || !video) {
+      setLoadingSlow(false);
+      return;
+    }
+
+    let timer = window.setTimeout(() => setLoadingSlow(true), 2000);
+    const arm = () => {
+      window.clearTimeout(timer);
+      timer = window.setTimeout(() => setLoadingSlow(true), 2000);
+    };
+    const onPlaying = () => {
+      window.clearTimeout(timer);
+      setLoadingSlow(false);
+    };
+
+    // already buffered enough to play — no spinner needed
+    if (video.readyState >= 3 && !video.paused) onPlaying();
+
+    video.addEventListener('playing', onPlaying);
+    video.addEventListener('waiting', arm); // re-arm when it stalls mid-play
+
+    return () => {
+      window.clearTimeout(timer);
+      video.removeEventListener('playing', onPlaying);
+      video.removeEventListener('waiting', arm);
+    };
+  }, [isActive, project.videoUrl]);
 
   // The shareable deep link to this card (same #ch-N format as the TV).
   const shareUrl = `${window.location.origin}${window.location.pathname}#ch-${channel}`;
@@ -215,7 +249,12 @@ export function FeedCard({ project, channel, isActive, preloadVideo, setRef, onP
           expands to the full description + behind-the-scenes */}
       <div className="feed__bug">
         <div className="feed__caption">
-          <h2 className="feed__title">{project.title}</h2>
+          <h2 className="feed__title">
+            {project.title}
+            {loadingSlow && (
+              <span className="feed__spinner" role="status" aria-label="Loading video" />
+            )}
+          </h2>
           <ul className="feed__tech">
             {project.tech.map((tag) => (
               <li key={tag} className="feed__tag">
