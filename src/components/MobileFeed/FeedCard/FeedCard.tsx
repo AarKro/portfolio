@@ -35,58 +35,30 @@ function persistLike(channel: number, liked: boolean) {
   }
 }
 
-// How far ahead we fetch clips (in cards) and how much each successive ring is
-// held back, so the active clip's download starts first, then ±1, then ±2.
-const PRELOAD_RADIUS = 2;
-const PRELOAD_STAGGER_MS = 350;
-
 interface FeedCardProps {
   project: Project;
   channel: number;
   isActive: boolean;
-  /** Signed offset from the active card; drives the preload window + priority. */
-  preloadDelta: number;
   setRef: (el: HTMLElement | null) => void;
   /** Jump back to the profile page, badging the card we came from. */
   onProfile: (fromChannel: number) => void;
 }
 
 /**
- * Loading order for a card at `delta` cards from the active one: the active
- * clip first, then forward neighbours ahead of equidistant ones behind
- * (current, +1, −1, +2, −2 → ranks 0,1,2,3,4). Drives the preload stagger so
- * the clips you're about to scroll into grab bandwidth first.
- */
-function preloadRank(delta: number): number {
-  if (delta === 0) return 0;
-  return (Math.abs(delta) - 1) * 2 + (delta < 0 ? 1 : 0) + 1;
-}
-
-/**
  * One project card in the feed: a full-bleed teaser video (or test card), a
  * right-edge rail of icon actions, and a tap-to-expand caption.
+ *
+ * The card only fetches its own clip when active; the neighbouring clips are
+ * warmed ahead of time by the shared <VideoPreloader> in MobileFeed (same
+ * policy as the desktop TV), so this component owns no preload logic.
  */
-export function FeedCard({ project, channel, isActive, preloadDelta, setRef, onProfile }: FeedCardProps) {
+export function FeedCard({ project, channel, isActive, setRef, onProfile }: FeedCardProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [expanded, setExpanded] = useState(false);
   const [liked, setLiked] = useState(() => readLikedChannels().has(channel));
   const [codeOpen, setCodeOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const [loadingSlow, setLoadingSlow] = useState(false);
-  // Whether this card's clip is allowed to fetch yet. Cards enter the preload
-  // window staggered by distance so the active clip grabs bandwidth first; once
-  // fetching starts we keep it on until the card leaves the window (don't abort).
-  const [preloadOn, setPreloadOn] = useState(false);
-
-  useEffect(() => {
-    if (Math.abs(preloadDelta) > PRELOAD_RADIUS) {
-      setPreloadOn(false); // out of range — stop fetching, free bandwidth
-      return;
-    }
-    if (preloadOn) return; // already fetching — don't restart it
-    const timer = window.setTimeout(() => setPreloadOn(true), preloadRank(preloadDelta) * PRELOAD_STAGGER_MS);
-    return () => window.clearTimeout(timer);
-  }, [preloadDelta, preloadOn]);
 
   // Only the card in view plays (battery + mobile single-video limits); leaving
   // a card resets its open panels. play() may reject without a user gesture
@@ -183,7 +155,9 @@ export function FeedCard({ project, channel, isActive, preloadDelta, setRef, onP
           muted
           loop
           playsInline
-          preload={preloadOn ? 'auto' : 'none'}
+          // active card loads its own clip; neighbours are warmed by
+          // <VideoPreloader> into the cache, so they fetch on demand here
+          preload={isActive ? 'auto' : 'none'}
         >
           <ClipSources sources={project.mobileVideoUrl ?? project.videoUrl} />
         </video>

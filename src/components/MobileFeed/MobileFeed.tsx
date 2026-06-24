@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { FIRST_PROJECT_CHANNEL, PROJECTS } from '../../data/projects';
 import { broadcastTitle, channelFromHash } from '../../utils/broadcast';
+import { orderedNeighborClips } from '../../utils/preload';
+import { VideoPreloader } from '../VideoPreloader/VideoPreloader';
 import { FeedCard } from './FeedCard/FeedCard';
 import { FeedProfile } from './FeedProfile/FeedProfile';
 import './MobileFeed.scss';
@@ -125,16 +127,21 @@ export function MobileFeed() {
               project={project}
               channel={channel}
               isActive={!profileOpen && activeChannel === channel}
-              // signed offset from the active card: drives the preload window
-              // (±2) and its priority — nearer first, and forward (+) ahead of
-              // the same distance behind (−)
-              preloadDelta={channel - activeChannel}
               setRef={setSectionRef(channel)}
               onProfile={openProfile}
             />
           );
         })}
       </div>
+
+      {/* Warm the clips around the active card ahead of time — same shared
+          policy + component as the desktop TV (portrait sources here). */}
+      <VideoPreloader
+        sources={orderedNeighborClips(activeChannel, (ch) => {
+          const p = PROJECTS[ch - FIRST_PROJECT_CHANNEL];
+          return p?.mobileVideoUrl ?? p?.videoUrl;
+        })}
+      />
 
       <FeedProfile
         open={profileOpen}

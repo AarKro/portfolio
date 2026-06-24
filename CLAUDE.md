@@ -162,7 +162,8 @@ src/
     StaticNoise/            ← canvas noise; animates only while `active`
     VideoPreloader/         ← off-screen <video preload="auto"> to warm the
                               clips within ±2 channels ahead of time, mounted
-                              staggered in priority order (caller-sorted)
+                              staggered in priority order (caller-sorted).
+                              Shared by the desktop TV AND the mobile feed
     IntroProgram/           ← channel 1 (intro + clickable TV guide)
     ProjectProgram/         ← project channels: one "broadcast" layout
                               (teaser-or-testcard backdrop + bug +
@@ -182,6 +183,9 @@ src/
   utils/noise.ts            ← static-noise pixel fill (used by StaticNoise)
   utils/broadcast.ts        ← SITE_TITLE + formatChannel/broadcastTitle helpers
                               (shared by the TV and the feed; keeps titles in sync)
+  utils/preload.ts          ← clip-preloading policy shared by the TV and the
+                              feed: ±2 window, forward-first priority order
+                              (feeds VideoPreloader in both)
   assets/                   ← bundled assets, grouped by kind:
     videos/                 ← teaser clips, `_landscape` (CRT) + `_portrait` (feed, centre-cropped)
     thumbnails/             ← video first-frame posters (loading + grid), `_landscape`/`_portrait`
@@ -255,15 +259,21 @@ via `?react`), including the real GitHub/LinkedIn brand marks.
   on the card's `#ch-N` deep link, falling back to copying the link (with a
   transient "Copied"). The rail sits at the bottom (lowest icon level with the
   caption); the caption's left inset matches the rail's right inset.
-- **Video loading** (both views): each clip shows its `posterUrl` first frame
-  instantly, and only the channels within ±2 of the active one are fetched, in
-  priority order — nearest first, and the forward channel ahead of the
-  equidistant previous one (current, +1, −1, +2, −2). The feed sets `preload`
-  per card on a stagger keyed to that rank; the desktop TV passes the same
-  forward-first ordered list to `VideoPreloader`, which mounts the clips
-  staggered so earlier ones grab bandwidth first. So clips load on demand in a
-  small window, not all up front. A feed card whose clip is still buffering
-  after 2s shows a small cyan spinner beside its title.
+- **Video loading** (both views, one shared policy): each clip shows its
+  `posterUrl` first frame instantly, and only the channels within ±2 of the
+  active one are fetched, in priority order — nearest first, and the forward
+  channel ahead of the equidistant previous one (current, +1, −1, +2, −2).
+  `utils/preload.ts` owns that policy (`PRELOAD_RADIUS`, `preloadRank`,
+  `orderedNeighborClips`): both the desktop TV (`Screen`) and the mobile feed
+  (`MobileFeed`) build a forward-first ordered neighbour list from it — desktop
+  with the landscape `videoUrl`, the feed with the portrait `mobileVideoUrl` —
+  and hand it to the **same `VideoPreloader` component**, which mounts the clips
+  staggered so earlier (higher-priority) ones grab bandwidth first. The
+  active channel's own `<video>` (the desktop program / the in-view feed card,
+  both `preload="auto"`) loads itself; every other card is `preload="none"` and
+  plays from the warmed cache. So clips load on demand in a small window, not
+  all up front. A feed card whose clip is still buffering after 2s shows a small
+  cyan spinner beside its title.
 - The **caption** (bottom-left): title on its own line, tags below, then a
   one-line **synopsis** — the `description` clipped to a single line with an
   ellipsis and an expand caret aligned to that line. Tapping the caret un-clips

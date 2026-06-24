@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
-import { FIRST_PROJECT_CHANNEL, PROJECTS, type VideoSources } from '../../data/projects';
+import { FIRST_PROJECT_CHANNEL, PROJECTS } from '../../data/projects';
 import { broadcastTitle, formatChannel } from '../../utils/broadcast';
+import { orderedNeighborClips } from '../../utils/preload';
 import type { TVState } from '../../hooks/useTV';
 import { useSwipe } from '../../hooks/useSwipe';
 import { IntroProgram } from '../IntroProgram/IntroProgram';
@@ -28,14 +29,12 @@ export function Screen({ tv }: ScreenProps) {
   const { channel, poweredOn, staticVisible, osdVisible } = tv;
   const project = channel >= FIRST_PROJECT_CHANNEL ? PROJECTS[channel - FIRST_PROJECT_CHANNEL] : null;
 
-  // Warm the clips within two channels of the current one so CH ▲/▼ lands on an
-  // already-buffered video. Ordered by loading priority — nearer first, and
-  // forward (the next channel) ahead of the equidistant previous one (+1, −1,
-  // +2, −2); VideoPreloader staggers their fetches in that order. Out-of-range
-  // indices fall through to undefined.
-  const neighborVideoSources = [channel + 1, channel - 1, channel + 2, channel - 2]
-    .map((ch) => PROJECTS[ch - FIRST_PROJECT_CHANNEL]?.videoUrl)
-    .filter((s): s is VideoSources => Boolean(s));
+  // Warm the clips within ±2 channels of the current one (priority-ordered) so
+  // CH ▲/▼ lands on an already-buffered video — same policy as the mobile feed.
+  const neighborVideoSources = orderedNeighborClips(
+    channel,
+    (ch) => PROJECTS[ch - FIRST_PROJECT_CHANNEL]?.videoUrl,
+  );
 
   // Visitors who deep-link past the intro never see the explainer,
   // so show them the arrow-keys hint once.
