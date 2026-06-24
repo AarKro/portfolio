@@ -163,17 +163,9 @@ export function FeedCard({ project, channel, isActive, setRef, onProfile }: Feed
         </video>
       ) : (
         <div className="feed__placeholder" aria-hidden="true">
-          {/* same Figma-style shape field as the profile page, so a clip-less
+          {/* the same soft palette-mesh wash as the profile hero (on a dark
+              ground so the white caption + rail stay legible), so a clip-less
               channel still feels part of the feed's identity */}
-          <div className="feed__placeholder-shapes">
-            <span className="feed__placeholder-shape feed__placeholder-shape--circle" />
-            <span className="feed__placeholder-shape feed__placeholder-shape--ring" />
-            <span className="feed__placeholder-shape feed__placeholder-shape--square" />
-            <span className="feed__placeholder-shape feed__placeholder-shape--triangle" />
-            <span className="feed__placeholder-shape feed__placeholder-shape--pill" />
-            <span className="feed__placeholder-shape feed__placeholder-shape--plus" />
-            <span className="feed__placeholder-shape feed__placeholder-shape--dot" />
-          </div>
           <span className="feed__placeholder-title">{project.title}</span>
         </div>
       )}

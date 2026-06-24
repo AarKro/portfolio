@@ -21,18 +21,6 @@ export function FeedProfile({ open, justViewedChannel, onOpenProject }: FeedProf
   return (
     <section className={`feed__profile ${open ? 'is-open' : ''}`} aria-hidden={!open}>
       <header className="feed__profile-head">
-        {/* Figma-style geometric shapes — decorative, clipped to the hero only
-            (so they never bleed into the grid or add scroll) */}
-        <div className="feed__shapes" aria-hidden="true">
-          <span className="feed__shape feed__shape--circle-cyan" />
-          <span className="feed__shape feed__shape--ring-pink" />
-          <span className="feed__shape feed__shape--square-violet" />
-          <span className="feed__shape feed__shape--triangle-violet" />
-          <span className="feed__shape feed__shape--pill-amber" />
-          <span className="feed__shape feed__shape--plus-pink" />
-          <span className="feed__shape feed__shape--dot-violet" />
-          <span className="feed__shape feed__shape--dot-cyan" />
-        </div>
         <div className="feed__profile-id">
           <div className="feed__nameplate">
             {/* deterministic break: two lines on phones, one on tablets (the
@@ -77,11 +65,7 @@ export function FeedProfile({ open, justViewedChannel, onOpenProject }: FeedProf
                   loading="lazy"
                 />
               ) : (
-                <span className="feed__tile-placeholder" aria-hidden="true">
-                  <span className="feed__tile-shape feed__tile-shape--circle" />
-                  <span className="feed__tile-shape feed__tile-shape--ring" />
-                  <span className="feed__tile-shape feed__tile-shape--square" />
-                </span>
+                <span className="feed__tile-placeholder" aria-hidden="true" />
               )}
               <span className="feed__tile-title">{project.title}</span>
               {justViewedChannel === channel && <span className="feed__tile-badge">Just viewed</span>}
