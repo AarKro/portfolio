@@ -53,6 +53,13 @@ import cssToolboxVideoPortraitAv1 from '../assets/videos/css_toolbox_portrait_av
 import cssToolboxPoster from '../assets/thumbnails/css_toolbox_landscape.jpg';
 import cssToolboxPosterPortrait from '../assets/thumbnails/css_toolbox_portrait.jpg';
 import cssToolboxGridPoster from '../assets/thumbnails/css_toolbox_grid.jpg';
+import zugliVideo from '../assets/videos/zugli_landscape.mp4';
+import zugliVideoAv1 from '../assets/videos/zugli_landscape_av1.mp4';
+import zugliVideoPortrait from '../assets/videos/zugli_portrait.mp4';
+import zugliVideoPortraitAv1 from '../assets/videos/zugli_portrait_av1.mp4';
+import zugliPoster from '../assets/thumbnails/zugli_landscape.jpg';
+import zugliPosterPortrait from '../assets/thumbnails/zugli_portrait.jpg';
+import zugliGridPoster from '../assets/thumbnails/zugli_grid.jpg';
 
 /** A named source-code link, for channels that bundle several repos. */
 export interface RepoLink {
@@ -146,6 +153,11 @@ export const PROJECTS: Project[] = [
     tech: ['ESP32', 'Rust', 'Hardware'],
     githubUrl: 'https://github.com/AarKro/zugli',
     demoUrl: 'https://aarkro.github.io/zugli/',
+    videoUrl: { av1: zugliVideoAv1, h264: zugliVideo },
+    mobileVideoUrl: { av1: zugliVideoPortraitAv1, h264: zugliVideoPortrait },
+    posterUrl: zugliPoster,
+    mobilePosterUrl: zugliPosterPortrait,
+    gridPosterUrl: zugliGridPoster,
   },
   {
     id: 'scholars-mate',
