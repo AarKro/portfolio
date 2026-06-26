@@ -35,7 +35,7 @@ export function FeedProfile({ open, justViewedChannel, onOpenProject }: FeedProf
               GitHub
             </a>
             <a
-              href="https://www.linkedin.com/in/aaron-kromer-a3026b193/"
+              href="https://www.linkedin.com/in/aaron-kromer"
               target="_blank"
               rel="noreferrer"
             >

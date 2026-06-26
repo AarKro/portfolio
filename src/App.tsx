@@ -56,7 +56,7 @@ export function App() {
           Portfolio of web projects: TypeScript, React, three.js, type design, machine learning
           experiments and games. Source code on{' '}
           <a href="https://github.com/AarKro">GitHub (AarKro)</a>, profile on{' '}
-          <a href="https://www.linkedin.com/in/aaron-kromer-a3026b193/">LinkedIn</a>.
+          <a href="https://www.linkedin.com/in/aaron-kromer">LinkedIn</a>.
         </p>
         <ul>
           {PROJECTS.map((project) => (

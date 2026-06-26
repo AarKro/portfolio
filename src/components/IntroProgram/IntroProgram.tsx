@@ -59,7 +59,7 @@ export function IntroProgram({ tuneTo }: IntroProgramProps) {
         </a>
         <span aria-hidden="true"> · </span>
         <a
-          href="https://www.linkedin.com/in/aaron-kromer-a3026b193/"
+          href="https://www.linkedin.com/in/aaron-kromer"
           target="_blank"
           rel="noreferrer"
         >
