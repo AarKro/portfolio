@@ -259,7 +259,6 @@
   }
 
   &__teletext-body {
-    max-width: 52ch;
     font-size: clamp(1rem, 2.1vw, 1.4rem);
     line-height: 1.35;
     color: $phosphor-text;
