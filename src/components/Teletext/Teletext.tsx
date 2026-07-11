@@ -21,7 +21,7 @@ import './Teletext.scss';
 /** Classic Mode 7 geometry: 40 character cells per row. */
 const COLS = 40;
 /** Body rows per subpage; everything else on the grid is fixed chrome. */
-const BODY_ROWS = 11;
+const BODY_ROWS = 10;
 /** How long the header hunts (rolling page numbers) before the page lands. */
 const SEARCH_DURATION = 900;
 /** How fast the rolling page numbers tick over while hunting. */

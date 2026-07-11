@@ -17,7 +17,9 @@
   // the 1.2 cell aspect is real Mode 7 (40×25 cells on a 4:3 raster).
   --tt-cell: 2.4cqw;
   --tt-fs: calc(var(--tt-cell) / 0.6163);
-  --tt-row: calc(var(--tt-cell) * 1.3);
+  // True Mode 7 cells are 1.2× as tall as wide, but VT323's ascenders and
+  // descenders collide at that density — legibility wins over faithfulness.
+  --tt-row: calc(var(--tt-cell) * 1.5);
   // Double-height text, Mode 7 style: same cell width, twice the height.
   // Drawn at 2× size and squeezed back to normal width so the line box is
   // naturally two rows tall (a scaleY would overflow its single-row box).
