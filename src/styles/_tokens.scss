@@ -23,8 +23,20 @@ $phosphor-bg: #0a0d0a;
 $phosphor-text: #d9e8d4;
 $phosphor-green: #4dff88;
 $phosphor-amber: #ffb454;
-$phosphor-purple: #b47cff; // teletext's own "info" voice
+$phosphor-purple: #b47cff; // the TELETEXT toggle on the broadcast bug
 $phosphor-dim: #8aa388;
+
+// Teletext (Mode 7). Real teletext has exactly these 8 colours — black plus
+// the 7 fully saturated primaries/secondaries — and nothing in between.
+// Used only by the Teletext page; don't blend them into the phosphor palette.
+$teletext-bg: #000000;
+$teletext-white: #ffffff;
+$teletext-yellow: #ffff00;
+$teletext-cyan: #00ffff;
+$teletext-green: #00ff00;
+$teletext-magenta: #ff00ff;
+$teletext-red: #ff0000;
+$teletext-blue: #0000ff;
 
 // Fonts
 $font-screen: 'VT323', monospace; // the CRT screen (desktop TV)

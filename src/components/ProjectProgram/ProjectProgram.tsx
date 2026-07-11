@@ -1,9 +1,8 @@
 import { useEffect, useState } from 'react';
 import type { Project } from '../../data/projects';
-import { formatChannel } from '../../utils/broadcast';
-import { renderInlineLinks } from '../InlineLink/InlineLink';
 import { StaticNoise } from '../StaticNoise/StaticNoise';
 import { ClipSources } from '../ClipSources/ClipSources';
+import { Teletext } from '../Teletext/Teletext';
 import './ProjectProgram.scss';
 
 /** Safety net: never show loading noise forever if the teaser never starts */
@@ -27,8 +26,9 @@ function ActionIcon({ glyph }: { glyph: string }) {
  * A project channel. Every channel shares one "broadcast" layout: a full-bleed
  * backdrop (autoplay teaser if the project has a `videoUrl`, else an SMPTE test
  * card) with a lower-third "bug" over it (title, tech, links, teletext toggle).
- * Pressing TELETEXT slides the bug up and a teletext page of detailed project
- * info — description, behind-the-scenes, and the same action links — into view.
+ * Pressing TELETEXT swaps the picture for a real Mode 7 teletext page of the
+ * detailed project info (see the Teletext component); the broadcast keeps
+ * playing behind it, so closing cuts straight back to the live picture.
  */
 export function ProjectProgram({ project, channel }: ProjectProgramProps) {
   // Cover the teaser with static until the clip actually plays
@@ -49,8 +49,6 @@ export function ProjectProgram({ project, channel }: ProjectProgramProps) {
     const timer = window.setTimeout(() => setVideoLoading(false), VIDEO_LOAD_TIMEOUT);
     return () => window.clearTimeout(timer);
   }, [project.id, project.videoUrl]);
-
-  const channelLabel = formatChannel(channel);
 
   // Source code: a single VIEW CODE button, or — for a bundled channel — one
   // pill matching the other buttons, sectioned into a link per repo.
@@ -75,20 +73,6 @@ export function ProjectProgram({ project, channel }: ProjectProgramProps) {
       <ActionIcon glyph="↗" />
     </a>
   ) : null;
-
-  // The same source/demo links live on the bug and on the teletext page, so
-  // they're reachable whether or not the teletext page is open.
-  const actionLinks = (
-    <>
-      {sourceControl}
-      {project.demoUrl && (
-        <a className="program__action" href={project.demoUrl} target="_blank" rel="noreferrer">
-          OPEN DEMO
-          <ActionIcon glyph="↗" />
-        </a>
-      )}
-    </>
-  );
 
   return (
     <div className={`program program--broadcast ${teletextOpen ? 'is-teletext' : ''}`}>
@@ -121,67 +105,40 @@ export function ProjectProgram({ project, channel }: ProjectProgramProps) {
         </div>
       )}
 
-      {/* Sliding deck: the bug page, with the teletext page stacked below it */}
-      <div className="program__deck">
-        <div className="program__deck-track">
-          <div className="program__page program__page--bug">
-            <div className="program__bug">
-              <h2 className="program__title">{project.title}</h2>
-              <ul className="program__tech">
-                {project.tech.map((tag) => (
-                  <li key={tag} className="program__tag">
-                    {tag}
-                  </li>
-                ))}
-              </ul>
-              <div className="program__actions">
-                <button
-                  className="program__action program__action--teletext"
-                  onClick={() => setTeletextOpen(true)}
-                  aria-expanded={teletextOpen}
-                >
-                  TELETEXT
-                  <ActionIcon glyph="▤" />
-                </button>
-                {actionLinks}
-              </div>
-            </div>
-          </div>
-
-          <div
-            className="program__page program__page--teletext"
-            aria-hidden={!teletextOpen}
+      {/* The lower-third bug over the broadcast */}
+      <div className="program__bug">
+        <h2 className="program__title">{project.title}</h2>
+        <ul className="program__tech">
+          {project.tech.map((tag) => (
+            <li key={tag} className="program__tag">
+              {tag}
+            </li>
+          ))}
+        </ul>
+        <div className="program__actions">
+          <button
+            className="program__action program__action--teletext"
+            onClick={() => setTeletextOpen(true)}
+            aria-expanded={teletextOpen}
           >
-            <article className="program__teletext">
-              <header className="program__teletext-head">
-                <span>P1{channelLabel}</span>
-                <span className="program__teletext-brand">AARKRO TV</span>
-                <span>CH {channelLabel}</span>
-              </header>
-              <h3 className="program__teletext-title">{project.title}</h3>
-              <p className="program__teletext-body">{renderInlineLinks(project.description)}</p>
-              {project.behindTheScenes && (
-                <p className="program__teletext-behind">
-                  <span className="program__behind-label">BEHIND THE SCENES</span>
-                  {renderInlineLinks(project.behindTheScenes)}
-                </p>
-              )}
-              {/* same row, same screen position as the bug's actions — the
-                  links don't move, the toggle just morphs TELETEXT → CLOSE */}
-              <div className="program__actions program__teletext-actions">
-                <button
-                  className="program__action program__action--teletext"
-                  onClick={() => setTeletextOpen(false)}
-                >
-                  CLOSE TELETEXT
-                  <ActionIcon glyph="▾" />
-                </button>
-                {actionLinks}
-              </div>
-            </article>
-          </div>
+            TELETEXT
+            <ActionIcon glyph="▤" />
+          </button>
+          {sourceControl}
+          {project.demoUrl && (
+            <a className="program__action" href={project.demoUrl} target="_blank" rel="noreferrer">
+              OPEN DEMO
+              <ActionIcon glyph="↗" />
+            </a>
+          )}
         </div>
       </div>
+
+      {/* The Mode 7 page replaces the picture while open — the broadcast keeps
+          running underneath, like a real TV's TEXT mode */}
+      {teletextOpen && (
+        <Teletext project={project} channel={channel} onClose={() => setTeletextOpen(false)} />
+      )}
     </div>
   );
 }
