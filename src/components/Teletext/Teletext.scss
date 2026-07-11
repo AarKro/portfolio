@@ -1,0 +1,237 @@
+@use '../../styles/tokens' as *;
+@use '../../styles/interactions' as *;
+
+// A Mode 7 teletext page: pure black, a fixed 40-character grid, and only the
+// 8 teletext colours. The section establishes the size container; the inner
+// __screen carries the grid, because container-query units resolve against
+// the nearest ANCESTOR container, never the element that declares it.
+.teletext {
+  position: absolute;
+  inset: 0;
+  z-index: 5; // above the broadcast (video/test card + bug), below the CRT decor
+  container-type: size;
+  background: $teletext-bg;
+
+  // The grid: 40 cells of --tt-cell fill the width minus 2cqw padding a side.
+  // VT323 advances 0.6163em per character (measured), hence the font size;
+  // the 1.2 cell aspect is real Mode 7 (40×25 cells on a 4:3 raster).
+  --tt-cell: 2.4cqw;
+  --tt-fs: calc(var(--tt-cell) / 0.6163);
+  --tt-row: calc(var(--tt-cell) * 1.3);
+  // Double-height text, Mode 7 style: same cell width, twice the height.
+  // Drawn at 2× size and squeezed back to normal width so the line box is
+  // naturally two rows tall (a scaleY would overflow its single-row box).
+  --tt-fs-double: calc(var(--tt-fs) * 2);
+  --tt-row-double: calc(var(--tt-row) * 2);
+
+  &__screen {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    padding: calc(var(--tt-row) * 0.7) 2cqw;
+    color: $teletext-white;
+    font-size: var(--tt-fs);
+    line-height: var(--tt-row);
+    // soft phosphor bloom on everything, in each row's own colour
+    text-shadow: 0 0 0.3em color-mix(in srgb, currentColor 40%, transparent);
+  }
+
+  &__row {
+    flex: 0 0 auto;
+    height: var(--tt-row);
+    white-space: pre;
+  }
+
+  // ── Row 0: the page header ────────────────────────────────────────────────
+  &__head {
+    display: flex;
+    gap: 2ch;
+  }
+
+  &__head-spacer {
+    flex: 1;
+  }
+
+  &__pageno {
+    min-width: 4ch; // rolling page numbers mustn't shift the row
+  }
+
+  &__subpage {
+    padding: 0;
+    border: none;
+    background: none;
+    font: inherit;
+    line-height: inherit;
+    color: $teletext-cyan;
+    text-shadow: inherit;
+    cursor: pointer;
+
+    @include hover-focus {
+      background: $teletext-cyan;
+      color: $teletext-bg;
+      text-shadow: none;
+      outline: none;
+    }
+  }
+
+  // ── The page body paints in top-to-bottom, row by row, no fades ──────────
+  &__page {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+
+    .teletext__row {
+      visibility: hidden;
+      animation: tt-paint 1ms steps(1, end) forwards;
+      animation-delay: var(--tt-delay, 0ms);
+    }
+  }
+
+  // ── Masthead: white on a red colour block with a mosaic stepped edge ─────
+  &__masthead {
+    position: relative;
+    z-index: 0;
+    height: var(--tt-row-double);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    // two half-height red blocks of different widths = the chunky step
+    &::before,
+    &::after {
+      content: '';
+      position: absolute;
+      left: calc(-1 * 2cqw); // bleed through the page padding to the tube edge
+      z-index: -1;
+      background: $teletext-red;
+    }
+
+    &::before {
+      top: 0;
+      bottom: 50%;
+      width: 60cqw;
+    }
+
+    &::after {
+      top: 50%;
+      bottom: 0;
+      width: 56cqw;
+    }
+  }
+
+  &__masthead-label {
+    display: inline-block;
+    font-size: var(--tt-fs-double);
+    line-height: var(--tt-row-double);
+    transform: scaleX(0.5);
+    transform-origin: 0 0;
+  }
+
+  &__masthead-channel {
+    color: $teletext-yellow;
+  }
+
+  // ── Double-height headline in yellow, the classic article opener ─────────
+  &__title-row {
+    height: var(--tt-row-double);
+    font-weight: normal;
+  }
+
+  &__title {
+    display: inline-block;
+    font-size: var(--tt-fs-double);
+    line-height: var(--tt-row-double);
+    transform: scaleX(0.5);
+    transform-origin: 0 0;
+    color: $teletext-yellow;
+  }
+
+  &__tech {
+    color: $teletext-green;
+  }
+
+  &__heading {
+    color: $teletext-magenta;
+  }
+
+  &__link {
+    color: $teletext-cyan;
+    text-decoration: none;
+
+    @include hover-focus {
+      background: $teletext-cyan;
+      color: $teletext-bg;
+      text-shadow: none;
+      outline: none;
+    }
+  }
+
+  // ── Bottom rows: the blue band + the Fastext coloured links ──────────────
+  &__footer {
+    margin-top: auto;
+    display: flex;
+    flex-direction: column;
+  }
+
+  &__band {
+    margin: 0 calc(-1 * 2cqw); // full-bleed like a real background-colour row
+    padding: 0 2cqw;
+    background: $teletext-blue;
+    text-align: center;
+  }
+
+  &__fastext {
+    display: flex;
+    justify-content: space-between;
+    gap: 1ch;
+  }
+
+  &__key {
+    padding: 0;
+    border: none;
+    background: none;
+    font: inherit;
+    line-height: inherit;
+    letter-spacing: inherit;
+    text-decoration: none;
+    text-shadow: inherit;
+    cursor: pointer;
+
+    @each $name,
+      $color
+        in (
+          red: $teletext-red,
+          green: $teletext-green,
+          yellow: $teletext-yellow,
+          cyan: $teletext-cyan
+        )
+    {
+      &--#{$name} {
+        color: $color;
+
+        @include hover-focus {
+          background: $color;
+          color: $teletext-bg;
+          text-shadow: none;
+          outline: none;
+        }
+      }
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    &__page .teletext__row {
+      visibility: visible;
+      animation: none;
+    }
+  }
+}
+
+@keyframes tt-paint {
+  to {
+    visibility: visible;
+  }
+}

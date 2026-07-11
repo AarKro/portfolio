@@ -54,25 +54,26 @@ Per project:
   in the repo (check its README/package.json), never invented. Shown on the
   teletext page (see below), not on the front bug.
 - `description` and `behindTheScenes` support inline `[label](url)` links
-  (markdown-style). On the teletext page they render via the `InlineLink`
-  component (purple, with a trailing ↗ "leaves the site" glyph); in the SEO
-  `.sr-only` block they're flattened to plain `label` text. Used e.g. to link
-  WoW Graveyard 3D back to its original 2D repo from inside the text, so the two
-  projects share one channel instead of two. Keep links grounded, same as copy.
+  (markdown-style). On the desktop teletext page the `Teletext` component
+  word-wraps them onto the character grid itself (cyan, trailing ↗); in the
+  mobile feed they render via the `InlineLink` component (purple, same ↗
+  "leaves the site" glyph); in the SEO `.sr-only` block they're flattened to
+  plain `label` text. Used e.g. to link WoW Graveyard 3D back to its original
+  2D repo from inside the text, so the two projects share one channel instead
+  of two. Keep links grounded, same as copy.
 - **Every project channel shares one "broadcast" layout** (so channels look
   like one consistent building block): a full-bleed *backdrop* — the `videoUrl`
   teaser, or a full-bleed SMPTE test card ("NO LIVE FEED ON THIS CHANNEL") when
   there's none — with a lower-third *bug* over it (title, tech tags, action
-  links, and a `▤ TELETEXT` button). The `description` +
-  `behindTheScenes` live on a **teletext page** that slides up over the bug when
-  TELETEXT is pressed. So those two fields are revealed on demand on *all*
-  channels, not shown up front. The teletext page repeats the source/demo links
-  in a bottom row that mirrors the bug's action row — same screen position in
-  both states, so the links don't jump; only the toggle morphs `▤ TELETEXT` ↔
-  `▾ CLOSE TELETEXT`. Teletext has its own colour voice — `$phosphor-purple`
-  (the TELETEXT/CLOSE buttons, the teletext header rule, the BEHIND THE SCENES
-  label) — to set it apart from the green broadcast UI and the neutral
-  external-link buttons.
+  links, and a `▤ TELETEXT` button, which keeps its `$phosphor-purple` voice).
+  The `description` + `behindTheScenes` live on a **real Mode 7 teletext page**
+  (the `Teletext` component — see "How the TV behaves") that replaces the
+  picture while open, so those two fields are revealed on demand on *all*
+  channels, not shown up front. The page repeats the source/demo links as its
+  bottom-row **Fastext links** — red CLOSE first, then green/yellow/cyan for
+  code/demo/each repo (a bundle like the Discord bots gets one coloured link
+  per repo), plus a cyan MORE when a slot is free and the copy runs to more
+  than one subpage.
 - Write `description` like a TV program blurb: one short paragraph, a bit of
   personality.
 
@@ -166,8 +167,10 @@ src/
                               Shared by the desktop TV AND the mobile feed
     IntroProgram/           ← channel 1 (intro + clickable TV guide)
     ProjectProgram/         ← project channels: one "broadcast" layout
-                              (teaser-or-testcard backdrop + bug +
-                              slide-up teletext page)
+                              (teaser-or-testcard backdrop + bug + the
+                              Teletext page overlay)
+    Teletext/               ← the Mode 7 teletext page (40-col grid, page hunt
+                              + row paint-in, subpage carousel, Fastext row)
     InlineLink/             ← inline `[label](url)` text-link renderer
     ClipSources/            ← <source> children for a <video>: AV1 first, H.264
                               fallback (shared by the 3 <video> sites)
@@ -383,12 +386,27 @@ importing tokens via a relative `@use '../../styles/tokens' as *;`.
   timeout), so there's no black-frame flash. The video is
   `muted loop autoplay playsInline` — muted is mandatory for browsers to allow
   autoplay (and teasers have no audio anyway). Don't drop those attributes.
-- The `▤ TELETEXT` button reveals the detailed info. The bug and the teletext
-  page are two stacked pages in a `program__deck-track` (200% tall); toggling
-  `is-teletext` slides the track up by one page (CSS transform, ~520ms), so the
-  bug scrolls up and the teletext page scrolls into view. The CLOSE button uses
-  a `▾` glyph because closing slides the page back *down*. Teletext closes on
-  that button and resets on channel change.
+- The `▤ TELETEXT` button swaps the picture for a **real Mode 7 teletext page**
+  (`Teletext` component), modelled on BBC Ceefax: pure black background, a
+  fixed **40-character grid** (copy is word-wrapped in JS, not by CSS), and
+  only the 8 teletext colours (`$teletext-*` in `_tokens.scss` — never blend
+  them into the phosphor palette). Page anatomy: header row with the page
+  number (`P102` = 100 + channel) and a **live HH:MM/SS clock**, a red
+  colour-block masthead with a mosaic stepped edge, a yellow **double-height**
+  headline (drawn at 2× font size and squeezed back to cell width with
+  scaleX(0.5), so its line box is naturally two rows — don't scaleY a
+  single-height row, it overflows), green tech line, white body with cyan
+  links, a blue full-width band, and the **Fastext row** of coloured links.
+  Behaviour is authentic too: opening shows the header immediately with
+  **rolling page numbers** (~0.9s carousel hunt), then rows **paint in
+  top-to-bottom** in chunks (step animations only — teletext has no fades or
+  slides); long copy splits into numbered **subpages** ("2/3") that
+  auto-rotate every 18s (click the counter or the cyan MORE to advance).
+  Closing (red CLOSE or ESC) cuts straight back to the broadcast, which keeps
+  playing underneath the whole time. Hunt/paint/rotation are all disabled
+  under `prefers-reduced-motion`. The grid is sized with container-query
+  units off the tube — cq units resolve against the nearest *ancestor*
+  container, hence the inner `__screen` div under the container `section`.
 - There is **no in-screen live demo / iframe** — that feature was removed.
   Demos are external new-tab links only (`demoUrl` → "OPEN DEMO ↗").
 - Decorative CRT layers (scanlines/vignette/glare) are `pointer-events: none`
