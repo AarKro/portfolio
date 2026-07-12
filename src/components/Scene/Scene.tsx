@@ -451,8 +451,6 @@ export function Scene({
               <span className="scene__key">S</span>
               <span className="scene__key">D</span>
             </div>
-            {/* Enter = back to the TV (the keyboard path; clicking still works) */}
-            <span className="scene__key scene__key--return">⏎</span>
           </div>
           <div className="scene__hint scene__hint--mouse">
             <span className="scene__mouse-arrow">‹</span>
