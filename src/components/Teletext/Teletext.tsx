@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type CSSProperties } from 'react';
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import type { Project } from '../../data/projects';
 import { tokenizeInlineLinks, type InlineToken } from '../InlineLink/InlineLink';
 import './Teletext.scss';
@@ -131,6 +131,14 @@ function groupLine(line: Line): WordGroup[] {
 export function Teletext({ project, channel, onClose }: TeletextProps) {
   const reducedMotion = useMemo(prefersReducedMotion, []);
 
+  // Opening hides the bug (and the TELETEXT button that had focus), which
+  // would drop keyboard focus to <body> — take it, so the page is announced
+  // and ESC/Tab work from here. ProjectProgram restores focus on close.
+  const sectionRef = useRef<HTMLElement>(null);
+  useEffect(() => {
+    sectionRef.current?.focus();
+  }, []);
+
   // ── The carousel hunt: header up instantly, page numbers rolling ─────────
   const [found, setFound] = useState(reducedMotion);
   const [rollingPage, setRollingPage] = useState(100);
@@ -186,13 +194,16 @@ export function Teletext({ project, channel, onClose }: TeletextProps) {
     return () => window.clearInterval(rotate);
   }, [found, pageCount, subpage, reducedMotion]);
 
-  // ESC is the remote's TEXT button: back to the programme.
+  // ESC is the remote's TEXT button: back to the programme. Capture phase so
+  // the ← → swallow below runs before TVSet's window-level channel keys —
+  // flipping channels would yank the page out from under the reader.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
+      if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') e.stopPropagation();
     };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
+    window.addEventListener('keydown', onKey, true);
+    return () => window.removeEventListener('keydown', onKey, true);
   }, [onClose]);
 
   // ── Header fields ─────────────────────────────────────────────────────────
@@ -255,7 +266,13 @@ export function Teletext({ project, channel, onClose }: TeletextProps) {
   );
 
   return (
-    <section className="teletext" aria-label={`Teletext page ${pageNo} — ${project.title}`}>
+    <section
+      className="teletext"
+      id="teletext-page"
+      ref={sectionRef}
+      tabIndex={-1}
+      aria-label={`Teletext page ${pageNo} — ${project.title}`}
+    >
       {/* container-query units resolve against the nearest ANCESTOR container,
           so the grid sizing lives on this inner screen div, not the section */}
       <div className="teletext__screen">

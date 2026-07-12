@@ -271,9 +271,11 @@
     flex: none;
     display: grid;
     place-items: center;
-    width: 34px;
-    height: 34px;
-    margin-top: -6px;
+    // a 44px hit target; the negative margins cancel the extra 10px so the
+    // icon keeps the old 34px box's position and the row doesn't grow
+    width: 44px;
+    height: 44px;
+    margin: -11px -5px -5px;
     color: #fff;
     background: none;
     border: none;

@@ -1,4 +1,5 @@
 import { useEffect, useRef, type ReactNode } from 'react';
+import { useFocusTrap } from '../../hooks/useFocusTrap';
 import storyRaw from '../../assets/others/ich.md?raw';
 import './StoryReader.scss';
 
@@ -33,11 +34,25 @@ function renderInline(text: string): ReactNode[] {
 
 export function StoryReader({ open, onClose }: StoryReaderProps) {
   const sheetRef = useRef<HTMLElement>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const openerRef = useRef<HTMLElement | null>(null);
 
-  // ESC closes; focus the sheet on open so PageUp/Down/arrows scroll it
+  // Focus the sheet on open so PageUp/Down/arrows scroll it; hand focus back
+  // to whatever had it on close (usually nothing — the paper is a 3D click).
+  useEffect(() => {
+    if (open) {
+      openerRef.current =
+        document.activeElement instanceof HTMLElement ? document.activeElement : null;
+      sheetRef.current?.focus();
+    } else {
+      openerRef.current?.focus();
+      openerRef.current = null;
+    }
+  }, [open]);
+
+  // ESC closes
   useEffect(() => {
     if (!open) return;
-    sheetRef.current?.focus();
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         event.stopPropagation();
@@ -48,12 +63,24 @@ export function StoryReader({ open, onClose }: StoryReaderProps) {
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [open, onClose]);
 
+  // Tab stays inside the dialog while it's open
+  useFocusTrap(dialogRef, open);
+
   if (!open) return null;
 
   return (
-    <div className="story" role="dialog" aria-modal="true" aria-label="Ich. — a short story" onClick={onClose}>
+    <div
+      ref={dialogRef}
+      className="story"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Ich. — a short story"
+      onClick={onClose}
+    >
+      {/* the story is German — lang keeps screen-reader pronunciation right */}
       <article
         className="story__sheet"
+        lang="de"
         ref={sheetRef}
         tabIndex={-1}
         onClick={(event) => event.stopPropagation()}

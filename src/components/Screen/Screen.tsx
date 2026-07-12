@@ -79,11 +79,12 @@ export function Screen({ tv }: ScreenProps) {
 
         <StaticNoise active={poweredOn && staticVisible} />
 
-        {poweredOn && osdVisible && (
-          <div className="screen__osd" aria-live="polite">
-            CH {formatChannel(channel)}
-          </div>
-        )}
+        {/* Kept mounted: a live region only announces changes to text that is
+            already in the accessibility tree, so mounting it with its content
+            (the old conditional render) said nothing to screen readers. */}
+        <div className="screen__osd" aria-live="polite">
+          {poweredOn && osdVisible ? `CH ${formatChannel(channel)}` : null}
+        </div>
 
         {poweredOn && keysHintVisible && (
           <p className="screen__keys-hint">

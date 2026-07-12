@@ -79,7 +79,8 @@ export function MobileFeed() {
 
   return (
     <>
-      <div className="feed">
+      {/* focusable so an external keyboard (iPad etc.) can scroll it directly */}
+      <div className="feed" role="region" aria-label="Project feed" tabIndex={0}>
         {PROJECTS.map((project, index) => {
           const channel = index + FIRST_PROJECT_CHANNEL;
           return (

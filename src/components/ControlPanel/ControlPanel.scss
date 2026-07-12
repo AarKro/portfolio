@@ -76,6 +76,10 @@
       background: #ff4b3a;
       box-shadow: 0 0 6px rgba(255, 75, 58, 0.9);
       animation: led-pulse 2.4s ease-in-out infinite;
+
+      @media (prefers-reduced-motion: reduce) {
+        animation: none;
+      }
     }
   }
 

@@ -101,6 +101,12 @@
     font-size: 1.3rem;
     text-shadow: 0 0 6px rgba(77, 255, 136, 0.6);
     box-shadow: 0 0 10px rgba(77, 255, 136, 0.15);
+
+    // the Enter key (back to the TV): a wide keycap set apart from WASD
+    &--return {
+      width: 81px; // spans the ASD row
+      margin-top: 6px;
+    }
   }
 
   // a little CSS mouse: body, split line and scroll wheel
@@ -147,6 +153,11 @@
 
     &:last-child {
       animation-delay: 0.9s;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      animation: none;
+      opacity: 0.7; // hold at a readable mid-state instead of pulsing
     }
   }
 }
