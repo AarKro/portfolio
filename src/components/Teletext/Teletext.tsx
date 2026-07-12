@@ -97,6 +97,8 @@ interface FastextSlot {
   color: 'red' | 'green' | 'yellow' | 'cyan';
   href?: string;
   onClick?: () => void;
+  /** Mode 7 flash attribute — hard on/off blink to draw the eye. */
+  flash?: boolean;
 }
 
 interface TeletextProps {
@@ -209,8 +211,17 @@ export function Teletext({ project, channel, onClose }: TeletextProps) {
   }
   if (project.demoUrl) links.push({ label: 'DEMO', href: project.demoUrl });
   links.slice(0, 3).forEach((link, i) => fastext.push({ ...link, color: linkColors[i] }));
-  if (fastext.length < 4 && pageCount > 1) {
-    fastext.push({ label: 'MORE', color: linkColors[fastext.length - 1], onClick: advance });
+  // The subpage advance control: a flashing (Mode 7 flash attribute) cyan MORE
+  // key when a Fastext slot is free; when the row is full of repo links, the
+  // header's subpage counter flashes instead so the affordance never vanishes.
+  const hasMoreSlot = fastext.length < 4 && pageCount > 1;
+  if (hasMoreSlot) {
+    fastext.push({
+      label: 'MORE ▸',
+      color: linkColors[fastext.length - 1],
+      onClick: advance,
+      flash: true,
+    });
   }
 
   // Rows paint in top-to-bottom in coarse chunks, like a slow decoder.
@@ -260,11 +271,11 @@ export function Teletext({ project, channel, onClose }: TeletextProps) {
           <span className="teletext__pageno">{rollingPage}</span>
         ) : pageCount > 1 ? (
           <button
-            className="teletext__subpage"
+            className={`teletext__subpage ${hasMoreSlot ? '' : 'teletext__subpage--flash'}`}
             onClick={advance}
             aria-label={`Subpage ${subpage + 1} of ${pageCount} — show next`}
           >
-            {subpage + 1}/{pageCount}
+            {subpage + 1}/{pageCount} ▸
           </button>
         ) : (
           <span>{pageNo}</span>
@@ -275,9 +286,11 @@ export function Teletext({ project, channel, onClose }: TeletextProps) {
 
       {found && (
         <div className="teletext__page" key={subpage}>
-          {/* Colour-block masthead with the classic mosaic stepped edge */}
+          {/* Colour-block masthead with the classic mosaic stepped edge. The
+              label is the SECTION name (Ceefax mastheads said NEWS or SPORT) —
+              the service name already sits in the header row above. */}
           <div className="teletext__row teletext__masthead" style={paintDelay(2)}>
-            <span className="teletext__masthead-label">AARKRO PROJECTS</span>
+            <span className="teletext__masthead-label">PROJECT GUIDE</span>
             <span className="teletext__masthead-channel">CH {pad2(channel)}</span>
           </div>
 
@@ -329,7 +342,9 @@ export function Teletext({ project, channel, onClose }: TeletextProps) {
                 ) : (
                   <button
                     key={slot.label}
-                    className={`teletext__key teletext__key--${slot.color}`}
+                    className={`teletext__key teletext__key--${slot.color} ${
+                      slot.flash ? 'teletext__key--flash' : ''
+                    }`}
                     onClick={slot.onClick}
                   >
                     {slot.label}

@@ -47,9 +47,11 @@
   }
 
   // ── Row 0: the page header ────────────────────────────────────────────────
+  // single-space gaps, Ceefax-style — the row must stay within 40 cells even
+  // with the widest middle slot (the "2/3 ▸" subpage counter)
   &__head {
     display: flex;
-    gap: 2ch;
+    gap: 1ch;
   }
 
   &__head-spacer {
@@ -75,6 +77,11 @@
       color: $teletext-bg;
       text-shadow: none;
       outline: none;
+    }
+
+    // flashes when it's the only way to reach the next subpage
+    &--flash {
+      animation: tt-flash 1.2s step-end infinite;
     }
   }
 
@@ -202,6 +209,13 @@
     text-shadow: inherit;
     cursor: pointer;
 
+    // the MORE key carries the Mode 7 flash attribute: a hard on/off blink
+    // (real teletext had no fades), steadied under the cursor so it doesn't
+    // flicker while being pressed
+    &--flash {
+      animation: tt-flash 1.2s step-end infinite;
+    }
+
     @each $name,
       $color
         in (
@@ -224,11 +238,38 @@
     }
   }
 
+  // the flashing advance controls hold steady under the cursor / keyboard
+  // focus, and don't blink at all for reduced-motion visitors
+  &__key--flash,
+  &__subpage--flash {
+    @include hover-focus {
+      animation: none;
+    }
+  }
+
   @media (prefers-reduced-motion: reduce) {
     &__page .teletext__row {
       visibility: visible;
       animation: none;
     }
+
+    &__key--flash,
+    &__subpage--flash {
+      animation: none;
+    }
+  }
+}
+
+// Mode 7 flash: hard on/off, mostly-on duty cycle so labels stay readable
+@keyframes tt-flash {
+  0%,
+  70% {
+    opacity: 1;
+  }
+
+  70.1%,
+  100% {
+    opacity: 0;
   }
 }
 

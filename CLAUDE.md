@@ -401,7 +401,9 @@ importing tokens via a relative `@use '../../styles/tokens' as *;`.
   **rolling page numbers** (~0.9s carousel hunt), then rows **paint in
   top-to-bottom** in chunks (step animations only — teletext has no fades or
   slides); long copy splits into numbered **subpages** ("2/3") that
-  auto-rotate every 18s (click the counter or the cyan MORE to advance).
+  auto-rotate every 18s (click the counter or the cyan MORE to advance —
+  whichever of the two is the page's advance control blinks, via the Mode 7
+  flash attribute: MORE when a Fastext slot is free, else the counter).
   Closing (red CLOSE or ESC) cuts straight back to the broadcast, which keeps
   playing underneath the whole time. Hunt/paint/rotation are all disabled
   under `prefers-reduced-motion`. The grid is sized with container-query
