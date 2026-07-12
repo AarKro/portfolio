@@ -323,7 +323,8 @@ body. "Website mode" is just the camera parked in front of the TV.
 start of that pull-back** (the PWR click's user activation is still fresh),
 so mouselook is already live when the flight lands — no extra click. In the
 room: WASD walking, ambient control hints in the lower corners (WASD keycaps
-left, mouse glyph right — iconic only, no explainer text by design), ESC
+left, mouse glyph right — iconic only, no explainer text by design; Enter
+still works as an unadvertised keyboard path back to the TV), ESC
 frees the mouse and any click re-locks it; clicking the TV (within 4m,
 crosshair turns amber) flies the camera back to the website framing, where
 the TV sits in standby (PWR resumes).

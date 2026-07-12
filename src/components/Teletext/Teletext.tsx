@@ -33,20 +33,42 @@ const prefersReducedMotion = () => matchesMedia('(prefers-reduced-motion: reduce
 /** One word cell-counted onto the grid; `linkEnd` carries the trailing ↗. */
 interface Word {
   text: string;
+  /** Space cells before this word on its line (0 for the first word;
+   *  justification widens it beyond 1). */
+  gap: number;
   href?: string;
   linkEnd?: boolean;
 }
 
 type Line = Word[];
 
-/** Word-wraps tokenized copy onto the grid (a link's ↗ costs a cell). */
-function wrapTokens(tokens: InlineToken[], cols: number): Line[] {
+/** Spread `extra` cells across a line's word gaps, as evenly as possible. */
+function justifyLine(line: Line, extra: number) {
+  const gaps = line.length - 1;
+  if (gaps < 1 || extra <= 0) return;
+  const base = Math.floor(extra / gaps);
+  const remainder = extra % gaps;
+  for (let i = 1; i < line.length; i++) {
+    const gap = i - 1;
+    const bonus =
+      Math.floor(((gap + 1) * remainder) / gaps) - Math.floor((gap * remainder) / gaps);
+    line[i].gap = 1 + base + bonus;
+  }
+}
+
+/**
+ * Word-wraps tokenized copy onto the grid (a link's ↗ costs a cell). When
+ * `justified`, the gaps widen so every line spans the full 40 columns, edge to
+ * edge; only the copy's last line stays ragged, as justified text always is.
+ */
+function wrapTokens(tokens: InlineToken[], cols: number, justified = false): Line[] {
   const words: Word[] = [];
   for (const token of tokens) {
     const parts = token.text.split(/\s+/).filter(Boolean);
     parts.forEach((part, i) =>
       words.push({
         text: part,
+        gap: 0,
         href: token.href,
         linkEnd: token.href ? i === parts.length - 1 : undefined,
       }),
@@ -54,19 +76,29 @@ function wrapTokens(tokens: InlineToken[], cols: number): Line[] {
   }
 
   const lines: Line[] = [];
+  const usedCells: number[] = [];
   let line: Line = [];
   let used = 0;
   for (const word of words) {
     const cells = word.text.length + (word.linkEnd ? 1 : 0);
     if (line.length && used + 1 + cells > cols) {
       lines.push(line);
+      usedCells.push(used);
       line = [];
       used = 0;
     }
-    used += (line.length ? 1 : 0) + cells;
+    word.gap = line.length ? 1 : 0;
+    used += word.gap + cells;
     line.push(word);
   }
-  if (line.length) lines.push(line);
+  if (line.length) {
+    lines.push(line);
+    usedCells.push(used);
+  }
+
+  if (justified) {
+    lines.slice(0, -1).forEach((full, i) => justifyLine(full, cols - usedCells[i]));
+  }
   return lines;
 }
 
@@ -101,6 +133,8 @@ interface TeletextProps {
 /** Consecutive words of one link (or one plain run) merged for rendering. */
 interface WordGroup {
   text: string;
+  /** Space cells before the group (justification may widen it beyond 1). */
+  gap: number;
   href?: string;
   linkEnd: boolean;
 }
@@ -110,10 +144,10 @@ function groupLine(line: Line): WordGroup[] {
   for (const word of line) {
     const last = groups[groups.length - 1];
     if (last && last.href === word.href) {
-      last.text += ` ${word.text}`;
+      last.text += ' '.repeat(word.gap) + word.text;
       last.linkEnd ||= !!word.linkEnd;
     } else {
-      groups.push({ text: word.text, href: word.href, linkEnd: !!word.linkEnd });
+      groups.push({ text: word.text, gap: word.gap, href: word.href, linkEnd: !!word.linkEnd });
     }
   }
   return groups;
@@ -161,12 +195,12 @@ export function Teletext({ project, channel, onClose }: TeletextProps) {
     const tech = wrapTokens([{ text: project.tech.join(' · ').toUpperCase() }], COLS);
     const bodyRows = BODY_ROWS - (tech.length - 1);
     const description = chunk(
-      wrapTokens(tokenizeInlineLinks(project.description), COLS),
+      wrapTokens(tokenizeInlineLinks(project.description), COLS, true),
       bodyRows,
     ).map((lines) => ({ lines }));
     const behind = project.behindTheScenes
       ? chunk(
-          wrapTokens(tokenizeInlineLinks(project.behindTheScenes), COLS),
+          wrapTokens(tokenizeInlineLinks(project.behindTheScenes), COLS, true),
           // heading + blank row eat into the page
           bodyRows - 2,
         ).map((lines) => ({ heading: 'BEHIND THE SCENES', lines }))
@@ -241,7 +275,7 @@ export function Teletext({ project, channel, onClose }: TeletextProps) {
         ? ' '
         : groupLine(line).map((group, i) => (
             <span key={i}>
-              {i > 0 && ' '}
+              {i > 0 && ' '.repeat(group.gap)}
               {group.href ? (
                 <a className="teletext__link" href={group.href} target="_blank" rel="noreferrer">
                   {group.text}

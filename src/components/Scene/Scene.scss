@@ -101,12 +101,6 @@
     font-size: 1.3rem;
     text-shadow: 0 0 6px rgba(77, 255, 136, 0.6);
     box-shadow: 0 0 10px rgba(77, 255, 136, 0.15);
-
-    // the Enter key (back to the TV): a wide keycap set apart from WASD
-    &--return {
-      width: 81px; // spans the ASD row
-      margin-top: 6px;
-    }
   }
 
   // a little CSS mouse: body, split line and scroll wheel
