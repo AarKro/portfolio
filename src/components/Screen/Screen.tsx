@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
-import { FIRST_PROJECT_CHANNEL, PROJECTS } from '../../data/projects';
+import { projectAt } from '../../data/projects';
+import { NAME } from '../../data/profile';
 import { broadcastTitle, formatChannel } from '../../utils/broadcast';
+import { matchesMedia } from '../../utils/media';
 import { orderedNeighborClips } from '../../utils/preload';
 import type { TVState } from '../../hooks/useTV';
 import { useSwipe } from '../../hooks/useSwipe';
@@ -14,8 +16,7 @@ import './Screen.scss';
 const KEYS_HINT_DURATION = 6000;
 
 /** Touch devices can't read "← →", so they get a swipe/buttons hint instead. */
-const coarsePointer =
-  typeof window !== 'undefined' && !!window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
+const coarsePointer = matchesMedia('(pointer: coarse)');
 
 interface ScreenProps {
   tv: TVState;
@@ -27,13 +28,10 @@ interface ScreenProps {
  */
 export function Screen({ tv }: ScreenProps) {
   const { channel, poweredOn, staticVisible, osdVisible } = tv;
-  const project = channel >= FIRST_PROJECT_CHANNEL ? PROJECTS[channel - FIRST_PROJECT_CHANNEL] : null;
+  const project = projectAt(channel);
 
   // warm neighbouring clips so CH ▲/▼ lands on an already-buffered video
-  const neighborVideoSources = orderedNeighborClips(
-    channel,
-    (ch) => PROJECTS[ch - FIRST_PROJECT_CHANNEL]?.videoUrl,
-  );
+  const neighborVideoSources = orderedNeighborClips(channel, (ch) => projectAt(ch)?.videoUrl);
 
   // deep-linked visitors never see the intro explainer — show a hint once
   const initialChannel = useRef(channel);
@@ -57,7 +55,7 @@ export function Screen({ tv }: ScreenProps) {
 
   // Browser tab mirrors the broadcast
   useEffect(() => {
-    document.title = poweredOn ? broadcastTitle(channel, project) : 'Standby — Aaron Kromer';
+    document.title = poweredOn ? broadcastTitle(channel, project) : `Standby — ${NAME}`;
   }, [channel, poweredOn, project]);
 
   return (

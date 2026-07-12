@@ -14,6 +14,7 @@ import {
   WORLD_PER_PX,
   buildRoom,
 } from './room/buildRoom';
+import { createFlightController } from './cameraFlight';
 import type { ChessGame } from './room/chess/chessGame';
 import { setupPainting } from './room/painting/painting';
 import './Scene.scss';
@@ -45,20 +46,6 @@ interface SceneProps {
   /** The DOM TV (TVSet) — projected onto the 3D TV body via CSS3D */
   children: ReactNode;
 }
-
-interface CameraFlight {
-  fromPos: THREE.Vector3;
-  toPos: THREE.Vector3;
-  fromQuat: THREE.Quaternion;
-  toQuat: THREE.Quaternion;
-  fromFov: number;
-  toFov: number;
-  elapsed: number;
-  duration: number;
-  onDone: () => void;
-}
-
-const easeInOut = (t: number) => t * t * (3 - 2 * t);
 
 function quaternionLookingAt(from: THREE.Vector3, target: THREE.Vector3): THREE.Quaternion {
   const matrix = new THREE.Matrix4().lookAt(from, target, new THREE.Vector3(0, 1, 0));
@@ -198,7 +185,7 @@ export function Scene({
       closeupPosition.set(0, cabinetCenterY, TV_FRONT_Z + distance);
 
       // keep the website framing locked while parked in front of the TV
-      if (modeRef.current === 'tv' && !flight) {
+      if (modeRef.current === 'tv' && !flight.active) {
         camera.position.copy(closeupPosition);
         camera.quaternion.copy(quaternionLookingAt(closeupPosition, closeupTarget));
         camera.fov = CLOSEUP_FOV;
@@ -211,35 +198,21 @@ export function Scene({
     const raycaster = new THREE.Raycaster();
     const screenCenter = new THREE.Vector2(0, 0);
     const keys = new Set<string>();
-    let flight: CameraFlight | null = null;
+    const flight = createFlightController(camera);
     let isPainting = false; // mouse button held while aiming at the easel canvas
 
     const showCrosshair = (visible: boolean) =>
       crosshairRef.current?.classList.toggle('scene__crosshair--visible', visible);
 
-    const startFlight = (
-      toPos: THREE.Vector3,
-      toQuat: THREE.Quaternion,
-      toFov: number,
-      duration: number,
-      onDone: () => void,
-    ) => {
-      flight = {
-        fromPos: camera.position.clone(),
-        toPos: toPos.clone(),
-        fromQuat: camera.quaternion.clone(),
-        toQuat: toQuat.clone(),
-        fromFov: camera.fov,
-        toFov,
-        elapsed: 0,
-        duration,
-        onDone,
-      };
+    /** Nearest raycast hit on `object` is within `reach` metres. */
+    const hitWithin = (object: THREE.Object3D, reach: number) => {
+      const hit = raycaster.intersectObject(object, true)[0];
+      return !!hit && hit.distance <= reach;
     };
 
     apiRef.current = {
       flyToRoom: () => {
-        startFlight(
+        flight.start(
           STANDING_SPOT,
           quaternionLookingAt(STANDING_SPOT, closeupTarget),
           WALKING_FOV,
@@ -255,7 +228,7 @@ export function Scene({
       },
       flyToTV: () => {
         // set the flight before unlocking so the unlock handler stays quiet
-        startFlight(
+        flight.start(
           closeupPosition,
           quaternionLookingAt(closeupPosition, closeupTarget),
           CLOSEUP_FOV,
@@ -273,7 +246,7 @@ export function Scene({
     };
 
     const onClick = () => {
-      if (flight || modeRef.current !== 'room') return;
+      if (flight.active || modeRef.current !== 'room') return;
       if (!controls.isLocked) {
         controls.lock();
         return;
@@ -281,17 +254,13 @@ export function Scene({
       raycaster.setFromCamera(screenCenter, camera);
       if (chessGame?.tryClick(raycaster)) return;
       // the story paper: free the cursor so the reader can scroll
-      if (storyPaper) {
-        const paperHit = raycaster.intersectObject(storyPaper, true)[0];
-        if (paperHit && paperHit.distance <= PAPER_REACH) {
-          controls.unlock();
-          showCrosshair(false);
-          callbacksRef.current.onPaperClicked();
-          return;
-        }
+      if (storyPaper && hitWithin(storyPaper, PAPER_REACH)) {
+        controls.unlock();
+        showCrosshair(false);
+        callbacksRef.current.onPaperClicked();
+        return;
       }
-      const hit = raycaster.intersectObject(tvGroup, true)[0];
-      if (hit && hit.distance <= TV_REACH) callbacksRef.current.onTVClicked();
+      if (hitWithin(tvGroup, TV_REACH)) callbacksRef.current.onTVClicked();
     };
     container.addEventListener('click', onClick);
 
@@ -299,7 +268,7 @@ export function Scene({
     // canvas it starts a stroke. The stroke itself continues in the loop so
     // dragging the crosshair draws continuously.
     const onPointerDown = () => {
-      if (flight || modeRef.current !== 'room' || !controls.isLocked || !painter) return;
+      if (flight.active || modeRef.current !== 'room' || !controls.isLocked || !painter) return;
       raycaster.setFromCamera(screenCenter, camera);
       const dab = raycaster.intersectObjects(painter.dabs, false)[0];
       if (dab && dab.distance <= PAINT_REACH) {
@@ -338,7 +307,7 @@ export function Scene({
       if (
         event.code === 'Enter' &&
         modeRef.current === 'room' &&
-        !flight &&
+        !flight.active &&
         !storyOpenRef.current
       ) {
         callbacksRef.current.onTVClicked();
@@ -375,20 +344,8 @@ export function Scene({
       raf = requestAnimationFrame(loop);
       const delta = Math.min(clock.getDelta(), 0.05);
 
-      if (flight) {
+      if (flight.update(delta)) {
         needsRender = true;
-        flight.elapsed += delta;
-        const t = THREE.MathUtils.clamp(flight.elapsed / flight.duration, 0, 1);
-        const eased = easeInOut(t);
-        camera.position.lerpVectors(flight.fromPos, flight.toPos, eased);
-        camera.quaternion.slerpQuaternions(flight.fromQuat, flight.toQuat, eased);
-        camera.fov = THREE.MathUtils.lerp(flight.fromFov, flight.toFov, eased);
-        camera.updateProjectionMatrix();
-        if (t >= 1) {
-          const { onDone } = flight;
-          flight = null;
-          onDone();
-        }
       } else if (controls.isLocked) {
         needsRender = true;
         const forward = (keys.has('KeyW') ? 1 : 0) - (keys.has('KeyS') ? 1 : 0);
@@ -399,30 +356,22 @@ export function Scene({
         camera.position.z = THREE.MathUtils.clamp(camera.position.z, BOUNDS.minZ, BOUNDS.maxZ);
         camera.position.y = EYE_HEIGHT;
 
-        // crosshair turns amber over anything interactive
         raycaster.setFromCamera(screenCenter, camera);
-        const tvHit = raycaster.intersectObject(tvGroup, true)[0];
-        let targetable = !!tvHit && tvHit.distance <= TV_REACH;
 
-        if (!targetable && chessGame?.isInteractive(raycaster)) targetable = true;
-
-        if (!targetable && storyPaper) {
-          const paperHit = raycaster.intersectObject(storyPaper, true)[0];
-          targetable = !!paperHit && paperHit.distance <= PAPER_REACH;
+        // painting continues while the button is held, wherever the crosshair is
+        if (painter && isPainting) {
+          const stroke = raycaster.intersectObject(painter.surface, false)[0];
+          if (stroke?.uv && stroke.distance <= PAINT_REACH) painter.paint(stroke.uv);
+          else painter.liftBrush(); // wandered off the canvas: break the stroke
         }
 
-        if (painter) {
-          if (isPainting) {
-            const stroke = raycaster.intersectObject(painter.surface, false)[0];
-            if (stroke?.uv && stroke.distance <= PAINT_REACH) painter.paint(stroke.uv);
-            else painter.liftBrush(); // wandered off the canvas: break the stroke
-          }
-          if (!targetable) {
-            const paintHit = raycaster.intersectObjects([painter.surface, ...painter.dabs], false)[0];
-            targetable = !!paintHit && paintHit.distance <= PAINT_REACH;
-          }
-        }
-
+        // crosshair turns amber over anything interactive
+        const targetable =
+          hitWithin(tvGroup, TV_REACH) ||
+          !!chessGame?.isInteractive(raycaster) ||
+          (!!storyPaper && hitWithin(storyPaper, PAPER_REACH)) ||
+          (!!painter &&
+            [painter.surface, ...painter.dabs].some((target) => hitWithin(target, PAINT_REACH)));
         crosshairRef.current?.classList.toggle('scene__crosshair--target', targetable);
       }
 

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { CHANNEL_COUNT } from '../data/projects';
-import { channelFromHash } from '../utils/broadcast';
+import { channelFromHash, setChannelHash } from '../utils/broadcast';
 
 /** How long the static noise covers the screen on a channel switch (ms) */
 const STATIC_DURATION = 450;
@@ -59,7 +59,7 @@ export function useTV(): TVState {
       if (wrapped === channelRef.current) return;
       channelRef.current = wrapped;
       setChannel(wrapped);
-      window.history.replaceState(null, '', `#ch-${wrapped}`);
+      setChannelHash(wrapped);
       burst();
     },
     [burst],

@@ -9,6 +9,7 @@
  */
 import * as THREE from 'three';
 import { Chess } from 'chess.js';
+import { easeInOut } from '../../../../utils/easing';
 import { BOARD_TOP_Y, type ChessPieces } from './chessPieces';
 
 const FILES = 'abcdefgh';
@@ -36,8 +37,6 @@ export interface ChessGame {
   /** Advance animations; returns true while a frame still needs drawing. */
   update(delta: number): boolean;
 }
-
-const easeInOut = (t: number) => t * t * (3 - 2 * t);
 
 interface Tween {
   mesh: THREE.Mesh;

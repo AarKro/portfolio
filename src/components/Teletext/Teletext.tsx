@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import type { Project } from '../../data/projects';
+import { matchesMedia } from '../../utils/media';
 import { tokenizeInlineLinks, type InlineToken } from '../InlineLink/InlineLink';
 import './Teletext.scss';
 
@@ -27,10 +28,7 @@ const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', '
 
 const pad2 = (n: number) => String(n).padStart(2, '0');
 
-const prefersReducedMotion = () =>
-  typeof window !== 'undefined' &&
-  !!window.matchMedia &&
-  window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const prefersReducedMotion = () => matchesMedia('(prefers-reduced-motion: reduce)');
 
 /** One word cell-counted onto the grid; `linkEnd` carries the trailing ↗. */
 interface Word {
@@ -212,6 +210,7 @@ export function Teletext({ project, channel, onClose }: TeletextProps) {
     links.push({ label: 'CODE', href: project.githubUrl });
   }
   if (project.demoUrl) links.push({ label: 'DEMO', href: project.demoUrl });
+  // only 3 coloured slots — a channel with 3 repos AND a demo drops the demo
   links.slice(0, 3).forEach((link, i) => fastext.push({ ...link, color: linkColors[i] }));
   // The subpage advance control: a flashing cyan MORE key when a Fastext slot
   // is free; when the row is full, the header's subpage counter flashes

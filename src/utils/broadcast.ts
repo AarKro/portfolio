@@ -1,7 +1,23 @@
 import { CHANNEL_COUNT, type Project } from '../data/projects';
+import { NAME, TAGLINE } from '../data/profile';
 
 /** The site/SEO title — must stay in sync with the <title> in index.html. */
-export const SITE_TITLE = 'Aaron Kromer — Frontend Developer & Interaction Designer';
+export const SITE_TITLE = `${NAME} — ${TAGLINE}`;
+
+/** The `#ch-N` fragment for a channel — the one place the format lives. */
+export function channelHash(channel: number): string {
+  return `#ch-${channel}`;
+}
+
+/** Mirrors the channel to the URL hash (without a history entry). */
+export function setChannelHash(channel: number): void {
+  window.history.replaceState(null, '', channelHash(channel));
+}
+
+/** Absolute shareable deep link to a channel. */
+export function channelUrl(channel: number): string {
+  return `${window.location.origin}${window.location.pathname}${channelHash(channel)}`;
+}
 
 /**
  * Reads the channel from the URL hash (`#ch-5` → 5); channels are shareable
@@ -23,5 +39,5 @@ export function formatChannel(channel: number): string {
  * channel, the site title for the intro/profile.
  */
 export function broadcastTitle(channel: number, project: Project | null): string {
-  return project ? `CH ${formatChannel(channel)} · ${project.title} — Aaron Kromer` : SITE_TITLE;
+  return project ? `CH ${formatChannel(channel)} · ${project.title} — ${NAME}` : SITE_TITLE;
 }

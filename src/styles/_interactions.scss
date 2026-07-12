@@ -1,4 +1,5 @@
 // Shared SCSS mixins.
+@use 'tokens' as *;
 
 // Hide the scrollbar but keep the element scrollable (Firefox + WebKit).
 @mixin hide-scrollbar {
@@ -38,6 +39,27 @@
   } @else {
     background: rgba(255, 255, 255, 0.1);
     box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.18);
+  }
+}
+
+// The feed's "palette mesh" wash: soft pools of the palette bled into the
+// corners. `light` backs the profile hero; `dark` grounds the no-clip video
+// card and its grid tile (one recipe, so the two can't drift apart).
+@mixin palette-mesh($tone: dark) {
+  @if $tone == light {
+    background:
+      radial-gradient(58% 48% at 14% 6%, rgba($feed-violet, 0.2), transparent 72%),
+      radial-gradient(54% 44% at 90% 2%, rgba($feed-accent, 0.16), transparent 72%),
+      radial-gradient(60% 55% at 88% 100%, rgba($feed-like, 0.1), transparent 74%),
+      radial-gradient(58% 52% at 6% 98%, rgba($feed-amber, 0.13), transparent 74%),
+      linear-gradient(168deg, #faf9ff 0%, #efedfb 100%);
+  } @else {
+    background:
+      radial-gradient(70% 55% at 18% 14%, rgba($feed-violet, 0.45), transparent 70%),
+      radial-gradient(60% 50% at 88% 8%, rgba($feed-accent, 0.2), transparent 70%),
+      radial-gradient(65% 55% at 86% 96%, rgba($feed-like, 0.22), transparent 72%),
+      radial-gradient(60% 50% at 8% 92%, rgba($feed-amber, 0.16), transparent 72%),
+      linear-gradient(160deg, #1a1530 0%, #0c0b16 65%, #07070d 100%);
   }
 }
 

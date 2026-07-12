@@ -1,4 +1,5 @@
-import { FIRST_PROJECT_CHANNEL, PROJECTS } from '../../../data/projects';
+import { channelOf, PROJECTS } from '../../../data/projects';
+import { GITHUB_URL, LINKEDIN_URL, TAGLINE } from '../../../data/profile';
 import GithubIcon from '../../../assets/icons/github.svg?react';
 import LinkedinIcon from '../../../assets/icons/linkedin.svg?react';
 import './FeedProfile.scss';
@@ -24,17 +25,13 @@ export function FeedProfile({ open, justViewedChannel, onOpenProject }: FeedProf
             {/* deterministic break: two lines on phones, one on tablets */}
             <h1 className="feed__intro-title">Aaron <br className="feed__name-break" />Kromer</h1>
           </div>
-          <p className="feed__intro-kicker">Frontend Developer &amp; Interaction Designer</p>
+          <p className="feed__intro-kicker">{TAGLINE}</p>
           <p className="feed__intro-contact">
-            <a href="https://github.com/AarKro" target="_blank" rel="noreferrer">
+            <a href={GITHUB_URL} target="_blank" rel="noreferrer">
               <GithubIcon />
               GitHub
             </a>
-            <a
-              href="https://www.linkedin.com/in/aaron-kromer"
-              target="_blank"
-              rel="noreferrer"
-            >
+            <a href={LINKEDIN_URL} target="_blank" rel="noreferrer">
               <LinkedinIcon />
               LinkedIn
             </a>
@@ -45,7 +42,7 @@ export function FeedProfile({ open, justViewedChannel, onOpenProject }: FeedProf
 
       <div className="feed__grid">
         {PROJECTS.map((project, index) => {
-          const channel = index + FIRST_PROJECT_CHANNEL;
+          const channel = channelOf(index);
           return (
             <button
               key={project.id}

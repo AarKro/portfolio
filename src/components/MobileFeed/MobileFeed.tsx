@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
-import { FIRST_PROJECT_CHANNEL, PROJECTS } from '../../data/projects';
-import { broadcastTitle, channelFromHash } from '../../utils/broadcast';
+import { channelOf, FIRST_PROJECT_CHANNEL, projectAt, PROJECTS } from '../../data/projects';
+import { broadcastTitle, channelFromHash, setChannelHash } from '../../utils/broadcast';
 import { orderedNeighborClips, PRELOAD_RADIUS } from '../../utils/preload';
 import { VideoPreloader } from '../VideoPreloader/VideoPreloader';
 import { FeedCard } from './FeedCard/FeedCard';
@@ -13,7 +13,7 @@ import './MobileFeed.scss';
  * deep links as the desktop TV; no three.js.
  */
 export function MobileFeed() {
-  const sectionsRef = useRef<(HTMLElement | null)[]>([]);
+  const sectionsRef = useRef(new Map<number, HTMLElement>());
   // The profile is an overlay, not a swipe card: `profileOpen` toggles it;
   // `activeChannel` always tracks a project (2..N).
   const [initialChannel] = useState(channelFromHash);
@@ -26,7 +26,7 @@ export function MobileFeed() {
 
   // Deep-linked straight to a project: put it in view under the closed profile
   useEffect(() => {
-    if (initialChannel !== 1) sectionsRef.current[initialChannel - 1]?.scrollIntoView();
+    if (initialChannel !== 1) sectionsRef.current.get(initialChannel)?.scrollIntoView();
   }, [initialChannel]);
 
   // Whichever project card is most in view becomes the active channel
@@ -40,16 +40,15 @@ export function MobileFeed() {
       },
       { threshold: 0.6 },
     );
-    sectionsRef.current.forEach((section) => section && observer.observe(section));
+    sectionsRef.current.forEach((section) => observer.observe(section));
     return () => observer.disconnect();
   }, []);
 
 
   // Mirror to the URL hash + tab title — the profile is channel 1
   useEffect(() => {
-    const channel = profileOpen ? 1 : activeChannel;
-    window.history.replaceState(null, '', `#ch-${channel}`);
-    const project = profileOpen ? null : PROJECTS[activeChannel - FIRST_PROJECT_CHANNEL];
+    setChannelHash(profileOpen ? 1 : activeChannel);
+    const project = profileOpen ? null : projectAt(activeChannel);
     document.title = broadcastTitle(activeChannel, project);
   }, [profileOpen, activeChannel]);
 
@@ -59,12 +58,13 @@ export function MobileFeed() {
   }, [profileOpen]);
 
   const setSectionRef = (channel: number) => (el: HTMLElement | null) => {
-    sectionsRef.current[channel - 1] = el;
+    if (el) sectionsRef.current.set(channel, el);
+    else sectionsRef.current.delete(channel);
   };
 
   // tile tap: scroll the feed under the overlay, then slide the profile away
   const openProject = (channel: number) => {
-    sectionsRef.current[channel - 1]?.scrollIntoView();
+    sectionsRef.current.get(channel)?.scrollIntoView();
     setProfileOpen(false);
   };
 
@@ -78,7 +78,7 @@ export function MobileFeed() {
       {/* focusable so an external keyboard (iPad etc.) can scroll it directly */}
       <div className="feed" role="region" aria-label="Project feed" tabIndex={0}>
         {PROJECTS.map((project, index) => {
-          const channel = index + FIRST_PROJECT_CHANNEL;
+          const channel = channelOf(index);
           return (
             <FeedCard
               key={project.id}
@@ -97,7 +97,7 @@ export function MobileFeed() {
           TV, portrait sources here */}
       <VideoPreloader
         sources={orderedNeighborClips(activeChannel, (ch) => {
-          const p = PROJECTS[ch - FIRST_PROJECT_CHANNEL];
+          const p = projectAt(ch);
           return p?.mobileVideoUrl ?? p?.videoUrl;
         })}
       />

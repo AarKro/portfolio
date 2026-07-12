@@ -41,14 +41,18 @@ Per project:
 - `demoUrl` (optional) is the hosted demo; it becomes the "OPEN DEMO ↗"
   new-tab link (there is no in-screen iframe — demos are never framed).
 - `videoUrl` (optional) gives the channel a short teaser clip that autoplays
-  (muted, looping) full-bleed as the program backdrop. Import the file from
-  `../assets/videos` so Vite bundles + fingerprints it (`import clip from
-  '../assets/videos/foo_landscape.mp4'; … videoUrl: clip`), don't hand-write a
-  path. Compress before adding (see "Adding a teaser clip").
-- `posterUrl` (optional, pairs with `videoUrl`): the clip's first frame as a
-  small image. Used as the `<video poster>` (instant frame while the clip loads,
-  desktop + feed) and as the project's thumbnail in the feed's profile grid.
-  Generate it from the video (see "Adding a teaser clip") and import it.
+  (muted, looping) full-bleed as the program backdrop. All the clip/poster
+  fields come from spreading `...clip('<name>')` into the entry — the `clip()`
+  helper in `projects.ts` glob-imports `src/assets/videos` + `src/assets/
+  thumbnails` and derives `videoUrl` / `mobileVideoUrl` / `posterUrl` /
+  `mobilePosterUrl` / `gridPosterUrl` from the `encode-clip.sh` file naming
+  convention (missing optional files are simply omitted). So: run the script,
+  then add `...clip('foo')`. Compress before adding (see "Adding a teaser
+  clip").
+- `posterUrl` (set by `clip()`, pairs with `videoUrl`): the clip's first frame
+  as a small image. Used as the `<video poster>` (instant frame while the clip
+  loads, desktop + feed) and as the project's thumbnail in the feed's profile
+  grid.
 - `behindTheScenes` (optional): one sentence on the interesting technical or
   design decision — written for hiring managers. Must be factually grounded
   in the repo (check its README/package.json), never invented. Shown on the
@@ -131,9 +135,10 @@ can decode — modern engines (Chrome, Firefox, Safari 17.4+) take AV1, everythi
 else falls through to H.264. No JS, no bandwidth detection. The three `<video>`
 sites (`ProjectProgram`, `FeedCard`, `VideoPreloader`) all render
 `<ClipSources>` children. `av1` is **optional**: a clip ships H.264-only until
-re-encoded, then you just add the `av1:` URL to its entry in `projects.ts` and
-it lights up everywhere. `-an` strips audio (clips play muted), `+faststart`
-lets them start before fully downloaded.
+re-encoded, then dropping the `*_av1.mp4` files into `src/assets/videos` is
+enough — `clip()` picks them up by name and they light up everywhere. `-an`
+strips audio (clips play muted), `+faststart` lets them start before fully
+downloaded.
 
 Posters are the first frame (codec-agnostic): the landscape one is `posterUrl`
 (desktop `<video poster>`), the portrait one is `mobilePosterUrl` (feed card
@@ -145,13 +150,17 @@ three; re-run it whenever the clips change.
 
 ```
 src/
-  data/projects.ts          ← content (see above)
+  data/projects.ts          ← content (see above) + projectAt/channelOf (the
+                              channel↔index convention lives ONLY here) + the
+                              clip() asset helper
+  data/profile.ts           ← name, tagline, GitHub/LinkedIn URLs (one place)
   hooks/useTV.ts            ← all TV behavior: channel state, static burst,
                               OSD timing, power, URL hash sync (#ch-N)
   components/               ← one folder per component: Name/Name.tsx + Name.scss
     Scene/                  ← THE view: 3D room + camera + the DOM TV in 3D
       Scene.tsx             ← WebGL+CSS3D renderers, pointer lock, WASD,
                               camera flights, DOM↔world size sync
+      cameraFlight.ts       ← the eased position/quaternion/FOV flight controller
       buildRoom.ts          ← WebGL geometry (placeholder primitives,
                               to be replaced by a GLTF model later)
     TVSet/                  ← the DOM TV (cabinet, screen, controls, antenna,
@@ -183,19 +192,26 @@ src/
       FeedSheet/            ← the drag-to-dismiss bottom sheet
   hooks/useDeviceTier.ts   ← desktop | mobile classification (capability-based)
   hooks/useSwipe.ts        ← tiny pointer-based swipe detector (no deps)
+  hooks/useDialog.ts       ← shared modal contract: focus in/restore, ESC, Tab
+                              trap (FeedSheet + StoryReader)
   utils/noise.ts            ← static-noise pixel fill (used by StaticNoise)
   utils/broadcast.ts        ← SITE_TITLE + formatChannel/broadcastTitle helpers
-                              (shared by the TV and the feed; keeps titles in sync)
+                              AND the #ch-N hash format (channelHash/
+                              setChannelHash/channelUrl/channelFromHash) —
+                              shared by the TV and the feed
   utils/preload.ts          ← clip-preloading policy shared by the TV and the
                               feed: ±2 window, forward-first priority order
                               (feeds VideoPreloader in both)
+  utils/easing.ts           ← easeInOut (camera flights + chess tweens)
+  utils/media.ts            ← matchesMedia() one-shot media query check
   assets/                   ← bundled assets, grouped by kind:
     videos/                 ← teaser clips, `_landscape` (CRT) + `_portrait` (feed, centre-cropped)
     thumbnails/             ← video first-frame posters (loading + grid), `_landscape`/`_portrait`
     icons/                  ← *.svg, imported as components via `?react` (svgr)
   styles/_tokens.scss       ← ALL colors and fonts; theme changes happen here
   styles/_interactions.scss ← shared SCSS mixins: `hover-focus` (touch-safe
-                              hover + focus), `glass`, `hide-scrollbar`, `smpte-bars`
+                              hover + focus), `glass`, `hide-scrollbar`,
+                              `smpte-bars`, `palette-mesh` (the feed's wash)
   styles/global.scss        ← reset + base
 ```
 

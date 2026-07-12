@@ -4,55 +4,43 @@
  * when entries are added/removed. See CLAUDE.md for the per-field details.
  */
 
-import scholarsMateVideo from '../assets/videos/scholars_mate_landscape.mp4';
-import scholarsMateVideoAv1 from '../assets/videos/scholars_mate_landscape_av1.mp4';
-import scholarsMateVideoPortrait from '../assets/videos/scholars_mate_portrait.mp4';
-import scholarsMateVideoPortraitAv1 from '../assets/videos/scholars_mate_portrait_av1.mp4';
-import scholarsMatePoster from '../assets/thumbnails/scholars_mate_landscape.jpg';
-import scholarsMatePosterPortrait from '../assets/thumbnails/scholars_mate_portrait.jpg';
-import wowGraveyard3dVideo from '../assets/videos/wow_graveyard_3d_landscape.mp4';
-import wowGraveyard3dVideoAv1 from '../assets/videos/wow_graveyard_3d_landscape_av1.mp4';
-import wowGraveyard3dVideoPortrait from '../assets/videos/wow_graveyard_3d_portrait.mp4';
-import wowGraveyard3dVideoPortraitAv1 from '../assets/videos/wow_graveyard_3d_portrait_av1.mp4';
-import wowGraveyard3dPoster from '../assets/thumbnails/wow_graveyard_3d_landscape.jpg';
-import wowGraveyard3dPosterPortrait from '../assets/thumbnails/wow_graveyard_3d_portrait.jpg';
-import wowGraveyard3dGridPoster from '../assets/thumbnails/wow_graveyard_3d_grid.jpg';
-import scholarsMateGridPoster from '../assets/thumbnails/scholars_mate_grid.jpg';
-import peggyAshcroftVideo from '../assets/videos/peggy_ashcroft_landscape.mp4';
-import peggyAshcroftVideoAv1 from '../assets/videos/peggy_ashcroft_landscape_av1.mp4';
-import peggyAshcroftVideoPortrait from '../assets/videos/peggy_ashcroft_portrait.mp4';
-import peggyAshcroftVideoPortraitAv1 from '../assets/videos/peggy_ashcroft_portrait_av1.mp4';
-import peggyAshcroftPoster from '../assets/thumbnails/peggy_ashcroft_landscape.jpg';
-import peggyAshcroftPosterPortrait from '../assets/thumbnails/peggy_ashcroft_portrait.jpg';
-import peggyAshcroftGridPoster from '../assets/thumbnails/peggy_ashcroft_grid.jpg';
-import zephirFlexVideo from '../assets/videos/zephir-flex_landscape.mp4';
-import zephirFlexVideoAv1 from '../assets/videos/zephir-flex_landscape_av1.mp4';
-import zephirFlexVideoPortrait from '../assets/videos/zephir-flex_portrait.mp4';
-import zephirFlexVideoPortraitAv1 from '../assets/videos/zephir-flex_portrait_av1.mp4';
-import zephirFlexPoster from '../assets/thumbnails/zephir-flex_landscape.jpg';
-import zephirFlexPosterPortrait from '../assets/thumbnails/zephir-flex_portrait.jpg';
-import zephirFlexGridPoster from '../assets/thumbnails/zephir-flex_grid.jpg';
-import sugarcubesVideo from '../assets/videos/sugarcubes_landscape.mp4';
-import sugarcubesVideoAv1 from '../assets/videos/sugarcubes_landscape_av1.mp4';
-import sugarcubesVideoPortrait from '../assets/videos/sugarcubes_portrait.mp4';
-import sugarcubesVideoPortraitAv1 from '../assets/videos/sugarcubes_portrait_av1.mp4';
-import sugarcubesPoster from '../assets/thumbnails/sugarcubes_landscape.jpg';
-import sugarcubesPosterPortrait from '../assets/thumbnails/sugarcubes_portrait.jpg';
-import sugarcubesGridPoster from '../assets/thumbnails/sugarcubes_grid.jpg';
-import cssToolboxVideo from '../assets/videos/css_toolbox_landscape.mp4';
-import cssToolboxVideoAv1 from '../assets/videos/css_toolbox_landscape_av1.mp4';
-import cssToolboxVideoPortrait from '../assets/videos/css_toolbox_portrait.mp4';
-import cssToolboxVideoPortraitAv1 from '../assets/videos/css_toolbox_portrait_av1.mp4';
-import cssToolboxPoster from '../assets/thumbnails/css_toolbox_landscape.jpg';
-import cssToolboxPosterPortrait from '../assets/thumbnails/css_toolbox_portrait.jpg';
-import cssToolboxGridPoster from '../assets/thumbnails/css_toolbox_grid.jpg';
-import zugliVideo from '../assets/videos/zugli_landscape.mp4';
-import zugliVideoAv1 from '../assets/videos/zugli_landscape_av1.mp4';
-import zugliVideoPortrait from '../assets/videos/zugli_portrait.mp4';
-import zugliVideoPortraitAv1 from '../assets/videos/zugli_portrait_av1.mp4';
-import zugliPoster from '../assets/thumbnails/zugli_landscape.jpg';
-import zugliPosterPortrait from '../assets/thumbnails/zugli_portrait.jpg';
-import zugliGridPoster from '../assets/thumbnails/zugli_grid.jpg';
+// Every clip encoded by scripts/encode-clip.sh, keyed by its full source path.
+// Eager, so the assets are bundled + fingerprinted exactly like plain imports.
+const videos = import.meta.glob<string>('../assets/videos/*.mp4', {
+  eager: true,
+  import: 'default',
+});
+const thumbnails = import.meta.glob<string>('../assets/thumbnails/*.jpg', {
+  eager: true,
+  import: 'default',
+});
+
+/**
+ * All video/poster fields for one encoded clip, derived from the file naming
+ * convention of scripts/encode-clip.sh — adding a clip to a project is
+ * `...clip('name')` once the script has run. Optional files (AV1 encodes, the
+ * portrait clip, posters) are simply omitted when absent; the landscape H.264
+ * file is the one hard requirement.
+ */
+function clip(name: string): Pick<
+  Project,
+  'videoUrl' | 'mobileVideoUrl' | 'posterUrl' | 'mobilePosterUrl' | 'gridPosterUrl'
+> {
+  const video = (suffix: string) => videos[`../assets/videos/${name}${suffix}.mp4`];
+  const poster = (suffix: string) => thumbnails[`../assets/thumbnails/${name}${suffix}.jpg`];
+
+  const landscape = video('_landscape');
+  if (!landscape) throw new Error(`No clip named ${name}_landscape.mp4 in src/assets/videos`);
+  const portrait = video('_portrait');
+
+  return {
+    videoUrl: { av1: video('_landscape_av1'), h264: landscape },
+    mobileVideoUrl: portrait ? { av1: video('_portrait_av1'), h264: portrait } : undefined,
+    posterUrl: poster('_landscape'),
+    mobilePosterUrl: poster('_portrait'),
+    gridPosterUrl: poster('_grid'),
+  };
+}
 
 /** A named source-code link, for channels that bundle several repos. */
 export interface RepoLink {
@@ -110,11 +98,7 @@ export const PROJECTS: Project[] = [
     tech: ['ESP32', 'Rust', 'Hardware'],
     githubUrl: 'https://github.com/AarKro/zugli',
     demoUrl: 'https://aarkro.github.io/zugli/',
-    videoUrl: { av1: zugliVideoAv1, h264: zugliVideo },
-    mobileVideoUrl: { av1: zugliVideoPortraitAv1, h264: zugliVideoPortrait },
-    posterUrl: zugliPoster,
-    mobilePosterUrl: zugliPosterPortrait,
-    gridPosterUrl: zugliGridPoster,
+    ...clip('zugli'),
   },
   {
     id: 'scholars-mate',
@@ -124,11 +108,7 @@ export const PROJECTS: Project[] = [
     tech: ['SVG Animation', 'Scrollytelling', 'CSS'],
     githubUrl: 'https://github.com/AarKro/scholars-mate',
     demoUrl: 'https://aarkro.github.io/scholars-mate/',
-    videoUrl: { av1: scholarsMateVideoAv1, h264: scholarsMateVideo },
-    mobileVideoUrl: { av1: scholarsMateVideoPortraitAv1, h264: scholarsMateVideoPortrait },
-    posterUrl: scholarsMatePoster,
-    mobilePosterUrl: scholarsMatePosterPortrait,
-    gridPosterUrl: scholarsMateGridPoster,
+    ...clip('scholars_mate'),
   },
   {
     id: 'zephir-flex',
@@ -138,11 +118,7 @@ export const PROJECTS: Project[] = [
     tech: ['Type Design', 'Variable Fonts', 'CSS'],
     githubUrl: 'https://github.com/AarKro/zephir-flex',
     demoUrl: 'https://aarkro.github.io/zephir-flex/',
-    videoUrl: { av1: zephirFlexVideoAv1, h264: zephirFlexVideo },
-    mobileVideoUrl: { av1: zephirFlexVideoPortraitAv1, h264: zephirFlexVideoPortrait },
-    posterUrl: zephirFlexPoster,
-    mobilePosterUrl: zephirFlexPosterPortrait,
-    gridPosterUrl: zephirFlexGridPoster,
+    ...clip('zephir-flex'),
   },
   {
     id: 'wow-graveyard-3d',
@@ -152,11 +128,7 @@ export const PROJECTS: Project[] = [
     tech: ['TypeScript', 'three.js', 'Procedural Generation'],
     githubUrl: 'https://github.com/AarKro/wow-graveyard-3d',
     demoUrl: 'https://aarkro.github.io/wow-graveyard-3d/',
-    videoUrl: { av1: wowGraveyard3dVideoAv1, h264: wowGraveyard3dVideo },
-    mobileVideoUrl: { av1: wowGraveyard3dVideoPortraitAv1, h264: wowGraveyard3dVideoPortrait },
-    posterUrl: wowGraveyard3dPoster,
-    mobilePosterUrl: wowGraveyard3dPosterPortrait,
-    gridPosterUrl: wowGraveyard3dGridPoster,
+    ...clip('wow_graveyard_3d'),
   },
   {
     id: 'sugarcubes',
@@ -166,11 +138,7 @@ export const PROJECTS: Project[] = [
     tech: ['Pure CSS', 'CSS Animation', 'Responsive Design'],
     githubUrl: 'https://github.com/AarKro/modul_webtech',
     demoUrl: 'https://aarkro.github.io/modul_webtech/sugarcubes/sugarcubes.html',
-    videoUrl: { av1: sugarcubesVideoAv1, h264: sugarcubesVideo },
-    mobileVideoUrl: { av1: sugarcubesVideoPortraitAv1, h264: sugarcubesVideoPortrait },
-    posterUrl: sugarcubesPoster,
-    mobilePosterUrl: sugarcubesPosterPortrait,
-    gridPosterUrl: sugarcubesGridPoster,
+    ...clip('sugarcubes'),
   },
   {
     id: 'peggy-ashcroft',
@@ -180,11 +148,7 @@ export const PROJECTS: Project[] = [
     tech: ['TypeScript', 'React', 'Accessibility'],
     githubUrl: 'https://github.com/AarKro/peggy-ashcroft',
     demoUrl: 'https://aarkro.github.io/peggy-ashcroft/',
-    videoUrl: { av1: peggyAshcroftVideoAv1, h264: peggyAshcroftVideo },
-    mobileVideoUrl: { av1: peggyAshcroftVideoPortraitAv1, h264: peggyAshcroftVideoPortrait },
-    posterUrl: peggyAshcroftPoster,
-    mobilePosterUrl: peggyAshcroftPosterPortrait,
-    gridPosterUrl: peggyAshcroftGridPoster,
+    ...clip('peggy_ashcroft'),
   },
   {
     id: 'css-toolbox',
@@ -194,11 +158,7 @@ export const PROJECTS: Project[] = [
     tech: ['Figma', 'UI Design', 'Interaction Design'],
     demoUrl:
       'https://www.figma.com/proto/5SfRSVnselzgMdOXUHzGxJ/CSS-Toolbox?node-id=79-2083&p=f&viewport=309%2C309%2C0.05&t=b8LCt5BqsEUP6NZh-1&scaling=scale-down&content-scaling=fixed&starting-point-node-id=79%3A2083&page-id=0%3A1',
-    videoUrl: { av1: cssToolboxVideoAv1, h264: cssToolboxVideo },
-    mobileVideoUrl: { av1: cssToolboxVideoPortraitAv1, h264: cssToolboxVideoPortrait },
-    posterUrl: cssToolboxPoster,
-    mobilePosterUrl: cssToolboxPosterPortrait,
-    gridPosterUrl: cssToolboxGridPoster,
+    ...clip('css_toolbox'),
   },
   {
     id: 'discord-bots',
@@ -219,3 +179,13 @@ export const FIRST_PROJECT_CHANNEL = 2;
 
 /** Total channel count: intro + all projects. */
 export const CHANNEL_COUNT = PROJECTS.length + 1;
+
+/** The project broadcast on `channel`, or null (the intro / out of range). */
+export function projectAt(channel: number): Project | null {
+  return PROJECTS[channel - FIRST_PROJECT_CHANNEL] ?? null;
+}
+
+/** The channel number of PROJECTS[index]. */
+export function channelOf(index: number): number {
+  return index + FIRST_PROJECT_CHANNEL;
+}

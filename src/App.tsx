@@ -1,5 +1,6 @@
 import { lazy, Suspense, useEffect } from 'react';
 import { PROJECTS } from './data/projects';
+import { GITHUB_URL, LINKEDIN_URL } from './data/profile';
 import { useDeviceTier } from './hooks/useDeviceTier';
 import { stripInlineLinks } from './components/InlineLink/InlineLink';
 import './App.scss';
@@ -43,9 +44,8 @@ export function App() {
         <h2>Aaron Kromer — frontend developer and interaction designer in Zürich, Switzerland</h2>
         <p>
           Portfolio of web projects: TypeScript, React, three.js, type design, machine learning
-          experiments and games. Source code on{' '}
-          <a href="https://github.com/AarKro">GitHub (AarKro)</a>, profile on{' '}
-          <a href="https://www.linkedin.com/in/aaron-kromer">LinkedIn</a>.
+          experiments and games. Source code on <a href={GITHUB_URL}>GitHub (AarKro)</a>, profile
+          on <a href={LINKEDIN_URL}>LinkedIn</a>.
         </p>
         <ul>
           {PROJECTS.map((project) => (

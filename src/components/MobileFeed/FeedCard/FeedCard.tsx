@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import type { Project } from '../../../data/projects';
+import { NAME } from '../../../data/profile';
+import { channelUrl } from '../../../utils/broadcast';
 import { renderInlineLinks } from '../../InlineLink/InlineLink';
 import { ClipSources } from '../../ClipSources/ClipSources';
-import { FeedSheet, type SheetLink } from '../FeedSheet/FeedSheet';
+import { FeedSheet } from '../FeedSheet/FeedSheet';
 import ChevronIcon from '../../../assets/icons/chevron.svg?react';
 import DemoIcon from '../../../assets/icons/demo.svg?react';
 import GithubIcon from '../../../assets/icons/github.svg?react';
@@ -110,18 +112,13 @@ export function FeedCard({ project, channel, isActive, inWindow, setRef, onProfi
   }, [isActive, project.videoUrl]);
 
   // deep link to this card, same #ch-N format as the TV
-  const shareUrl = `${window.location.origin}${window.location.pathname}#ch-${channel}`;
-
-  // a single repo links straight out; a bundled channel opens a sheet
-  const repoLinks: SheetLink[] = project.repos
-    ? project.repos.map((repo) => ({ label: repo.name, href: repo.url }))
-    : [];
+  const shareUrl = channelUrl(channel);
 
   // Web Share API where available, otherwise copy the link with a confirmation
   const handleShare = async () => {
     const data = {
       title: project.title,
-      text: `${project.title} — from Aaron Kromer's portfolio`,
+      text: `${project.title} — from ${NAME}'s portfolio`,
       url: shareUrl,
     };
     if (navigator.share) {
@@ -291,12 +288,16 @@ export function FeedCard({ project, channel, isActive, inWindow, setRef, onProfi
         </div>
       </div>
 
-      <FeedSheet
-        open={codeOpen}
-        title="Source code"
-        links={repoLinks}
-        onClose={() => setCodeOpen(false)}
-      />
+      {/* only a bundled channel needs the source sheet; a single repo is a
+          plain rail link */}
+      {project.repos && (
+        <FeedSheet
+          open={codeOpen}
+          title="Source code"
+          links={project.repos.map((repo) => ({ label: repo.name, href: repo.url }))}
+          onClose={() => setCodeOpen(false)}
+        />
+      )}
     </section>
   );
 }
