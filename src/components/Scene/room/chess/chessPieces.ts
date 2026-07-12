@@ -1,17 +1,8 @@
 /**
- * Loads the chess pieces — one self-contained .glb per piece type, split out of
- * the original model (see src/assets/models/*.glb) — and places a full set onto
- * the procedural board built by makeChessSet.
- *
- * Each piece file is already baked upright with its base at y=0 and centred over
- * its square, and the model is authored 1 unit per square, so a piece scales
- * straight onto the board's `squareSize`. The board group exposes `squareSize`
- * and `squareCoord(file,rank)` via userData (see chess.ts); pieces are added as
- * its children so they inherit the board's position/rotation on the desk.
- *
- * Returns the live set so the game controller (chessGame.ts) can move/capture
- * pieces: a `pieces` map keyed by algebraic square ('e2') and the shared
- * geometry/materials needed to spawn a promoted queen.
+ * Loads the chess pieces (one .glb per type, authored 1 unit per square with
+ * the base at y=0) and places a full set onto the board from makeChessSet.
+ * Pieces are added as board children so they inherit its placement on the
+ * desk. Returns the square→mesh map and shared assets for chessGame.ts.
  */
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
@@ -65,12 +56,9 @@ function geometryOf(gltf: { scene: THREE.Object3D }): THREE.BufferGeometry | nul
 }
 
 /**
- * Adds a view-dependent Fresnel rim to a MeshStandardMaterial: glancing-angle
- * faces (a piece's silhouette edge) pick up `color`, so each piece's outline
- * glows softly and reads against the board and its neighbours — what tells a
- * knight from a bishop is the contour. Implemented by injecting into the lit
- * shader (adds to the emissive term using the view-space normal + view dir), so
- * it costs nothing extra and survives material.clone() (the selected-piece glow).
+ * Adds a Fresnel rim to a MeshStandardMaterial so each piece's silhouette
+ * glows softly and reads against the board. Injected into the lit shader's
+ * emissive term, so it survives material.clone() (the selected-piece glow).
  */
 function addFresnelRim(material: THREE.MeshStandardMaterial, color: number, strength: number, power = 3) {
   material.onBeforeCompile = (shader) => {
@@ -111,10 +99,8 @@ export async function populateChessPieces(set: THREE.Object3D): Promise<ChessPie
   );
 
   const scale = squareSize; // model is 1 unit per square
-  // Glossier finish (lower roughness) so the pieces catch form-revealing
-  // highlights from the board light; the "black" side is a lifted graphite
-  // rather than near-black for the same reason. A faint Fresnel rim outlines
-  // every piece — stronger and cooler on the dark side, where it's needed most.
+  // "black" is a lifted graphite (not near-black) so its forms still read;
+  // the rim is stronger and cooler on the dark side, where it's needed most
   const white = new THREE.MeshStandardMaterial({ color: 0xeae0cb, roughness: 0.42, metalness: 0.08 });
   const black = new THREE.MeshStandardMaterial({ color: 0x3e424a, roughness: 0.34, metalness: 0.12 });
   addFresnelRim(white, 0xfff4e0, 0.28);

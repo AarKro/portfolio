@@ -4,16 +4,9 @@ import { TVSet } from '../TVSet/TVSet';
 import { StoryReader } from '../StoryReader/StoryReader';
 
 /**
- * The desktop experience: the full 3D living room with the DOM TV projected onto
- * the 3D TV body, plus the short-story "Ich." reader. Lazy-loaded by App so
- * three.js (and the chess chunk the Scene defers to power-off) never ships to
- * the mobile feed.
- *
- * The camera mode machine lives here because it only concerns the desktop scene:
- * tv      → parked in front of the TV: the portfolio, fully interactive
- * to-room → user powered off: camera pulls back from the glass
- * room    → first-person walking (WASD + pointer lock)
- * to-tv   → user clicked the TV: camera flies back to the website framing
+ * The desktop experience: the 3D living room with the DOM TV, plus the
+ * short-story reader. Lazy-loaded by App so three.js never ships to the feed.
+ * Owns the camera mode machine: tv → to-room → room → to-tv → tv.
  */
 export function DesktopExperience() {
   const [mode, setMode] = useState<ViewMode>('tv');

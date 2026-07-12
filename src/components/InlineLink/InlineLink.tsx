@@ -7,9 +7,8 @@ interface InlineLinkProps {
 }
 
 /**
- * A link that sits inside running text and leaves the site — it carries the
- * same trailing ↗ "external" glyph as the action buttons so it's clear the
- * link navigates away.
+ * An external link inside running text, with the same trailing ↗ glyph as the
+ * action buttons.
  */
 export function InlineLink({ href, children }: InlineLinkProps) {
   return (
@@ -29,11 +28,7 @@ export interface InlineToken {
   href?: string;
 }
 
-/**
- * Splits a string with inline `[label](url)` links into plain/link tokens.
- * Shared by `renderInlineLinks` and renderers that need to lay the text out
- * themselves (the teletext page word-wraps it onto a character grid).
- */
+/** Splits a string with inline `[label](url)` links into plain/link tokens. */
 export function tokenizeInlineLinks(text: string): InlineToken[] {
   const tokens: InlineToken[] = [];
   let lastIndex = 0;
@@ -50,11 +45,7 @@ export function tokenizeInlineLinks(text: string): InlineToken[] {
   return tokens;
 }
 
-/**
- * Renders a string that may contain inline `[label](url)` links as React nodes,
- * turning each into an `<InlineLink>`. Plain text passes through untouched, so
- * project copy can stay as simple strings in `projects.ts`.
- */
+/** Renders a string with inline `[label](url)` links as React nodes. */
 export function renderInlineLinks(text: string): ReactNode {
   return tokenizeInlineLinks(text).map((token, i) =>
     token.href ? (

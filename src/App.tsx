@@ -5,16 +5,9 @@ import { stripInlineLinks } from './components/InlineLink/InlineLink';
 import './App.scss';
 
 /**
- * Two experiences (see useDeviceTier), each code-split so a visitor downloads
- * only their branch:
- *  - desktop → the full 3D living room (Scene + the DOM TV). Its chunk carries
- *    three.js and defers a further chunk (chess.js) until the TV is powered off.
- *  - mobile  → a vertical feed UI (phones AND tablets); ships no three.js.
- *
- * useDeviceTier reads the tier synchronously on first paint, so the correct
- * chunk is requested immediately — no wrong-experience flash. While a chunk
- * loads, the Suspense fallback is empty: `.app` already paints the dark scene
- * colour, so nothing flickers.
+ * Two code-split experiences: desktop gets the 3D room (three.js), mobile the
+ * vertical feed. useDeviceTier reads the tier synchronously on first paint, so
+ * the correct chunk is requested immediately — no wrong-experience flash.
  */
 const DesktopExperience = lazy(() =>
   import('./components/DesktopExperience/DesktopExperience').then((m) => ({
@@ -28,8 +21,7 @@ const MobileFeed = lazy(() =>
 export function App() {
   const tier = useDeviceTier();
 
-  // Favicon follows the experience: the CRT TV on desktop, the AK monogram
-  // (social style) on the mobile feed.
+  // favicon follows the experience: CRT TV on desktop, AK monogram on mobile
   useEffect(() => {
     const link = document.getElementById('favicon');
     if (link instanceof HTMLLinkElement) {
@@ -44,12 +36,9 @@ export function App() {
         {tier === 'mobile' ? <MobileFeed /> : <DesktopExperience />}
       </Suspense>
 
-      {/*
-        Crawlable text version of the broadcast. Project content only appears
-        on screen after interaction, which crawlers don't do — this section
-        mirrors that same content (nothing extra, so it isn't cloaking) and
-        stays in sync because it renders from the same data file.
-      */}
+      {/* Crawlable version of the project content, which is otherwise only
+          reachable by interaction. Must mirror on-screen content only —
+          anything extra risks being treated as cloaking. */}
       <section className="sr-only">
         <h2>Aaron Kromer — frontend developer and interaction designer in Zürich, Switzerland</h2>
         <p>

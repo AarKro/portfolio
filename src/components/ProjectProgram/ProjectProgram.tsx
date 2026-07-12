@@ -23,20 +23,16 @@ function ActionIcon({ glyph }: { glyph: string }) {
 }
 
 /**
- * A project channel. Every channel shares one "broadcast" layout: a full-bleed
- * backdrop (autoplay teaser if the project has a `videoUrl`, else an SMPTE test
- * card) with a lower-third "bug" over it (title, tech, links, teletext toggle).
- * Pressing TELETEXT swaps the picture for a real Mode 7 teletext page of the
- * detailed project info (see the Teletext component); the broadcast keeps
- * playing behind it, so closing cuts straight back to the live picture.
+ * A project channel: a full-bleed backdrop (teaser clip or SMPTE test card)
+ * with a lower-third "bug" over it. TELETEXT swaps the picture for the Mode 7
+ * page; the broadcast keeps playing behind it.
  */
 export function ProjectProgram({ project, channel }: ProjectProgramProps) {
-  // Cover the teaser with static until the clip actually plays
+  // cover the teaser with static until the clip actually plays
   const [videoLoading, setVideoLoading] = useState(true);
-  // Teletext page revealed over the broadcast
   const [teletextOpen, setTeletextOpen] = useState(false);
 
-  // Leaving the channel closes teletext
+  // leaving the channel closes teletext
   useEffect(() => {
     setTeletextOpen(false);
   }, [project.id]);
@@ -54,8 +50,8 @@ export function ProjectProgram({ project, channel }: ProjectProgramProps) {
     }
   }, [teletextOpen]);
 
-  // Each time we land on a video channel, show static until it plays (with a
-  // safety timeout so a clip that never fires `playing` doesn't stay covered).
+  // show static until the clip plays, with a safety timeout so a clip that
+  // never fires `playing` doesn't stay covered
   useEffect(() => {
     if (!project.videoUrl) return;
     setVideoLoading(true);
@@ -63,8 +59,7 @@ export function ProjectProgram({ project, channel }: ProjectProgramProps) {
     return () => window.clearTimeout(timer);
   }, [project.id, project.videoUrl]);
 
-  // Source code: a single VIEW CODE button, or — for a bundled channel — one
-  // pill matching the other buttons, sectioned into a link per repo.
+  // a single VIEW CODE button, or one pill with a link per repo for bundles
   const sourceControl = project.repos ? (
     <div className="program__source-group">
       {project.repos.map((repo) => (
@@ -89,13 +84,11 @@ export function ProjectProgram({ project, channel }: ProjectProgramProps) {
 
   return (
     <div className={`program program--broadcast ${teletextOpen ? 'is-teletext' : ''}`}>
-      {/* Backdrop: the teaser clip, or a full-bleed test card when there's none */}
       {project.videoUrl ? (
         <>
           {/* Key by project so the element remounts on channel change —
               swapping <source> children alone won't reselect the source
-              without a manual video.load(), so navigation would otherwise
-              keep showing the previous (or no) clip until the load timeout. */}
+              without a manual video.load(). */}
           <video
             key={project.id}
             className="program__video"
@@ -119,7 +112,6 @@ export function ProjectProgram({ project, channel }: ProjectProgramProps) {
         </div>
       )}
 
-      {/* The lower-third bug over the broadcast */}
       <div className="program__bug">
         <h2 className="program__title">{project.title}</h2>
         <ul className="program__tech">
@@ -150,8 +142,6 @@ export function ProjectProgram({ project, channel }: ProjectProgramProps) {
         </div>
       </div>
 
-      {/* The Mode 7 page replaces the picture while open — the broadcast keeps
-          running underneath, like a real TV's TEXT mode */}
       {teletextOpen && (
         <Teletext project={project} channel={channel} onClose={() => setTeletextOpen(false)} />
       )}

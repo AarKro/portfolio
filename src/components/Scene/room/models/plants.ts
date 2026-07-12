@@ -7,9 +7,8 @@ import * as THREE from 'three';
 import { cylinder } from '../primitives';
 import { COL } from '../palette';
 
-// Shared across every bushy leaf in the scene: one unit icosahedron (scaled
-// per-leaf) and three green materials, instead of a fresh geometry + material
-// for each of the ~50 leaves.
+// shared across every bushy leaf, instead of a fresh geometry + material for
+// each of the ~50 leaves
 const LEAF_GEOMETRY = new THREE.IcosahedronGeometry(1, 0);
 const LEAF_MATERIALS = [COL.leaf, COL.leafDark, COL.leafLight].map(
   (color) => new THREE.MeshStandardMaterial({ color, roughness: 0.85, flatShading: true }),
@@ -55,8 +54,7 @@ export function makePlant(
       plant.add(blade);
     }
   } else {
-    // a bulky leafy mound — randomized lobe count, placement, size and green
-    // shade, so every bushy plant is a bit different (shared geometry/materials)
+    // a leafy mound with randomized lobes, so every bushy plant differs a bit
     const clumps = 6 + Math.floor(Math.random() * 4); // 6–9 lobes
     const spread = (0.16 + Math.random() * 0.09) * scale;
     for (let i = 0; i < clumps; i++) {
@@ -70,7 +68,7 @@ export function makePlant(
       leaf.castShadow = true;
       leaf.position.set(
         Math.cos(angle) * rad,
-        soilTop + Math.random() * 0.34 * scale, // sit lower, nestled on the pot (no hover)
+        soilTop + Math.random() * 0.34 * scale,
         Math.sin(angle) * rad,
       );
       leaf.scale.set(r, r * (0.8 + Math.random() * 0.25), r);
@@ -81,15 +79,14 @@ export function makePlant(
   return plant;
 }
 
-// mostly bulky leafy ones (the favourite), scattered around. [plant, x, z, rotY]
 export function addPlants(scene: THREE.Scene): void {
+  // [plant, x, z, rotY]
   const plants: Array<[THREE.Group, number, number, number]> = [
-    // front-right corner cluster (orientation = looking at the TV): the big one
-    // hugs the corner, the other two trail toward the window
-    [makePlant('bushy', 1.8, COL.potStone), 2.6, -2.8, 1.4], // corner — big and bulky
+    // front-right corner cluster (orientation = looking at the TV)
+    [makePlant('bushy', 1.8, COL.potStone), 2.6, -2.8, 1.4],
     [makePlant('bushy', 1.15, COL.potTerra), 2.08, -2.76, 0.6],
     [makePlant('bushy', 0.95, COL.potDark), 2.8, -2.16, 2.2],
-    // back-left corner — a single big plant in the corner
+    // back-left corner
     [makePlant('bushy', 1.8, COL.potTerra), -2.64, 2.56, 0.2],
     // back-right corner + desk gap
     [makePlant('bushy', 1.1, COL.potDark), 2.64, 2.56, 1.7],

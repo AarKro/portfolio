@@ -1,12 +1,8 @@
 /**
- * Makes the easel canvas paintable. artCorner builds a 'canvasSurface' plane
- * (and palette dabs each carrying userData.paintColor); this backs that plane
- * with a CanvasTexture you draw onto by aiming the room crosshair at it and
- * holding the mouse button (the raycast hands us the UV hit point). Clicking a
- * dab swaps the brush colour. Default colour is red.
- *
- * Scene.tsx owns the input/raycasting; this just exposes the surface, the dab
- * meshes to test against, and the draw operations.
+ * Makes the easel canvas paintable: backs artCorner's 'canvasSurface' plane
+ * with a CanvasTexture drawn onto via raycast UV hits. Scene.tsx owns the
+ * input/raycasting; this exposes the surface, the palette dabs and the draw
+ * operations.
  */
 import * as THREE from 'three';
 
@@ -49,9 +45,8 @@ export function setupPainting(scene: THREE.Scene): Painter | null {
   texture.colorSpace = THREE.SRGBColorSpace;
   texture.anisotropy = 4;
 
-  // the surface material is unique to this mesh (not from the shared primitives
-  // cache), so mutating it is safe. White base colour lets the texture show its
-  // true colours.
+  // the surface material is unique to this mesh (not from the shared
+  // primitives cache), so mutating it is safe
   const material = surface.material as THREE.MeshStandardMaterial;
   material.map = texture;
   material.color.set('#ffffff');

@@ -26,9 +26,8 @@ export function addSeating(scene: THREE.Scene): void {
   rug.receiveShadow = true;
   scene.add(rug);
 
-  // couch — a CC-BY low-poly model (see couch.glb), loaded async. It pops in
-  // once loaded; the room is only seen after the power-off flight, which
-  // re-renders every frame, so it's there by the time you walk in.
+  // couch — a CC-BY low-poly model, loaded async; the room is only seen after
+  // the power-off flight, so it's there by the time you walk in
   loadCouch(scene).catch((error) => console.error('couch failed to load', error));
 }
 

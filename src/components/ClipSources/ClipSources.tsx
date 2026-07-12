@@ -11,12 +11,8 @@ interface ClipSourcesProps {
 }
 
 /**
- * `<source>` children for a `<video>`: AV1 first (when the clip has been
- * re-encoded), H.264 always as the fallback. The browser plays the first it can
- * decode — modern engines take AV1, everything else uses H.264. No JS, no
- * bandwidth detection. Render as a child of `<video>`:
- *
- *   <video …><ClipSources sources={project.videoUrl} /></video>
+ * `<source>` children for a `<video>`: AV1 first when present, H.264 as the
+ * fallback. The browser plays the first it can decode.
  */
 export function ClipSources({ sources }: ClipSourcesProps) {
   return (

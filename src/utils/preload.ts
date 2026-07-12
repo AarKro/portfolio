@@ -1,18 +1,14 @@
 import { type VideoSources } from '../data/projects';
 
-// Shared clip-preloading policy for BOTH views (the desktop TV and the mobile
-// feed). Both warm the teaser clips around the current channel ahead of time
-// and hand the ordered list to <VideoPreloader>, which staggers the fetches so
-// higher-priority clips grab bandwidth first. Keeping the policy here means the
+// Clip-preloading policy shared by the desktop TV and the mobile feed, so the
 // two experiences load videos identically.
 
 /** How far ahead/behind the active channel we warm clips (in channels). */
 export const PRELOAD_RADIUS = 2;
 
 /**
- * Loading priority for a clip `delta` channels from the active one: the active
- * clip first, then the forward channel ahead of the equidistant one behind
- * (0 → +1 → −1 → +2 → −2 ⇒ ranks 0,1,2,3,4). Lower rank = fetched sooner.
+ * Loading priority for a clip `delta` channels from the active one — nearest
+ * first, forward before backward (0 → +1 → −1 → +2 → −2). Lower = sooner.
  */
 export function preloadRank(delta: number): number {
   if (delta === 0) return 0;
@@ -20,12 +16,9 @@ export function preloadRank(delta: number): number {
 }
 
 /**
- * The clips within ±PRELOAD_RADIUS of `activeChannel` that actually have a
- * video, sorted by loading priority (forward-first). `sourceAt` maps a channel
- * to its clip (or undefined for the intro / sourceless / out-of-range channels)
- * — desktop passes the landscape `videoUrl`, the feed its portrait
- * `mobileVideoUrl`. The active channel itself is excluded: its own <video>
- * element loads it directly when it plays.
+ * The clips within ±PRELOAD_RADIUS of `activeChannel` that have a video,
+ * sorted by loading priority. The active channel itself is excluded: its own
+ * <video> element loads it directly when it plays.
  */
 export function orderedNeighborClips(
   activeChannel: number,

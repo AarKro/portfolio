@@ -2,18 +2,14 @@
 @use '../../../styles/interactions' as *;
 
 .feed {
-  // The profile is a fixed, tap-only overlay (NOT a swipe card): you tap a tile
-  // to open a project; swiping is for the feed alone. Slides down from the top.
-  // A clean, light hero (TikTok-ish) with the name as a chromatic-split logo;
-  // the project grid below is unchanged.
+  // the profile is a fixed, tap-only overlay (not a swipe card); slides down
+  // from the top
   &__profile {
     position: fixed;
     inset: 0;
     z-index: 10;
     display: flex;
     flex-direction: column;
-    // very light, near-white base; the colour lives in the hero's soft wash
-    // (see &__profile-head), so the grid area below stays clean and quiet.
     background: #f6f5fc;
     color: #15161a;
     font-family: $font-feed; // sibling of .feed, so doesn't inherit its font
@@ -34,19 +30,15 @@
   }
 
   // ─── Identity hero ─────────────────────────────────────────────────────────
-  // The identity cluster (name → tagline → social links) sits centred in the
-  // hero; the instruction line stays pinned just above the grid. Achieved with
-  // a pair of `margin-top: auto` (see &__profile-id / &__intro-sub), which split
-  // the free space evenly above and below the cluster.
+  // The identity cluster sits centred in the hero and the instruction line is
+  // pinned just above the grid — a pair of `margin-top: auto` (on
+  // &__profile-id / &__intro-sub) splits the free space.
   &__profile-head {
     flex: none;
     position: relative;
     overflow: hidden; // keep the soft wash clipped to the hero
     min-height: 40dvh;
-    // A calm, social-style backdrop: soft pastel pools of the feed palette
-    // (violet/cyan/pink/amber) bled into the corners at low opacity over a
-    // light base, blended into one another (a quiet "mesh" wash). The colours
-    // are present but tamed — no hard-edged shapes, no motion.
+    // soft pools of the feed palette bled into the corners over a light base
     background:
       radial-gradient(58% 48% at 14% 6%, rgba($feed-violet, 0.20), transparent 72%),
       radial-gradient(54% 44% at 90% 2%, rgba($feed-accent, 0.16), transparent 72%),
@@ -72,9 +64,7 @@
     flex-direction: column;
     align-items: center;
     gap: 0.6rem;
-    // centre the cluster: this auto + the one on &__intro-sub split the free
-    // space evenly, leaving equal room above the name and below the links
-    margin-top: auto;
+    margin-top: auto; // pairs with &__intro-sub's to centre the cluster
   }
 
   &__nameplate {
@@ -83,8 +73,7 @@
     padding: 0.6rem 0;
   }
 
-  // the name as a plain, clean heading. A soft white halo keeps it legible when
-  // a colour shape drifts behind it.
+  // soft white halo keeps the name legible over the colour wash
   &__intro-title {
     font-size: clamp(2.5rem, 12vw, 3.4rem);
     font-weight: 800;
@@ -94,8 +83,7 @@
     text-shadow: 0 1px 22px rgba(255, 255, 255, 0.75);
   }
 
-  // forced line break inside the name: shown on phones (two lines), hidden on
-  // tablets and up (one line). Keeps the wrap deterministic at every width.
+  // forced break: two lines on phones, one on tablets — deterministic wrap
   &__name-break {
     display: inline;
 
@@ -104,21 +92,18 @@
     }
   }
 
-  // tagline — a quiet frosted chip (not the old bold amber shape): a soft
-  // translucent panel with a faint warm amber tint, so a palette colour is
-  // still present but tamed. Dark ink for contrast, no shadow, no drift.
-  // Always one line — the chip widens to fit (nowrap), font clamps only on the
-  // narrowest phones.
+  // tagline chip — always one line: the chip widens to fit, the font clamps
+  // only on the narrowest phones
   &__intro-kicker {
-    align-self: center; // stay centred
-    white-space: nowrap; // keep the tagline on a single line; the chip grows
+    align-self: center;
+    white-space: nowrap;
     padding: 0.4rem 0.95rem;
     border-radius: 0.7rem;
     background: rgba($feed-amber, 0.18);
     box-shadow: inset 0 0 0 1px rgba($feed-amber, 0.35);
     color: #2a2410;
     font-weight: 600;
-    font-size: clamp(0.84rem, 4.3vw, 1rem); // full size ≥375px, shrinks on tiny screens
+    font-size: clamp(0.84rem, 4.3vw, 1rem);
     letter-spacing: 0.01em;
   }
 
@@ -128,9 +113,7 @@
     font-size: 0.98rem;
     line-height: 1.4;
     padding-top: 15px;
-    // pairs with &__profile-id's auto margin to centre the cluster above while
-    // this line stays pinned just above the grid
-    margin-top: auto;
+    margin-top: auto; // pairs with &__profile-id's to pin this above the grid
   }
 
   &__intro-contact {
@@ -147,10 +130,8 @@
       gap: 0.45rem;
       padding: 0 1.3rem;
       border-radius: 999px;
-      // frosted glass — shares the feed's glass recipe (light tone), but a
-      // touch more transparent. The white overlay still keeps the blurred
-      // backdrop light enough that the dark label stays ≥7:1 (AA) even with a
-      // colour shape behind it; the inset white border keeps the edge defined.
+      // glass (light tone), a touch more transparent — the white overlay keeps
+      // the dark label ≥7:1 contrast even with a colour shape behind it
       @include glass(light);
       background: rgba(255, 255, 255, 0.32);
       color: #15161a;
@@ -173,9 +154,9 @@
     }
   }
 
-  // ─── Staggered entrance — children rise+fade in once the panel is open ──────
-  // Driven by `animation` (not a transition) so it also plays on initial load,
-  // when the profile mounts already-open (deep link / fresh visit to channel 1).
+  // ─── Staggered entrance ──────────────────────────────────────────────────
+  // Driven by `animation` (not a transition) so it also plays when the profile
+  // mounts already-open (deep link / fresh visit to channel 1).
   &__nameplate,
   &__intro-kicker,
   &__intro-contact,
@@ -183,21 +164,18 @@
     opacity: 0;
   }
 
-  // each element rises+fades in turn (delay = its place in the cluster)
   @each $part, $delay in (nameplate: 120ms, intro-contact: 360ms, intro-sub: 440ms) {
     &__profile.is-open &__#{$part} {
       animation: feed-rise 520ms cubic-bezier(0.2, 0.7, 0.2, 1) $delay both;
     }
   }
 
-  // the tagline rises in with the cluster (between the nameplate and the links)
   &__profile.is-open &__intro-kicker {
     animation: feed-rise 520ms cubic-bezier(0.2, 0.7, 0.2, 1) 280ms both;
   }
 
   // ─── Project grid ──────────────────────────────────────────────────────────
-  // 3 per row, tap a tile to jump to it. Flows in normal document order; the
-  // whole profile scrolls (see &__profile), not the grid on its own.
+  // the whole profile scrolls (see &__profile), not the grid on its own
   &__grid {
     flex: none;
     display: grid;
@@ -274,9 +252,7 @@
     pointer-events: none;
   }
 
-  // thumbnail for projects without a teaser clip — a tile-sized echo of the
-  // feed card's no-clip placeholder (same soft palette-mesh wash on a dark
-  // ground), so the two match
+  // no-clip thumbnail — echoes the feed card's placeholder wash so they match
   &__tile-placeholder {
     position: absolute;
     inset: 0;
@@ -290,8 +266,6 @@
   }
 }
 
-// ─── Animations ──────────────────────────────────────────────────────────────
-// staggered entrance: rise + fade
 @keyframes feed-rise {
   from {
     opacity: 0;

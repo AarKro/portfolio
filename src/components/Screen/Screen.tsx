@@ -29,15 +29,13 @@ export function Screen({ tv }: ScreenProps) {
   const { channel, poweredOn, staticVisible, osdVisible } = tv;
   const project = channel >= FIRST_PROJECT_CHANNEL ? PROJECTS[channel - FIRST_PROJECT_CHANNEL] : null;
 
-  // Warm the clips within ±2 channels of the current one (priority-ordered) so
-  // CH ▲/▼ lands on an already-buffered video — same policy as the mobile feed.
+  // warm neighbouring clips so CH ▲/▼ lands on an already-buffered video
   const neighborVideoSources = orderedNeighborClips(
     channel,
     (ch) => PROJECTS[ch - FIRST_PROJECT_CHANNEL]?.videoUrl,
   );
 
-  // Visitors who deep-link past the intro never see the explainer,
-  // so show them the arrow-keys hint once.
+  // deep-linked visitors never see the intro explainer — show a hint once
   const initialChannel = useRef(channel);
   const [keysHintVisible, setKeysHintVisible] = useState(initialChannel.current !== 1);
 
@@ -51,8 +49,7 @@ export function Screen({ tv }: ScreenProps) {
     if (channel !== initialChannel.current) setKeysHintVisible(false);
   }, [channel]);
 
-  // Swipe the glass left/right to flip channels (the touch equivalent of the
-  // arrow keys); the on-screen CH ▲/▼ buttons still work too.
+  // swipe the glass left/right to flip channels (touch equivalent of ← →)
   const swipe = useSwipe({
     onSwipeLeft: tv.channelUp,
     onSwipeRight: tv.channelDown,

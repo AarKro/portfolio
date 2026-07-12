@@ -1,13 +1,8 @@
 /**
- * The chess board (the 32 pieces are loaded from GLTF at runtime — see
- * chessPieces.ts). It's a real, playable game (chessGame.ts drives it), so the
- * structure is queryable rather than baked:
- *   • the returned group is named 'chessSet' and carries userData.squareSize +
- *     userData.squareCoord(file,rank) → local (x,z) of a square centre
- *   • each square tile is in the 'squares' subgroup with userData.square ('e4')
- *   • each loaded piece mesh has userData = { kind:'piece', type, color, square }
- * chessGame.ts does getObjectByName('chessSet'), reads these, and slides the
- * piece meshes between squareCoord() positions as moves are played.
+ * The chess board (pieces load from GLTF at runtime — chessPieces.ts). The
+ * structure is queryable because chessGame.ts drives a real game on it: the
+ * group is named 'chessSet' with userData.squareSize/squareCoord, and each
+ * tile carries userData.square ('e4').
  */
 import * as THREE from 'three';
 import { box } from '../primitives';
@@ -16,10 +11,8 @@ export const CHESS_SQ = 0.07; // square size (m)
 const FILES = 'abcdefgh';
 
 export function squareCoord(file: number, rank: number): [number, number] {
-  // The file axis is negated so the board isn't mirrored: this puts white's a1
-  // (a dark square) on white's LEFT, as the rules require ("light square on the
-  // right"). Tiles AND pieces both resolve their position through here, so they
-  // stay in lock-step. Rank still runs white(0..1) → black(6..7) along +z.
+  // file axis negated so the board isn't mirrored: a1 (dark) lands on white's
+  // left, as the rules require ("light square on the right")
   return [(3.5 - file) * CHESS_SQ, (rank - 3.5) * CHESS_SQ];
 }
 

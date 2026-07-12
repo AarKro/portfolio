@@ -4,12 +4,9 @@ import storyRaw from '../../assets/others/ich.md?raw';
 import './StoryReader.scss';
 
 /**
- * The reader that opens when the visitor picks up the "Ich." paper off the couch
- * in the 3D room. A sheet of paper laid over the room: the short story rendered
- * from src/assets/others/ich.md, with a control hint so it's clear you scroll to
- * read and press ESC (or ✕) to put it back down. Markdown here is just blank-line
- * paragraphs with `_inline italics_` (the story's system interjections) — parsed
- * inline below so we keep the no-dependencies rule.
+ * The reader for the "Ich." paper on the couch: the short story from
+ * src/assets/others/ich.md laid over the room. Its markdown is just blank-line
+ * paragraphs with `_italics_`, parsed inline to keep the no-dependencies rule.
  */
 interface StoryReaderProps {
   open: boolean;

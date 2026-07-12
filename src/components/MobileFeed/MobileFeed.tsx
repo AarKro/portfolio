@@ -8,22 +8,20 @@ import { FeedProfile } from './FeedProfile/FeedProfile';
 import './MobileFeed.scss';
 
 /**
- * The phone & tablet experience: a vertical scroll-snap feed of project cards
- * (TikTok-style), plus a tap-only profile overlay (channel 1). Driven by the
- * same `projects.ts` data as the desktop TV; no three.js. The channel hash + tab
- * title track what's shown so deep links and SEO stay consistent with the TV.
+ * The phone & tablet experience: a vertical scroll-snap feed of project cards,
+ * plus a tap-only profile overlay (channel 1). Same projects.ts data and #ch-N
+ * deep links as the desktop TV; no three.js.
  */
 export function MobileFeed() {
   const sectionsRef = useRef<(HTMLElement | null)[]>([]);
-  // Channel 1 is the profile, which is a tap-only overlay (NOT a swipe card):
-  // `profileOpen` toggles it; `activeChannel` always tracks a project (2..N).
+  // The profile is an overlay, not a swipe card: `profileOpen` toggles it;
+  // `activeChannel` always tracks a project (2..N).
   const [initialChannel] = useState(channelFromHash);
   const [profileOpen, setProfileOpen] = useState(initialChannel === 1);
   const [activeChannel, setActiveChannel] = useState(
     initialChannel === 1 ? FIRST_PROJECT_CHANNEL : initialChannel,
   );
-  // The project you opened the profile FROM — its grid tile gets a "just viewed"
-  // badge while the profile is open, cleared once you leave again.
+  // the project you opened the profile FROM — its grid tile gets a badge
   const [justViewedChannel, setJustViewedChannel] = useState<number | null>(null);
 
   // Deep-linked straight to a project: put it in view under the closed profile
@@ -64,14 +62,12 @@ export function MobileFeed() {
     sectionsRef.current[channel - 1] = el;
   };
 
-  // Tile tap → reveal that project: scroll the feed under the overlay, then
-  // slide the profile away.
+  // tile tap: scroll the feed under the overlay, then slide the profile away
   const openProject = (channel: number) => {
     sectionsRef.current[channel - 1]?.scrollIntoView();
     setProfileOpen(false);
   };
 
-  // Rail profile icon → slide the profile back over, badging the card we left.
   const openProfile = (fromChannel: number) => {
     setJustViewedChannel(fromChannel);
     setProfileOpen(true);
@@ -89,8 +85,6 @@ export function MobileFeed() {
               project={project}
               channel={channel}
               isActive={!profileOpen && activeChannel === channel}
-              // same ±PRELOAD_RADIUS window the clips use — gates the poster
-              // image so only nearby cards fetch their placeholder frame
               inWindow={Math.abs(channel - activeChannel) <= PRELOAD_RADIUS}
               setRef={setSectionRef(channel)}
               onProfile={openProfile}
@@ -99,8 +93,8 @@ export function MobileFeed() {
         })}
       </div>
 
-      {/* Warm the clips around the active card ahead of time — same shared
-          policy + component as the desktop TV (portrait sources here). */}
+      {/* warm the clips around the active card — same policy as the desktop
+          TV, portrait sources here */}
       <VideoPreloader
         sources={orderedNeighborClips(activeChannel, (ch) => {
           const p = PROJECTS[ch - FIRST_PROJECT_CHANNEL];

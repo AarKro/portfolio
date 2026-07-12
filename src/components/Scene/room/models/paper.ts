@@ -1,10 +1,7 @@
 /**
- * A printed sheet of the short story "Ich." resting on the couch. It's a click
- * target like the TV: Scene.tsx finds it by name ('storyPaper'), turns the
- * crosshair amber when it's in reach, and opens the DOM reader on click.
- *
- * The page face carries a CanvasTexture of the title + faux body lines, so from
- * across the room it reads as a written manuscript and invites the click.
+ * A printed sheet of the short story "Ich." on the couch — a click target:
+ * Scene.tsx finds it by name ('storyPaper') and opens the DOM reader. The face
+ * carries a CanvasTexture of the title + faux body lines.
  */
 import * as THREE from 'three';
 

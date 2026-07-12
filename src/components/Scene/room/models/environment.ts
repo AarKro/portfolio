@@ -1,9 +1,7 @@
 /**
- * Sky + lighting. A big inward-facing sphere with a golden-hour vertical
- * gradient + a soft sun glow (shader), procedurally varied cloud puffs, a real
- * round sun sprite, the golden-hour sun (directional, casts shadows), and the
- * ambient hemisphere + cool fill. The room floats in this sky — the walls
- * occlude it everywhere except through the two windows.
+ * Sky + lighting: a gradient sky sphere, procedural clouds, the sun sprite,
+ * the golden-hour directional sun (casts shadows) and ambient fills. The walls
+ * occlude the sky everywhere except through the two windows.
  */
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
@@ -52,12 +50,9 @@ export function addEnvironment(scene: THREE.Scene): void {
   scene.add(sky);
   scene.background = new THREE.Color(0x9bbce8);
 
-  // fluffy cumulus clouds, each one procedurally varied so no two look alike:
-  // different lobe counts, sizes, horizontal spread, stretch, tilt and a faint
-  // warm/cool near-white tint. Flattened bottoms read more cloud-like.
-  // each cloud's puffs are baked into ONE merged geometry → one draw call per
-  // cloud (instead of ~10). Unlit MeshBasic, so the non-uniform puff scaling
-  // mangling normals doesn't matter.
+  // Procedurally varied cumulus clouds. Each cloud's puffs are merged into one
+  // geometry (one draw call instead of ~10); unlit MeshBasic, so the
+  // non-uniform puff scaling mangling normals doesn't matter.
   const puffTemplate = new THREE.SphereGeometry(1, 16, 12);
   const rand = (a: number, b: number) => a + Math.random() * (b - a);
   const makeCloud = (scale: number) => {
@@ -111,9 +106,8 @@ export function addEnvironment(scene: THREE.Scene): void {
     scene.add(cloud);
   }
 
-  // a soft, glowing sun: a radial-gradient sprite (brightest dead centre,
-  // fading smoothly out) so it reads as *shining* rather than a hard ringed
-  // disc. Depth-tested, so the walls hide it — it only shows through windows.
+  // the sun: radial-gradient sprites so it reads as shining rather than a hard
+  // disc; depth-tested, so it only shows through the windows
   const sunDir = sunPosition.clone().normalize();
   const sunCenter = sunDir.clone().multiplyScalar(40);
 
@@ -130,8 +124,7 @@ export function addEnvironment(scene: THREE.Scene): void {
   gctx.fillRect(0, 0, 128, 128);
   const sunTexture = new THREE.CanvasTexture(glow);
 
-  // two layered additive sprites: a tight bright body + a wide soft halo. They
-  // both peak at the centre, so it blooms (shines) without any ring.
+  // two layered additive sprites: a tight bright body + a wide soft halo
   for (const size of [7, 18]) {
     const sprite = new THREE.Sprite(
       new THREE.SpriteMaterial({
@@ -146,9 +139,8 @@ export function addEnvironment(scene: THREE.Scene): void {
     scene.add(sprite);
   }
 
-  // the golden-hour sun light: warm, low, streaming through the windows.
-  // Shadow frustum is sized to enclose the whole room (walls + ceiling) so the
-  // walls actually occlude the sunlight instead of it leaking through them.
+  // Shadow frustum must enclose the whole room (walls + ceiling) so the walls
+  // actually occlude the sunlight instead of it leaking through.
   const sun = new THREE.DirectionalLight(0xffd9a0, 2.4);
   sun.position.copy(sunPosition);
   sun.castShadow = true;

@@ -24,12 +24,8 @@
     background: #000;
   }
 
-  // No-clip backdrop: the profile hero's soft palette-mesh wash, so a channel
-  // without a teaser still reads as part of the feed's identity (the CRT
-  // test-card stays on the TV — it would look broken in this social context).
-  // Kept on a dark ground — same corner-pool composition as the hero (violet
-  // TL, cyan TR, pink BR, amber BL), just over dark so the white caption + rail
-  // stay legible. Tamed: soft pools, no hard shapes, no motion.
+  // No-clip backdrop: the profile hero's palette wash on a dark ground (the
+  // CRT test card would look broken in this social context).
   &__placeholder {
     overflow: hidden;
     display: grid;

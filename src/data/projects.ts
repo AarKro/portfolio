@@ -1,14 +1,7 @@
 /**
- * THE content file. Each entry below becomes one TV channel, in order.
- * Channel 1 is always the intro program; projects start at channel 2.
- *
- * To add a project: append (or insert) an object here. Done.
- * To remove one: delete its entry. Channel numbers renumber automatically.
- *
- * videoUrl: import a teaser clip from ../assets and set it here. The channel
- * then autoplays the clip as its program backdrop (muted loop); channels
- * without one fall back to a full-bleed SMPTE test card. Import the file so
- * Vite bundles + fingerprints it.
+ * THE content file. Each entry becomes one TV channel, in order; channel 1 is
+ * the intro program, so projects start at channel 2 and renumber automatically
+ * when entries are added/removed. See CLAUDE.md for the per-field details.
  */
 
 import scholarsMateVideo from '../assets/videos/scholars_mate_landscape.mp4';
@@ -70,77 +63,41 @@ export interface RepoLink {
 }
 
 /**
- * A teaser clip in both codecs. Each `<video>` offers AV1 first and H.264 as a
- * `<source>` fallback, so the browser plays the best it can decode (see the
- * `ClipSources` component and CLAUDE.md "Adding a teaser clip"). `av1` is
- * optional: until a clip has been re-encoded with `scripts/encode-clip.sh`,
- * only the H.264 file ships and every browser uses it.
+ * A teaser clip in both codecs: AV1 preferred when present, H.264 as the
+ * universal fallback (see ClipSources). Encode with scripts/encode-clip.sh.
  */
 export interface VideoSources {
-  /** AV1 encode (`*_av1.mp4`) — smaller at equal quality; preferred when present. */
   av1?: string;
-  /** H.264 encode (`*.mp4`) — the universal fallback, always present. */
   h264: string;
 }
 
 export interface Project {
   /** Stable identifier, used as React key */
   id: string;
-  /** Title shown on screen */
   title: string;
   /** One short paragraph, written like a TV program description */
   description: string;
   /** Tech keywords shown as tags */
   tech: string[];
-  /**
-   * Optional "behind the scenes" line: the interesting technical or design
-   * decision behind the project, aimed at hiring managers. One sentence.
-   */
+  /** One sentence on the interesting technical/design decision behind it. */
   behindTheScenes?: string;
-  /** Link to the repository (single-repo channels). Use `repos` for bundles. */
+  /** Repository link (single-repo channels). Use `repos` for bundles. */
   githubUrl?: string;
-  /**
-   * Several source repos for one bundled channel (e.g. the Discord bots).
-   * Rendered as a compact labelled cluster of source links in place of the
-   * single VIEW CODE button. Set this OR `githubUrl`, not both.
-   */
+  /** Source repos for a bundled channel. Set this OR `githubUrl`, not both. */
   repos?: RepoLink[];
-  /** Link to a hosted demo, opens in a new tab */
+  /** Hosted demo, opens in a new tab */
   demoUrl?: string;
-  /**
-   * Teaser clip that autoplays as this channel's program backdrop (muted,
-   * looping). When omitted, the channel shows a full-bleed SMPTE test card.
-   * Carries both codec encodes (`{ av1?, h264 }`); import the assets from
-   * ../assets so Vite bundles them.
-   */
+  /** Teaser clip, autoplayed as the channel backdrop (muted loop). Channels
+   *  without one show the SMPTE test card. */
   videoUrl?: VideoSources;
-  /**
-   * Portrait (9:16) variant of `videoUrl` for the mobile feed — ideally a
-   * dedicated portrait recording, not a crop of the landscape clip (see CLAUDE.md
-   * "Adding a teaser clip"). The feed prefers this when set and falls back to
-   * `videoUrl`. Same `{ av1?, h264 }` shape; import from ../assets/videos.
-   */
+  /** Portrait (9:16) variant for the mobile feed; falls back to `videoUrl`. */
   mobileVideoUrl?: VideoSources;
-  /**
-   * First-frame poster for `videoUrl` — shown instantly while the clip loads
-   * (the `<video poster>`), and as the project's thumbnail in the feed grid.
-   * Generate from the video (see "Adding a teaser clip"); pairs with videoUrl.
-   */
+  /** First frame of `videoUrl` — the `<video poster>` and grid fallback. */
   posterUrl?: string;
-  /**
-   * Portrait (9:16) variant of `posterUrl` for the mobile feed — the feed card
-   * `<video poster>` and the profile grid tile prefer this and fall back to
-   * `posterUrl`. Generate from `mobileVideoUrl` (see CLAUDE.md).
-   */
+  /** Portrait first-frame poster for the feed card; falls back to posterUrl. */
   mobilePosterUrl?: string;
-  /**
-   * Portrait poster for the mobile profile grid tile ONLY — grabbed a moment
-   * into the clip (1.5s) so the tile previews real content rather than the
-   * first frame (which is often an intro/title card). The grid prefers this and
-   * falls back to `mobilePosterUrl` / `posterUrl`. It is NOT used as a `<video
-   * poster>` (those stay first-frame to match the clip's opening). Generate at
-   * `-ss 1.5` from `*_portrait.mp4` (see CLAUDE.md "Adding a teaser clip").
-   */
+  /** Profile-grid tile only: grabbed 1.5s into the clip so the tile previews
+   *  real content rather than a title card. Never used as a <video poster>. */
   gridPosterUrl?: string;
 }
 
@@ -255,7 +212,6 @@ export const PROJECTS: Project[] = [
       { name: 'League Buddy', url: 'https://github.com/AarKro/League-Buddy' },
     ],
   },
-  
 ];
 
 /** Channel 1 is the intro; project channels start here. */

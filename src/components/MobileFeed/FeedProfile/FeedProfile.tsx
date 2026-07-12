@@ -12,10 +12,8 @@ interface FeedProfileProps {
 }
 
 /**
- * The profile page: a fixed, tap-only overlay (NOT a swipe card). A clean,
- * light hero — the name as a chromatic-split logo, tagline, social links — over
- * the unchanged thumbnail grid of every project. Tapping a tile opens that
- * project. Reached only via the rail profile icon. Content mirrors the SEO block.
+ * The profile page: a fixed, tap-only overlay (not a swipe card) — hero with
+ * name/tagline/social links over a thumbnail grid of every project.
  */
 export function FeedProfile({ open, justViewedChannel, onOpenProject }: FeedProfileProps) {
   return (
@@ -23,9 +21,7 @@ export function FeedProfile({ open, justViewedChannel, onOpenProject }: FeedProf
       <header className="feed__profile-head">
         <div className="feed__profile-id">
           <div className="feed__nameplate">
-            {/* deterministic break: two lines on phones, one on tablets (the
-                <br> is hidden ≥600px) — avoids the wrap flip-flop from a
-                width-scaled font size */}
+            {/* deterministic break: two lines on phones, one on tablets */}
             <h1 className="feed__intro-title">Aaron <br className="feed__name-break" />Kromer</h1>
           </div>
           <p className="feed__intro-kicker">Frontend Developer &amp; Interaction Designer</p>

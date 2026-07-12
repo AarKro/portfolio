@@ -1,15 +1,11 @@
 import { CHANNEL_COUNT, type Project } from '../data/projects';
 
-/**
- * The site/SEO title — must stay in sync with the <title> in index.html.
- * Shown when the TV is on the intro channel and on the mobile profile.
- */
+/** The site/SEO title — must stay in sync with the <title> in index.html. */
 export const SITE_TITLE = 'Aaron Kromer — Frontend Developer & Interaction Designer';
 
 /**
- * Reads the current channel from the URL hash. Channels are shareable links:
- * `#ch-5` opens on channel 5. Falls back to channel 1 (the intro) for a
- * missing or out-of-range hash. Shared by the desktop TV and the mobile feed.
+ * Reads the channel from the URL hash (`#ch-5` → 5); channels are shareable
+ * links. Falls back to channel 1 for a missing or out-of-range hash.
  */
 export function channelFromHash(): number {
   const match = /^#ch-(\d+)$/.exec(window.location.hash);
@@ -23,10 +19,8 @@ export function formatChannel(channel: number): string {
 }
 
 /**
- * The document title for a broadcast: a project channel reads
- * "CH 05 · Title — Aaron Kromer"; the intro/profile (no project) falls back to
- * the site title. Used by both the desktop TV and the mobile feed so they stay
- * consistent (and `#ch-N` deep links read the same in either experience).
+ * Document title for a broadcast: "CH 05 · Title — Aaron Kromer" for a project
+ * channel, the site title for the intro/profile.
  */
 export function broadcastTitle(channel: number, project: Project | null): string {
   return project ? `CH ${formatChannel(channel)} · ${project.title} — Aaron Kromer` : SITE_TITLE;
