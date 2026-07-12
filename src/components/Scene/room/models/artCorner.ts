@@ -90,10 +90,8 @@ export function addArtCorner(scene: THREE.Scene): void {
   palette.position.set(stoolX, 0.53, stoolZ);
   palette.rotation.y = 0.5;
   scene.add(palette);
-  // colour dabs on the palette — aim the room crosshair at one to load it as the
-  // brush colour (the first, red, is the painting default). `paintColor` in
-  // userData is what painting.ts reads; they're a touch larger than pure decor
-  // so they're easier to hit from across the easel.
+  // colour dabs — painting.ts reads userData.paintColor; sized a touch larger
+  // than pure decor so they're easier to hit from across the easel
   [0xd13b3b, 0x2f6fb0, 0xf2c23e, 0xffffff, 0x3a8f4a].forEach((col, i, arr) => {
     const angle = (i / arr.length) * Math.PI * 2;
     const dab = sphere(0.028, col, { roughness: 0.5 });

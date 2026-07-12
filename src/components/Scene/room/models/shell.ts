@@ -18,15 +18,12 @@ const wallBottom = -0.15;
 const wallHeight = wallTop - wallBottom;
 const wallMidY = (wallTop + wallBottom) / 2;
 
-// A full wall hollowed out by a centered floor-to-ceiling opening — side jambs +
-// a slim header + a thin sill (all solid slabs) make the hole — then a faint
-// glass pane fills it behind a minimal black frame with one transom bar. The
-// slab/frame geometries are pushed into the shared `wallGeos`/`frameGeos` arrays
-// (merged once by the caller); only the glass is added as its own mesh.
-// `normalAxis` is the axis the wall's face points along: 'x' → wall at x=`at`
-// spanning Z (a left/right wall); 'z' → wall at z=`at` spanning X (a front/back
-// wall). `inward` (+1/−1) points the face toward the room interior. `u` below is
-// the along-the-wall coordinate (Z for an 'x' wall, X for a 'z' wall).
+// A wall with a centered floor-to-ceiling window: jambs + header + sill slabs
+// make the hole, a glass pane fills it behind a slim frame. Slab/frame
+// geometries go into the shared wallGeos/frameGeos arrays (merged by the
+// caller); only the glass is its own mesh. `normalAxis` is the axis the wall's
+// face points along, `inward` (+1/−1) points it into the room, and `u` is the
+// along-the-wall coordinate.
 function addWindowedWall(
   scene: THREE.Scene,
   glassMaterial: THREE.Material,

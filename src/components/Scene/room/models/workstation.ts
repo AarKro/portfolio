@@ -101,41 +101,29 @@ export function addWorkstation(scene: THREE.Scene): void {
   desk.position.set(ROOM_HALF - 0.45, 0, 0.24); // rear edge (0.72 deep) ≈ at the wall face
   scene.add(desk);
 
-  // chair on the room side of the desk, facing it (+X toward the wall), tucked in
-  // with a clear gap so it doesn't clip the desk
   const chair = makeChair();
-  chair.position.set(2.0, 0, 0.0); // a little to the left along the desk, clear of it
-  chair.rotation.y = Math.PI / 2 - 0.18; // swivelled a few degrees off-square, as if just left
+  chair.position.set(2.0, 0, 0.0);
+  chair.rotation.y = Math.PI / 2 - 0.18; // swivelled off-square, as if just left
   scene.add(chair);
 
-  // a small potted plant on the LEFT end of the desktop
   const deskPlant = makePlant('bushy', 0.45, COL.potStone);
   deskPlant.position.set(2.75, 0.765, -0.4);
   deskPlant.rotation.y = 0.8;
   scene.add(deskPlant);
 
-  // a chess set on the RIGHT end of the desktop. Rotated so the white pieces sit
-  // on the player's side (you approach the desk facing +X) with the two armies
-  // running front-to-back and a1 (dark) in white's bottom-left. The board group
-  // is centred on its own origin and the pieces are its children, so this spins
-  // board + pieces together in place (pieces stay on their squares). Pieces load
-  // at runtime.
+  // chess set on the right end of the desk; pieces load at runtime. π/2 puts
+  // white on the player's side, the extra 5° gives it a casual, askew placement
   const chessSet = makeChessSet();
-  chessSet.position.set(2.75, 0.765, 0.8); // centred on the desk depth
-  // base orientation (π/2) puts white on the player's side; the extra +5° gives
-  // it a slightly casual, askew placement on the desk (counter-clockwise seen
-  // from above)
+  chessSet.position.set(2.75, 0.765, 0.8);
   chessSet.rotation.y = Math.PI / 2 + THREE.MathUtils.degToRad(5);
   scene.add(chessSet);
 
-  // a book and a few pens in the middle of the desk so it isn't bare
+  // a book and a few pens so the desk isn't bare
   const book = makeBook(0x6b3b4a);
   book.position.set(2.82, 0.765, 0.02);
   book.rotation.y = 0.22 + Math.PI / 2;
   scene.add(book);
 
-  // a design classic laid cover-up near the front of the desk, between the plant
-  // and the room edge
   const designBook = makeCoverBook(designBookCover, 0xcdbfa6);
   designBook.position.set(2.52, 0.765, -0.55);
   designBook.rotation.y = -0.35;

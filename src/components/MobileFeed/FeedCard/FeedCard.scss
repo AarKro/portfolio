@@ -24,22 +24,13 @@
     background: #000;
   }
 
-  // No-clip backdrop: the profile hero's soft palette-mesh wash, so a channel
-  // without a teaser still reads as part of the feed's identity (the CRT
-  // test-card stays on the TV — it would look broken in this social context).
-  // Kept on a dark ground — same corner-pool composition as the hero (violet
-  // TL, cyan TR, pink BR, amber BL), just over dark so the white caption + rail
-  // stay legible. Tamed: soft pools, no hard shapes, no motion.
+  // No-clip backdrop: the profile hero's palette wash on a dark ground (the
+  // CRT test card would look broken in this social context).
   &__placeholder {
     overflow: hidden;
     display: grid;
     place-items: center;
-    background:
-      radial-gradient(70% 55% at 18% 14%, rgba($feed-violet, 0.45), transparent 70%),
-      radial-gradient(60% 50% at 88% 8%, rgba($feed-accent, 0.20), transparent 70%),
-      radial-gradient(65% 55% at 86% 96%, rgba($feed-like, 0.22), transparent 72%),
-      radial-gradient(60% 50% at 8% 92%, rgba($feed-amber, 0.16), transparent 72%),
-      linear-gradient(160deg, #1a1530 0%, #0c0b16 65%, #07070d 100%);
+    @include palette-mesh;
   }
 
   // the project title is the hero, like the name on the profile hero

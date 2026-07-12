@@ -23,9 +23,6 @@ export const STAND_TOP_Y = 0.5;
 export const CLOSEUP_FOV = 55;
 export const WALKING_FOV = 70;
 
-// Room shrunk 20% in width/depth (8→6.4) to feel more cramped; interior objects
-// keep their real size but were moved in proportionally. Ceiling height is
-// unchanged.
 export const ROOM_HALF = 3.2;
 export const CEILING_Y = 3.2;
 /** Wall thickness — walls are solid slabs (not planes) so the shell is

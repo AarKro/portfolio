@@ -1,11 +1,8 @@
 /**
- * The CRT television on its media console against the −Z wall.
- *
- * The TV has no front face here — its screen/controls/cabinet front IS the real
- * DOM website, projected onto `tvBody` by Scene.tsx via CSS3DRenderer. This
- * builds the wooden cabinet box (sized/positioned at runtime from the measured
- * DOM) plus the rear tube shell so the set reads as a real CRT from the
- * sides/back. `tvGroup` is the click target.
+ * The CRT television on its media console. The TV has no front face here — the
+ * DOM website is projected onto `tvBody` by Scene.tsx via CSS3D. This builds
+ * the cabinet box (runtime-sized from the measured DOM) and the rear tube
+ * shell. `tvGroup` is the click target.
  */
 import * as THREE from 'three';
 import { box, cylinder } from '../primitives';

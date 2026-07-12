@@ -1,14 +1,7 @@
 /**
- * Assembles the 3D home-office room from the per-domain builders in this folder.
- * Everything outside relies only on the returned handles ({ tvGroup, tvBody })
- * and the exported constants (re-exported below) — a future single-GLTF room
- * just needs to keep that contract.
- *
- * The room (6.4×6.4m, walls at ±3.2, ceiling 3.2m): a low media console on the
- * TV wall (−Z) with the CRT on it, a plain sofa facing it, a desk + chair along
- * the right wall (+X), a painter's corner left of the TV, plants scattered
- * around, and big floor-to-ceiling windows on the left (−X) and back (+Z) walls
- * looking onto a golden-hour sky.
+ * Assembles the 3D room from the per-domain builders in this folder. Outside
+ * code relies only on the returned handles ({ tvGroup, tvBody }) and the
+ * re-exported constants — a future single-GLTF room must keep that contract.
  */
 import * as THREE from 'three';
 import { addShell } from './models/shell';

@@ -13,9 +13,8 @@ interface TVSetProps {
 }
 
 /**
- * The whole television: cabinet, screen, controls, feet and antenna.
- * Renders at a fixed pixel size — it lives on the front of the 3D TV body
- * (via Scene's CSS3D layer), so apparent size is the camera's job.
+ * The whole television: cabinet, screen, controls, feet and antenna. Renders
+ * at a fixed pixel size — apparent size is the camera's job (see Scene).
  */
 export function TVSet({ onPoweredOff }: TVSetProps) {
   const tv = useTV();
@@ -24,8 +23,8 @@ export function TVSet({ onPoweredOff }: TVSetProps) {
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key !== 'ArrowRight' && event.key !== 'ArrowLeft') return;
-      // While walking the room the TV is inert (Scene toggles it) — the
-      // window-level arrows shouldn't keep flipping channels underneath.
+      // while walking the room the TV is inert — these window-level arrows
+      // shouldn't keep flipping channels underneath
       if (rootRef.current?.closest('[inert]')) return;
       if (event.key === 'ArrowRight') tv.channelUp();
       if (event.key === 'ArrowLeft') tv.channelDown();

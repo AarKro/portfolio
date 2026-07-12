@@ -1,13 +1,8 @@
 /**
- * Tiny mesh factories shared by the room/* builders. All cast + receive shadows.
- *
- * Identical geometries and materials are cached and shared, so the room builds
- * and first-paints cheaply: e.g. the 64 chess tiles reference a single
- * BoxGeometry + two materials rather than 64 of each, and every wood/metal/leaf
- * surface of the same colour shares one material. Keys come from the
- * construction params. This is safe because the room never mutates a
- * primitive's material or geometry after creation (verified), and three.js
- * happily shares both across any number of meshes.
+ * Mesh factories shared by the room/* builders; all cast + receive shadows.
+ * Identical geometries/materials are cached and shared (keyed on construction
+ * params) — safe because the room never mutates a primitive's material or
+ * geometry after creation.
  */
 import * as THREE from 'three';
 

@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import type { Project } from '../../../data/projects';
+import { NAME } from '../../../data/profile';
+import { channelUrl } from '../../../utils/broadcast';
 import { renderInlineLinks } from '../../InlineLink/InlineLink';
 import { ClipSources } from '../../ClipSources/ClipSources';
-import { FeedSheet, type SheetLink } from '../FeedSheet/FeedSheet';
+import { FeedSheet } from '../FeedSheet/FeedSheet';
 import ChevronIcon from '../../../assets/icons/chevron.svg?react';
 import DemoIcon from '../../../assets/icons/demo.svg?react';
 import GithubIcon from '../../../assets/icons/github.svg?react';
@@ -11,9 +13,8 @@ import ProfileIcon from '../../../assets/icons/profile.svg?react';
 import ShareIcon from '../../../assets/icons/share.svg?react';
 import './FeedCard.scss';
 
-// Likes are a bit of fun, not real data — but persisting them in localStorage
-// (one shared key holding the set of liked channels) keeps the heart filled
-// across reloads, which is what people expect from a TikTok-style feed.
+// Likes are just for fun, but persisting them keeps the heart filled across
+// reloads, as people expect from this kind of feed.
 const LIKES_KEY = 'feed:likes';
 
 function readLikedChannels(): Set<number> {
@@ -31,7 +32,7 @@ function persistLike(channel: number, liked: boolean) {
     liked ? set.add(channel) : set.delete(channel);
     localStorage.setItem(LIKES_KEY, JSON.stringify([...set]));
   } catch {
-    // storage unavailable / quota — the in-memory state still updates
+    // storage unavailable — the in-memory state still updates
   }
 }
 
@@ -40,10 +41,9 @@ interface FeedCardProps {
   channel: number;
   isActive: boolean;
   /**
-   * Whether this card is within the preload window of the active one. Gates the
-   * `poster` image so far-off cards don't eager-load it — the image equivalent
-   * of the clip windowing (browsers fetch `<video poster>` for every card on
-   * mount otherwise, regardless of `preload`).
+   * Within the preload window of the active card. Gates the `poster` image —
+   * browsers fetch `<video poster>` for every card on mount regardless of
+   * `preload`, so far-off cards must not carry one.
    */
   inWindow: boolean;
   setRef: (el: HTMLElement | null) => void;
@@ -52,12 +52,10 @@ interface FeedCardProps {
 }
 
 /**
- * One project card in the feed: a full-bleed teaser video (or test card), a
- * right-edge rail of icon actions, and a tap-to-expand caption.
- *
- * The card only fetches its own clip when active; the neighbouring clips are
- * warmed ahead of time by the shared <VideoPreloader> in MobileFeed (same
- * policy as the desktop TV), so this component owns no preload logic.
+ * One project card in the feed: full-bleed teaser video (or placeholder), a
+ * right-edge rail of icon actions, and a tap-to-expand caption. Neighbouring
+ * clips are warmed by the shared <VideoPreloader> in MobileFeed, so this
+ * component owns no preload logic.
  */
 export function FeedCard({ project, channel, isActive, inWindow, setRef, onProfile }: FeedCardProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -67,9 +65,9 @@ export function FeedCard({ project, channel, isActive, inWindow, setRef, onProfi
   const [copied, setCopied] = useState(false);
   const [loadingSlow, setLoadingSlow] = useState(false);
 
-  // Only the card in view plays (battery + mobile single-video limits); leaving
-  // a card resets its open panels. play() may reject without a user gesture
-  // (e.g. iOS low-power) — that's fine, the first frame still shows.
+  // Only the card in view plays; leaving a card resets its open panels.
+  // play() may reject without a user gesture (e.g. iOS low-power) — fine,
+  // the first frame still shows.
   useEffect(() => {
     const video = videoRef.current;
     if (isActive) {
@@ -81,9 +79,8 @@ export function FeedCard({ project, channel, isActive, inWindow, setRef, onProfi
     }
   }, [isActive]);
 
-  // Mobile networks make these clips slow to start; show a small on-brand
-  // spinner once the active card has been waiting on its video for >2s, and
-  // clear it the moment playback (re)starts. Only the active card can spin.
+  // Show a spinner once the active card has been waiting on its video for
+  // >2s; clear it the moment playback (re)starts.
   useEffect(() => {
     const video = videoRef.current;
     if (!isActive || !project.videoUrl || !video) {
@@ -114,28 +111,21 @@ export function FeedCard({ project, channel, isActive, inWindow, setRef, onProfi
     };
   }, [isActive, project.videoUrl]);
 
-  // The shareable deep link to this card (same #ch-N format as the TV).
-  const shareUrl = `${window.location.origin}${window.location.pathname}#ch-${channel}`;
+  // deep link to this card, same #ch-N format as the TV
+  const shareUrl = channelUrl(channel);
 
-  // Source code lives on its own rail button. A single repo links straight out;
-  // a bundled channel (the Discord bots) opens a sheet listing each repo.
-  const repoLinks: SheetLink[] = project.repos
-    ? project.repos.map((repo) => ({ label: repo.name, href: repo.url }))
-    : [];
-
-  // Share: hand off to the OS share sheet (Web Share API). Where that's not
-  // available, fall back to copying the link with a brief confirmation.
+  // Web Share API where available, otherwise copy the link with a confirmation
   const handleShare = async () => {
     const data = {
       title: project.title,
-      text: `${project.title} — from Aaron Kromer's portfolio`,
+      text: `${project.title} — from ${NAME}'s portfolio`,
       url: shareUrl,
     };
     if (navigator.share) {
       try {
         await navigator.share(data);
       } catch {
-        // user dismissed the share sheet — nothing to do
+        // user dismissed the share sheet
       }
     } else if (navigator.clipboard) {
       try {
@@ -143,7 +133,7 @@ export function FeedCard({ project, channel, isActive, inWindow, setRef, onProfi
         setCopied(true);
         window.setTimeout(() => setCopied(false), 1600);
       } catch {
-        // clipboard blocked — ignore
+        // clipboard blocked
       }
     }
   };
@@ -159,10 +149,6 @@ export function FeedCard({ project, channel, isActive, inWindow, setRef, onProfi
           className="feed__video"
           ref={videoRef}
           aria-label={`Silent preview clip of ${project.title}`}
-          // poster is windowed like the clip: only cards within ±PRELOAD_RADIUS
-          // carry it, so distant cards don't eager-fetch their placeholder frame
-          // (browsers load `poster` on mount regardless of `preload`). A card
-          // enters the window before it scrolls into view, so the frame is ready.
           poster={inWindow ? (project.mobilePosterUrl ?? project.posterUrl) : undefined}
           muted
           loop
@@ -175,9 +161,6 @@ export function FeedCard({ project, channel, isActive, inWindow, setRef, onProfi
         </video>
       ) : (
         <div className="feed__placeholder" aria-hidden="true">
-          {/* the same soft palette-mesh wash as the profile hero (on a dark
-              ground so the white caption + rail stay legible), so a clip-less
-              channel still feels part of the feed's identity */}
           <span className="feed__placeholder-title">{project.title}</span>
         </div>
       )}
@@ -256,8 +239,8 @@ export function FeedCard({ project, channel, isActive, inWindow, setRef, onProfi
         </button>
       </div>
 
-      {/* bottom-left caption: title, then tags, then a one-line synopsis that
-          expands to the full description + behind-the-scenes */}
+      {/* caption: title, tags, one-line synopsis that expands to the full
+          description + behind-the-scenes */}
       <div className="feed__bug">
         <div className="feed__caption">
           <h2 className="feed__title">
@@ -305,12 +288,16 @@ export function FeedCard({ project, channel, isActive, inWindow, setRef, onProfi
         </div>
       </div>
 
-      <FeedSheet
-        open={codeOpen}
-        title="Source code"
-        links={repoLinks}
-        onClose={() => setCodeOpen(false)}
-      />
+      {/* only a bundled channel needs the source sheet; a single repo is a
+          plain rail link */}
+      {project.repos && (
+        <FeedSheet
+          open={codeOpen}
+          title="Source code"
+          links={project.repos.map((repo) => ({ label: repo.name, href: repo.url }))}
+          onClose={() => setCodeOpen(false)}
+        />
+      )}
     </section>
   );
 }

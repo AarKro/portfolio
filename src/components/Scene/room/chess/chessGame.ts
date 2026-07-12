@@ -1,54 +1,42 @@
 /**
- * A real, playable chess game on the 3D board. The player has the white pieces;
- * a rudimentary alpha-beta AI plays black. Rules + move legality come from
- * chess.js — we never reinvent them; this module only drives the 3D side:
- * raycast clicks → selection, light up legal target squares, slide/capture the
- * piece meshes, and animate the AI's reply.
+ * The playable chess game on the 3D board: player = white, a weak alpha-beta
+ * AI = black. Rules and move legality come from chess.js; this module only
+ * drives the 3D side — raycast clicks to selection, highlight legal squares,
+ * slide/capture the piece meshes, animate the AI's reply.
  *
- * Interaction (crosshair, while walking the room):
- *   • click a white piece  → it's selected, its legal destinations light up
- *   • click a lit square   → the move is played (incl. captures, castling,
- *                            en passant, auto-queen promotion), then black replies
- *   • click elsewhere      → deselect
- *
- * The board group exposes squareSize + squareCoord() (see chess.ts) and holds
- * the piece meshes as children, so everything here works in the board's local
- * space and inherits its placement/rotation on the desk.
+ * Everything works in the board group's local space (squareSize/squareCoord
+ * from chess.ts), so it inherits the board's placement on the desk.
  */
 import * as THREE from 'three';
 import { Chess } from 'chess.js';
+import { easeInOut } from '../../../../utils/easing';
 import { BOARD_TOP_Y, type ChessPieces } from './chessPieces';
 
 const FILES = 'abcdefgh';
-/** How close (m) the crosshair hit must be for a click to count as "at the board" */
+/** Max crosshair-hit distance (m) for a click to count as "at the board" */
 const REACH = 2.2;
-/** Plies the AI looks ahead (its own move + this many replies). Kept low (2) on
- *  purpose: a deeper search froze the main thread while "thinking". 2 still sees
- *  the immediate recapture, so it doesn't hang its pieces for free, but stays
- *  effectively instant — deliberately a weak, rudimentary opponent. */
+/** AI look-ahead in plies. Kept at 2 on purpose: deeper searches froze the
+ *  main thread, and 2 still sees the immediate recapture — a deliberately
+ *  weak but instant opponent. */
 const SEARCH_DEPTH = 2;
 const PIECE_VALUE: Record<string, number> = { p: 1, n: 3, b: 3, r: 5, q: 9, k: 0 };
 const CHECKMATE = 1000;
-/** Random eval noise (± pawns) added to each candidate move, to weaken/vary the
- *  AI on purpose. Big enough that it'll sometimes pick an inaccuracy among
- *  near-equal moves, but well under a minor piece (3) so it never randomly hangs
- *  real material to a clear recapture. */
+/** Random eval noise (± pawns) per candidate move, to vary/weaken the AI.
+ *  Well under a minor piece (3), so it never hangs real material outright. */
 const AI_NOISE = 0.7;
 /** Seconds for a piece to glide between squares */
 const MOVE_DURATION = 0.34;
-/** Height (m) of the little hop a moving piece makes, so it clears its neighbours */
+/** Height (m) of the hop a moving piece makes, so it clears its neighbours */
 const HOP = 0.045;
 
 export interface ChessGame {
-  /** Resolve a crosshair click; returns true if it was a chess interaction (consumed). */
+  /** Resolve a crosshair click; returns true if consumed by the board. */
   tryClick(raycaster: THREE.Raycaster): boolean;
-  /** Is the crosshair currently over something the player could click? (crosshair feedback) */
+  /** Is the crosshair over something clickable? (crosshair feedback) */
   isInteractive(raycaster: THREE.Raycaster): boolean;
   /** Advance animations; returns true while a frame still needs drawing. */
   update(delta: number): boolean;
 }
-
-const easeInOut = (t: number) => t * t * (3 - 2 * t);
 
 interface Tween {
   mesh: THREE.Mesh;
@@ -67,9 +55,8 @@ export function createChessGame(
   const squareCoord = set.userData.squareCoord as (file: number, rank: number) => [number, number];
   const chess = new Chess();
 
-  // a highlighted-target material/geometry, reused across all the markers. Full
-  // squares (not circles), so a capture square stays visible as a ring around
-  // the enemy piece sitting on it. Green = move, red = capture.
+  // Target markers are full squares (not circles) so a capture square stays
+  // visible as a ring around the enemy piece on it. Green = move, red = capture.
   const tileGeo = new THREE.PlaneGeometry(assets.scale * 0.98, assets.scale * 0.98);
   const moveMat = new THREE.MeshBasicMaterial({
     color: 0x46e07a,
@@ -83,7 +70,7 @@ export function createChessGame(
     opacity: 0.55,
     depthWrite: false,
   });
-  // a glowing copy of the white material for the currently-selected piece
+  // glowing copy of the white material for the selected piece
   const selectedMat = (assets.white as THREE.MeshStandardMaterial).clone();
   selectedMat.emissive = new THREE.Color(0x2f8f4a);
   selectedMat.emissiveIntensity = 0.9;
@@ -92,19 +79,18 @@ export function createChessGame(
   highlights.name = 'chessHighlights';
   set.add(highlights);
 
-  // win celebration: a quad over every tile that strobes through the rainbow
-  // (filled in by startDisco on a win, animated in update)
+  // win celebration: rainbow-strobing quads over the tiles (see startDisco)
   const disco = new THREE.Group();
   disco.name = 'chessDisco';
   set.add(disco);
 
-  let selected: string | null = null; // selected square, or null
+  let selected: string | null = null;
   let legalTargets = new Map<string, boolean>(); // target square → isCapture
   let busy = false; // a move (player + AI reply) is in flight; ignore clicks
-  let discoActive = false; // the win light-show is running
+  let discoActive = false;
   let discoTime = 0;
-  let bannerSprite: THREE.Sprite | null = null; // the floating outcome text
-  let bannerWin = false; // tint the banner through the rainbow (win) vs static
+  let bannerSprite: THREE.Sprite | null = null; // floating outcome text
+  let bannerWin = false; // rainbow-tint the banner (win) vs static amber
   const tweens: Tween[] = [];
 
   /** Local board position of an algebraic square ('e4'). */
@@ -118,7 +104,7 @@ export function createChessGame(
   function clearSelection() {
     if (selected) {
       const mesh = pieces.get(selected);
-      if (mesh) mesh.material = assets.white; // restore (only white is ever selected)
+      if (mesh) mesh.material = assets.white; // only white is ever selected
     }
     selected = null;
     legalTargets = new Map();
@@ -140,7 +126,7 @@ export function createChessGame(
       const isCapture = move.flags.includes('c') || move.flags.includes('e');
       legalTargets.set(move.to, isCapture);
       const marker = new THREE.Mesh(tileGeo, isCapture ? captureMat : moveMat);
-      marker.rotation.x = -Math.PI / 2; // lie flat on the board
+      marker.rotation.x = -Math.PI / 2;
       const pos = localOf(move.to);
       marker.position.set(pos.x, BOARD_TOP_Y + 0.002, pos.z);
       marker.userData = { square: move.to };
@@ -160,7 +146,7 @@ export function createChessGame(
     pieces.delete(square);
   }
 
-  /** Replace a just-moved pawn mesh with a queen of the same colour (auto-promotion). */
+  /** Replace a just-moved pawn mesh with a queen (auto-promotion). */
   function promote(square: string, color: 'w' | 'b') {
     removePiece(square);
     const queen = new THREE.Mesh(assets.geoms.queen, color === 'w' ? assets.white : assets.black);
@@ -177,7 +163,7 @@ export function createChessGame(
 
   /**
    * Reflect a chess.js move on the 3D board: remove any captured piece, glide
-   * the moving piece (and the rook, when castling), and auto-queen promotions.
+   * the mover (and the rook when castling), auto-queen promotions.
    * `onComplete` fires when the primary piece finishes sliding.
    */
   function reconcileMove(
@@ -221,8 +207,7 @@ export function createChessGame(
     }
   }
 
-  /** Light the whole board up disco-style: one additive quad per tile, hue
-   *  strobing across the board (animated in update). Used only on a player win. */
+  /** One additive quad per tile, hue-strobed in update. Player wins only. */
   function startDisco() {
     if (discoActive) return;
     discoActive = true;
@@ -244,10 +229,7 @@ export function createChessGame(
     }
   }
 
-  /** Float the outcome text in the room as a billboarded sprite above the board
-   *  (white text + dark outline on a transparent canvas). The material colour is
-   *  tinted: static amber for a draw/loss, cycled through the rainbow for a win
-   *  (see update). A Sprite always faces the camera, so it reads from anywhere. */
+  /** Float the outcome text above the board as a billboarded sprite. */
   function showBanner(text: string, win: boolean) {
     const W = 1024;
     const H = 256;
@@ -278,14 +260,13 @@ export function createChessGame(
     bannerWin = win;
     bannerSprite = new THREE.Sprite(material);
     bannerSprite.scale.set(0.62, 0.62 * (H / W), 1);
-    bannerSprite.position.set(0, 0.34, 0); // local: hover above the board centre
+    bannerSprite.position.set(0, 0.34, 0);
     bannerSprite.renderOrder = 999;
     set.add(bannerSprite);
     requestRender();
   }
 
-  /** End-of-game signal: a win lights the board up disco-style; either way the
-   *  outcome text floats above the board. Returns true if the game is over. */
+  /** Announce the result if the game is over; returns true if it is. */
   function announceIfOver(): boolean {
     if (!chess.isGameOver()) return false;
     let text: string;
@@ -307,13 +288,13 @@ export function createChessGame(
     } else {
       text = 'DRAW';
     }
-    clearSelection(); // tidy any leftover highlights
+    clearSelection();
     if (win) startDisco();
     showBanner(text, win);
     return true;
   }
 
-  // ── the rudimentary AI (black) ─────────────────────────────────────────────
+  // ── the AI (black) ─────────────────────────────────────────────────────────
   function evaluate(): number {
     let score = 0; // +ve favours white
     for (const row of chess.board()) {
@@ -343,7 +324,7 @@ export function createChessGame(
         best = Math.min(best, value);
         beta = Math.min(beta, value);
       }
-      if (beta <= alpha) break; // alpha-beta cutoff
+      if (beta <= alpha) break;
     }
     return best;
   }
@@ -397,7 +378,7 @@ export function createChessGame(
   }
 
   // ── interaction ────────────────────────────────────────────────────────────
-  /** Nearest in-reach hit among the highlight discs and the piece meshes. */
+  /** Nearest in-reach hit among the highlight markers and the piece meshes. */
   function pick(raycaster: THREE.Raycaster): THREE.Intersection | null {
     const hits = raycaster.intersectObjects([...highlights.children, ...pieces.values()], false);
     const hit = hits.find((h) => h.distance <= REACH);
@@ -411,7 +392,7 @@ export function createChessGame(
     if (selected) {
       if (!hit) {
         clearSelection();
-        return true; // consume: clicking away cancels the selection
+        return true; // clicking away cancels the selection
       }
       const square = hit.object.userData.square as string;
       if (legalTargets.has(square)) {
@@ -420,21 +401,21 @@ export function createChessGame(
       }
       const piece = chess.get(square as never);
       if (piece && piece.color === 'w') {
-        select(square); // re-select another of the player's pieces
+        select(square);
         return true;
       }
       clearSelection();
       return true;
     }
 
-    if (!hit) return false; // nothing of ours under the crosshair — let other clicks through
+    if (!hit) return false; // nothing of ours under the crosshair
     const square = hit.object.userData.square as string;
     const piece = chess.get(square as never);
     if (piece && piece.color === 'w') {
       select(square);
       return true;
     }
-    return true; // clicked a black piece at the board — consume so it doesn't reach the TV
+    return true; // clicked a black piece — consume so it doesn't reach the TV
   }
 
   function isInteractive(raycaster: THREE.Raycaster): boolean {
@@ -468,18 +449,17 @@ export function createChessGame(
       discoTime += delta;
       for (const tile of disco.children as THREE.Mesh[]) {
         const phase = tile.userData.phase as number;
-        const hue = (discoTime * 0.45 + phase * 0.07) % 1; // rainbow rolls across the board
-        const light = 0.5 + 0.18 * Math.sin(discoTime * 7 - phase * 0.6); // strobe brightness
+        const hue = (discoTime * 0.45 + phase * 0.07) % 1;
+        const light = 0.5 + 0.18 * Math.sin(discoTime * 7 - phase * 0.6);
         (tile.material as THREE.MeshBasicMaterial).color.setHSL(hue, 1, light);
       }
-      // the win banner rides the same rainbow as the board
       if (bannerSprite && bannerWin) {
         (bannerSprite.material as THREE.SpriteMaterial).color.setHSL((discoTime * 0.45) % 1, 1, 0.62);
       }
       active = true;
     }
 
-    return active; // keep drawing while a piece slides or the board is partying
+    return active;
   }
 
   return { tryClick, isInteractive, update };

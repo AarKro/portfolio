@@ -16,11 +16,9 @@ interface SwipeHandlers {
 }
 
 /**
- * Minimal pointer-based swipe detection — no dependency. Spread the returned
- * handlers onto an element; a quick drag past `threshold` fires the matching
- * direction. The dominant axis wins, so a vertical scroll never triggers a
- * horizontal swipe (and vice-versa). Mouse pointers are ignored on purpose:
- * a precise pointer has the buttons/keys, swipe is the touch affordance.
+ * Minimal pointer-based swipe detection. Spread the returned handlers onto an
+ * element; the dominant axis wins, so a vertical scroll never triggers a
+ * horizontal swipe. Mouse pointers are ignored — swipe is a touch affordance.
  */
 export function useSwipe({
   onSwipeLeft,

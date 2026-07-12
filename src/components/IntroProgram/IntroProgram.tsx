@@ -1,4 +1,5 @@
-import { FIRST_PROJECT_CHANNEL, PROJECTS } from '../../data/projects';
+import { channelOf, PROJECTS } from '../../data/projects';
+import { GITHUB_URL, LINKEDIN_URL, NAME, TAGLINE } from '../../data/profile';
 import { formatChannel } from '../../utils/broadcast';
 import './IntroProgram.scss';
 
@@ -23,9 +24,9 @@ export function IntroProgram({ tuneTo }: IntroProgramProps) {
     <div className="intro">
       <p className="intro__pretitle">*** LIVE ***</p>
       <p className="intro__greeting">{greeting} You’re tuned in to</p>
-      <h1 className="intro__title">Aaron Kromer</h1>
+      <h1 className="intro__title">{NAME}</h1>
       <p className="intro__subtitle">
-        Frontend Developer &amp; Interaction Designer.
+        {TAGLINE}.
         <br />
         {program}: my pet projects, on every channel.
       </p>
@@ -38,7 +39,7 @@ export function IntroProgram({ tuneTo }: IntroProgramProps) {
         <p className="intro__guide-title">— TV GUIDE —</p>
         <ul className="intro__guide-list">
           {PROJECTS.map((project, index) => {
-            const channel = index + FIRST_PROJECT_CHANNEL;
+            const channel = channelOf(index);
             return (
               <li key={project.id}>
                 <button className="intro__guide-entry" onClick={() => tuneTo(channel)}>
@@ -54,15 +55,11 @@ export function IntroProgram({ tuneTo }: IntroProgramProps) {
       </div>
 
       <p className="intro__contact">
-        <a href="https://github.com/AarKro" target="_blank" rel="noreferrer">
+        <a href={GITHUB_URL} target="_blank" rel="noreferrer">
           GitHub
         </a>
         <span aria-hidden="true"> · </span>
-        <a
-          href="https://www.linkedin.com/in/aaron-kromer"
-          target="_blank"
-          rel="noreferrer"
-        >
+        <a href={LINKEDIN_URL} target="_blank" rel="noreferrer">
           LinkedIn
         </a>
       </p>

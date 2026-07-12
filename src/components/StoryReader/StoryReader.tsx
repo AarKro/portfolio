@@ -1,15 +1,12 @@
-import { useEffect, useRef, type ReactNode } from 'react';
-import { useFocusTrap } from '../../hooks/useFocusTrap';
+import { useRef, type ReactNode } from 'react';
+import { useDialog } from '../../hooks/useDialog';
 import storyRaw from '../../assets/others/ich.md?raw';
 import './StoryReader.scss';
 
 /**
- * The reader that opens when the visitor picks up the "Ich." paper off the couch
- * in the 3D room. A sheet of paper laid over the room: the short story rendered
- * from src/assets/others/ich.md, with a control hint so it's clear you scroll to
- * read and press ESC (or ✕) to put it back down. Markdown here is just blank-line
- * paragraphs with `_inline italics_` (the story's system interjections) — parsed
- * inline below so we keep the no-dependencies rule.
+ * The reader for the "Ich." paper on the couch: the short story from
+ * src/assets/others/ich.md laid over the room. Its markdown is just blank-line
+ * paragraphs with `_italics_`, parsed inline to keep the no-dependencies rule.
  */
 interface StoryReaderProps {
   open: boolean;
@@ -35,36 +32,10 @@ function renderInline(text: string): ReactNode[] {
 export function StoryReader({ open, onClose }: StoryReaderProps) {
   const sheetRef = useRef<HTMLElement>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
-  const openerRef = useRef<HTMLElement | null>(null);
 
-  // Focus the sheet on open so PageUp/Down/arrows scroll it; hand focus back
-  // to whatever had it on close (usually nothing — the paper is a 3D click).
-  useEffect(() => {
-    if (open) {
-      openerRef.current =
-        document.activeElement instanceof HTMLElement ? document.activeElement : null;
-      sheetRef.current?.focus();
-    } else {
-      openerRef.current?.focus();
-      openerRef.current = null;
-    }
-  }, [open]);
-
-  // ESC closes
-  useEffect(() => {
-    if (!open) return;
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        event.stopPropagation();
-        onClose();
-      }
-    };
-    window.addEventListener('keydown', onKeyDown);
-    return () => window.removeEventListener('keydown', onKeyDown);
-  }, [open, onClose]);
-
-  // Tab stays inside the dialog while it's open
-  useFocusTrap(dialogRef, open);
+  // Focus the sheet on open so PageUp/Down/arrows scroll it (and back to the
+  // opener on close); ESC closes; Tab stays inside while open.
+  useDialog(dialogRef, sheetRef, open, onClose);
 
   if (!open) return null;
 

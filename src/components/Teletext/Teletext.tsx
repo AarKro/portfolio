@@ -1,21 +1,15 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import type { Project } from '../../data/projects';
+import { matchesMedia } from '../../utils/media';
 import { tokenizeInlineLinks, type InlineToken } from '../InlineLink/InlineLink';
 import './Teletext.scss';
 
 /**
- * A real Mode 7 teletext page (BBC Ceefax style), replacing the broadcast
- * picture while open — black screen, a fixed 40-character grid, a header row
- * with the page number and a live clock (HH:MM/SS), a yellow double-height
- * headline, white body copy with cyan links, and a Fastext row of coloured
- * link labels at the bottom (red = CLOSE, then green/yellow/cyan for the
- * project's source/demo links).
- *
- * Behaviour is modelled on the real thing too: requesting the page first
- * shows the header hunting through rolling page numbers (teletext was a
- * broadcast carousel — you waited for your page to come round), then the
- * rows paint in top-to-bottom. Long descriptions split into numbered
- * subpages ("2/3") that rotate on a timer, exactly like Ceefax articles.
+ * A Mode 7 teletext page (BBC Ceefax style) that replaces the broadcast
+ * picture while open: fixed 40-character grid, live clock, double-height
+ * headline, body copy split into rotating subpages, Fastext row of coloured
+ * links at the bottom. Opening plays the authentic carousel "hunt" (rolling
+ * page numbers) before the rows paint in top-to-bottom.
  */
 
 /** Classic Mode 7 geometry: 40 character cells per row. */
@@ -26,7 +20,7 @@ const BODY_ROWS = 10;
 const SEARCH_DURATION = 900;
 /** How fast the rolling page numbers tick over while hunting. */
 const SEARCH_TICK = 90;
-/** Subpage carousel period — Ceefax articles rotated on a timer like this. */
+/** Subpage carousel period. */
 const ROTATE_INTERVAL = 18000;
 
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -34,10 +28,7 @@ const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', '
 
 const pad2 = (n: number) => String(n).padStart(2, '0');
 
-const prefersReducedMotion = () =>
-  typeof window !== 'undefined' &&
-  !!window.matchMedia &&
-  window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const prefersReducedMotion = () => matchesMedia('(prefers-reduced-motion: reduce)');
 
 /** One word cell-counted onto the grid; `linkEnd` carries the trailing ↗. */
 interface Word {
@@ -48,7 +39,7 @@ interface Word {
 
 type Line = Word[];
 
-/** Word-wraps tokenized copy onto the 40-column grid (a link's ↗ costs a cell). */
+/** Word-wraps tokenized copy onto the grid (a link's ↗ costs a cell). */
 function wrapTokens(tokens: InlineToken[], cols: number): Line[] {
   const words: Word[] = [];
   for (const token of tokens) {
@@ -131,15 +122,15 @@ function groupLine(line: Line): WordGroup[] {
 export function Teletext({ project, channel, onClose }: TeletextProps) {
   const reducedMotion = useMemo(prefersReducedMotion, []);
 
-  // Opening hides the bug (and the TELETEXT button that had focus), which
-  // would drop keyboard focus to <body> — take it, so the page is announced
-  // and ESC/Tab work from here. ProjectProgram restores focus on close.
+  // Opening hides the bug (and the focused TELETEXT button), which would drop
+  // keyboard focus to <body> — take it, so the page is announced and ESC/Tab
+  // work from here. ProjectProgram restores focus on close.
   const sectionRef = useRef<HTMLElement>(null);
   useEffect(() => {
     sectionRef.current?.focus();
   }, []);
 
-  // ── The carousel hunt: header up instantly, page numbers rolling ─────────
+  // carousel hunt: header up instantly, page numbers rolling until "found"
   const [found, setFound] = useState(reducedMotion);
   const [rollingPage, setRollingPage] = useState(100);
 
@@ -156,16 +147,16 @@ export function Teletext({ project, channel, onClose }: TeletextProps) {
     };
   }, [found]);
 
-  // ── The live header clock, ticking seconds like the real service ─────────
+  // live header clock
   const [now, setNow] = useState(() => new Date());
   useEffect(() => {
     const tick = window.setInterval(() => setNow(new Date()), 1000);
     return () => window.clearInterval(tick);
   }, []);
 
-  // ── Copy wrapped onto the grid and split into subpages ───────────────────
-  // The tech line wraps like everything else; when it takes more than one row
-  // the extra rows come out of the body budget so the grid never overflows.
+  // Copy wrapped onto the grid and split into subpages. When the tech line
+  // wraps to more than one row, the extra rows come out of the body budget so
+  // the grid never overflows.
   const { techLines, subpages } = useMemo(() => {
     const tech = wrapTokens([{ text: project.tech.join(' · ').toUpperCase() }], COLS);
     const bodyRows = BODY_ROWS - (tech.length - 1);
@@ -194,9 +185,8 @@ export function Teletext({ project, channel, onClose }: TeletextProps) {
     return () => window.clearInterval(rotate);
   }, [found, pageCount, subpage, reducedMotion]);
 
-  // ESC is the remote's TEXT button: back to the programme. Capture phase so
-  // the ← → swallow below runs before TVSet's window-level channel keys —
-  // flipping channels would yank the page out from under the reader.
+  // ESC closes. Capture phase so the ← → swallow runs before TVSet's
+  // window-level channel keys — flipping channels would yank the page away.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
@@ -206,12 +196,11 @@ export function Teletext({ project, channel, onClose }: TeletextProps) {
     return () => window.removeEventListener('keydown', onKey, true);
   }, [onClose]);
 
-  // ── Header fields ─────────────────────────────────────────────────────────
   const pageNo = 100 + channel;
   const dateLabel = `${DAYS[now.getDay()]} ${pad2(now.getDate())} ${MONTHS[now.getMonth()]}`;
   const clockLabel = `${pad2(now.getHours())}:${pad2(now.getMinutes())}/${pad2(now.getSeconds())}`;
 
-  // ── Fastext row: red CLOSE, then up to three coloured project links ──────
+  // Fastext row: red CLOSE, then up to three coloured project links
   const fastext: FastextSlot[] = [{ label: 'CLOSE', color: 'red', onClick: onClose }];
   const linkColors: FastextSlot['color'][] = ['green', 'yellow', 'cyan'];
   const links: Omit<FastextSlot, 'color'>[] = [];
@@ -221,10 +210,11 @@ export function Teletext({ project, channel, onClose }: TeletextProps) {
     links.push({ label: 'CODE', href: project.githubUrl });
   }
   if (project.demoUrl) links.push({ label: 'DEMO', href: project.demoUrl });
+  // only 3 coloured slots — a channel with 3 repos AND a demo drops the demo
   links.slice(0, 3).forEach((link, i) => fastext.push({ ...link, color: linkColors[i] }));
-  // The subpage advance control: a flashing (Mode 7 flash attribute) cyan MORE
-  // key when a Fastext slot is free; when the row is full of repo links, the
-  // header's subpage counter flashes instead so the affordance never vanishes.
+  // The subpage advance control: a flashing cyan MORE key when a Fastext slot
+  // is free; when the row is full, the header's subpage counter flashes
+  // instead so the affordance never vanishes.
   const hasMoreSlot = fastext.length < 4 && pageCount > 1;
   if (hasMoreSlot) {
     fastext.push({
@@ -276,10 +266,9 @@ export function Teletext({ project, channel, onClose }: TeletextProps) {
       {/* container-query units resolve against the nearest ANCESTOR container,
           so the grid sizing lives on this inner screen div, not the section */}
       <div className="teletext__screen">
-      {/* Row 0: the page header — up instantly, even while the page is hunted.
-          While hunting, the requested number sits fixed on the left and the
-          carousel's passing page numbers roll in the middle slot, like the
-          real thing. Once found, that slot shows the subpage counter. */}
+      {/* Header row — up instantly, even while the page is hunted. While
+          hunting, the middle slot shows the carousel's rolling page numbers;
+          once found it shows the subpage counter. */}
       <header className="teletext__row teletext__head">
         <span className="teletext__pageno">P{pageNo}</span>
         <span>AARKRO</span>
@@ -303,15 +292,13 @@ export function Teletext({ project, channel, onClose }: TeletextProps) {
 
       {found && (
         <div className="teletext__page" key={subpage}>
-          {/* Colour-block masthead with the classic mosaic stepped edge. The
-              label is the SECTION name (Ceefax mastheads said NEWS or SPORT) —
-              the service name already sits in the header row above. */}
+          {/* masthead label is the SECTION name (Ceefax said NEWS or SPORT);
+              the service name already sits in the header row above */}
           <div className="teletext__row teletext__masthead" style={paintDelay(2)}>
             <span className="teletext__masthead-label">PROJECT GUIDE</span>
             <span className="teletext__masthead-channel">CH {pad2(channel)}</span>
           </div>
 
-          {/* Double-height yellow headline, Mode 7 style */}
           <h3 className="teletext__row teletext__title-row" style={paintDelay(2)}>
             <span className="teletext__title">{project.title}</span>
           </h3>
