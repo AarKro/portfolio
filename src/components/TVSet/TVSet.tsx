@@ -19,9 +19,14 @@ interface TVSetProps {
  */
 export function TVSet({ onPoweredOff }: TVSetProps) {
   const tv = useTV();
+  const rootRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== 'ArrowRight' && event.key !== 'ArrowLeft') return;
+      // While walking the room the TV is inert (Scene toggles it) — the
+      // window-level arrows shouldn't keep flipping channels underneath.
+      if (rootRef.current?.closest('[inert]')) return;
       if (event.key === 'ArrowRight') tv.channelUp();
       if (event.key === 'ArrowLeft') tv.channelDown();
     };
@@ -42,7 +47,7 @@ export function TVSet({ onPoweredOff }: TVSetProps) {
   }, [tv.poweredOn, onPoweredOff]);
 
   return (
-    <div className="tv">
+    <div className="tv" ref={rootRef}>
       <div className="tv__antenna" aria-hidden="true">
         <span className="tv__antenna-rod tv__antenna-rod--left" />
         <span className="tv__antenna-rod tv__antenna-rod--right" />

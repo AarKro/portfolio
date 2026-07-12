@@ -31,6 +31,10 @@
     scrollbar-width: thin;
     scrollbar-color: rgba(77, 255, 136, 0.35) transparent;
     animation: phosphor-flicker 4s infinite;
+
+    @media (prefers-reduced-motion: reduce) {
+      animation: none;
+    }
   }
 
   // green channel number, like an old OSD

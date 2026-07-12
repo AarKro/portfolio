@@ -12,6 +12,12 @@
   container-type: size;
   background: $teletext-bg;
 
+  // receives programmatic focus on open (tabindex=-1); the full-screen page
+  // itself is the focus context, so no ring on the container
+  &:focus {
+    outline: none;
+  }
+
   // The grid: 40 cells of --tt-cell fill the width minus 2cqw padding a side.
   // VT323 advances 0.6163em per character (measured), hence the font size;
   // the 1.2 cell aspect is real Mode 7 (40×25 cells on a 4:3 raster).

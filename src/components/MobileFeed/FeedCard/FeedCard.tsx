@@ -158,6 +158,7 @@ export function FeedCard({ project, channel, isActive, inWindow, setRef, onProfi
         <video
           className="feed__video"
           ref={videoRef}
+          aria-label={`Silent preview clip of ${project.title}`}
           // poster is windowed like the clip: only cards within ±PRELOAD_RADIUS
           // carry it, so distant cards don't eager-fetch their placeholder frame
           // (browsers load `poster` on mount regardless of `preload`). A card
@@ -204,7 +205,7 @@ export function FeedCard({ project, channel, isActive, inWindow, setRef, onProfi
             })
           }
           aria-pressed={liked}
-          aria-label={liked ? 'Unlike' : 'Like'}
+          aria-label="Like" /* constant: aria-pressed carries the on/off state */
         >
           <HeartIcon />
         </button>
@@ -248,7 +249,10 @@ export function FeedCard({ project, channel, isActive, inWindow, setRef, onProfi
           aria-label="Share"
         >
           <ShareIcon />
-          {copied && <span className="feed__rail-label feed__rail-copied">Copied</span>}
+          {/* kept mounted so the status is announced when the text appears */}
+          <span className="feed__rail-label feed__rail-copied" role="status">
+            {copied ? 'Copied' : null}
+          </span>
         </button>
       </div>
 
@@ -271,11 +275,17 @@ export function FeedCard({ project, channel, isActive, inWindow, setRef, onProfi
           </ul>
 
           <div className="feed__synopsis">
-            <p className="feed__description">{renderInlineLinks(project.description)}</p>
+            <p className="feed__description" id={`feed-description-${channel}`}>
+              {renderInlineLinks(project.description)}
+            </p>
             <button
               className="feed__expand"
               onClick={() => setExpanded((v) => !v)}
               aria-expanded={expanded}
+              aria-controls={
+                `feed-description-${channel}` +
+                (project.behindTheScenes ? ` feed-details-${channel}` : '')
+              }
               aria-label={expanded ? 'Hide details' : 'Show details'}
             >
               <ChevronIcon />
@@ -283,7 +293,7 @@ export function FeedCard({ project, channel, isActive, inWindow, setRef, onProfi
           </div>
 
           {project.behindTheScenes && (
-            <div className="feed__details" aria-hidden={!expanded}>
+            <div className="feed__details" id={`feed-details-${channel}`} aria-hidden={!expanded}>
               <div className="feed__details-inner">
                 <p className="feed__behind">
                   <span className="feed__behind-label">BEHIND THE SCENES</span>

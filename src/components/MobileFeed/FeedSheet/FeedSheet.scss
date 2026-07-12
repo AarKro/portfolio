@@ -46,6 +46,12 @@
     &.is-dragging {
       transition: none;
     }
+
+    // receives programmatic focus on open (tabindex=-1); the sheet itself is
+    // the focus context, so no ring on the container
+    &:focus {
+      outline: none;
+    }
   }
 
   // drag target: the grabber + title. Drag it down to dismiss.

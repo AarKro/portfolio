@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { Project } from '../../data/projects';
 import { StaticNoise } from '../StaticNoise/StaticNoise';
 import { ClipSources } from '../ClipSources/ClipSources';
@@ -40,6 +40,19 @@ export function ProjectProgram({ project, channel }: ProjectProgramProps) {
   useEffect(() => {
     setTeletextOpen(false);
   }, [project.id]);
+
+  // Closing the page unmounts it with focus inside (dropping focus to <body>);
+  // hand it back to the TELETEXT toggle. Skipped when focus survived the close
+  // (e.g. the user clicked a control-panel button instead).
+  const teletextButtonRef = useRef<HTMLButtonElement>(null);
+  const wasTeletextOpen = useRef(false);
+  useEffect(() => {
+    const was = wasTeletextOpen.current;
+    wasTeletextOpen.current = teletextOpen;
+    if (was && !teletextOpen && document.activeElement === document.body) {
+      teletextButtonRef.current?.focus();
+    }
+  }, [teletextOpen]);
 
   // Each time we land on a video channel, show static until it plays (with a
   // safety timeout so a clip that never fires `playing` doesn't stay covered).
@@ -86,6 +99,7 @@ export function ProjectProgram({ project, channel }: ProjectProgramProps) {
           <video
             key={project.id}
             className="program__video"
+            aria-label={`Silent preview clip of ${project.title}`}
             poster={project.posterUrl}
             muted
             loop
@@ -117,9 +131,11 @@ export function ProjectProgram({ project, channel }: ProjectProgramProps) {
         </ul>
         <div className="program__actions">
           <button
+            ref={teletextButtonRef}
             className="program__action program__action--teletext"
             onClick={() => setTeletextOpen(true)}
             aria-expanded={teletextOpen}
+            aria-controls={teletextOpen ? 'teletext-page' : undefined}
           >
             TELETEXT
             <ActionIcon glyph="▤" />

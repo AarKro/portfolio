@@ -103,6 +103,8 @@ export function Scene({
 
   const modeRef = useRef(mode);
   modeRef.current = mode;
+  const storyOpenRef = useRef(storyOpen);
+  storyOpenRef.current = storyOpen;
   const callbacksRef = useRef({ onArrivedInRoom, onArrivedAtTV, onTVClicked, onPaperClicked });
   callbacksRef.current = { onArrivedInRoom, onArrivedAtTV, onTVClicked, onPaperClicked };
 
@@ -350,7 +352,20 @@ export function Scene({
     controls.addEventListener('lock', onLock);
     controls.addEventListener('unlock', onUnlock);
 
-    const onKeyDown = (event: KeyboardEvent) => keys.add(event.code);
+    const onKeyDown = (event: KeyboardEvent) => {
+      keys.add(event.code);
+      // Keyboard escape hatch: returning to the TV otherwise needs a
+      // pointer-locked mouse click on it, which strands keyboard-only
+      // visitors in the room after they toggle PWR with Enter/Space.
+      if (
+        event.code === 'Enter' &&
+        modeRef.current === 'room' &&
+        !flight &&
+        !storyOpenRef.current
+      ) {
+        callbacksRef.current.onTVClicked();
+      }
+    };
     const onKeyUp = (event: KeyboardEvent) => keys.delete(event.code);
     window.addEventListener('keydown', onKeyDown);
     window.addEventListener('keyup', onKeyUp);
@@ -515,6 +530,8 @@ export function Scene({
               <span className="scene__key">S</span>
               <span className="scene__key">D</span>
             </div>
+            {/* Enter = back to the TV (the keyboard path; clicking still works) */}
+            <span className="scene__key scene__key--return">⏎</span>
           </div>
           <div className="scene__hint scene__hint--mouse">
             <span className="scene__mouse-arrow">‹</span>
