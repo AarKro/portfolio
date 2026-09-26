@@ -57,7 +57,7 @@ There is no contact page: LinkedIn and GitHub are always in the nav. Calls to ac
 ## 4. Pages in detail
 
 ### 4.1 Landing: art installation
-An interactive generative piece, shown on **every visit**. It's not an intro that plays once; it *is* the landing page. Built with **p5.js**. Only the *perception* of 3D is needed.
+An interactive generative piece, shown on **every visit**. It's not an intro that plays once; it *is* the landing page. Drawn with the plain Canvas 2D API (no drawing library). Only the *perception* of 3D is needed.
 
 **Look**
 - Full screen, **dark charcoal background** (`bg/inverse`, warm gray 900). This is the only dark part of the site.
@@ -74,12 +74,11 @@ An interactive generative piece, shown on **every visit**. It's not an intro tha
 5. **Arrival:** the dive ends on the overview (§4.2).
 
 **Readability**
-- A soft **backdrop blur with a slight charcoal tint** sits behind the title and behind the scroll hint. Threads behind the text turn into soft glows; at the edges they stay sharp.
-- The blur has a feathered edge. In code: a DOM layer over the canvas with `backdrop-filter: blur()` and a radial `mask-image`.
-- White text must reach at least 4.5:1 against the brightest blurred thread.
+- ~~A soft backdrop blur with a slight charcoal tint behind the title and the scroll hint.~~ On trial: no blur at all (2026-09-26). If it comes back: a DOM layer over the canvas with `backdrop-filter: blur()` and a radial `mask-image` for the feathered edge.
+- White text must still reach at least 4.5:1 (3:1 for large text) against the threads behind it. Open: check this without the blur.
 
 **Interaction**
-- Guitar-string behavior: the mouse can drag and pluck the threads; they stretch a little, vibrate and spring back into form. Technically a damped spring simulation (e.g. a chain of points per thread).
+- Guitar-string behavior: the mouse can drag and pluck the threads; they stretch a little, vibrate and spring back into form. Technically a damped spring simulation (a chain of points per thread). Tuned tight: a pluck rings for about a second; a grabbed thread slips out of the grip when pulled about 84 px and snaps back.
 - This interaction is specified here only; it is not shown in Figma.
 
 **Title**
@@ -180,7 +179,7 @@ An interactive generative piece, shown on **every visit**. It's not an intro tha
 ### 6.2 Transitions (keyframes in Figma, "Transitions" section)
 **Dive (landing → overview)**, scroll-driven:
 1. Threads loaded: title and scroll hint visible.
-2. ~30%: title and hint fade out fast; threads scale up from the center (camera moving forward); back layers fade first.
+2. ~30%: title and hint fade out fast; threads scale up from the center (camera moving forward); each thread stays fully visible until the camera gets close, then drops out quickly (within ~5% of the dive); the front threads go first (~35%), the farthest last (~90%).
 3. ~70%: only a few huge, soft front threads left; background lightens toward `bg/default`.
 4. 100%: background fully light; the five yarn bundles drop in staggered with a small bounce, settle into their rows and reveal the content.
 
@@ -233,7 +232,7 @@ Tag · Text link · Social link (icon + label) · Scrap (loose ends item) · Ico
 | Styling | SCSS modules per component + CSS custom properties for theming |
 | Scroll | Lenis (smooth scroll) |
 | Animation | GSAP + ScrollTrigger (DrawSVG for the thread, MorphSVG where useful) |
-| Landing installation | p5.js in instance mode, wrapped in a React component. Three.js only if p5 hits a real limit. |
+| Landing installation | Plain Canvas 2D with a `requestAnimationFrame` loop in a React component, fixed-step physics. Three.js only if 2D hits a real limit. |
 | Content | MDX: one file per case study |
 | Linting | ESLint 9 + `eslint-plugin-jsx-a11y` (the a11y plugin doesn't support ESLint 10 yet) |
 | Hosting | GitHub Pages (static SPA), portable to other hosts later |
@@ -244,7 +243,7 @@ Tag · Text link · Social link (icon + label) · Scrap (loose ends item) · Ico
 src/
   app/            routing, layout, navigation
   pages/          Landing, Overview, About
-  installation/   p5 sketch + React wrapper
+  installation/   thread model + canvas wrapper
   thread/         the thread: SVG path, scroll logic
   components/     shared building blocks (Stage, ImageReveal, …)
   styles/         global SCSS, tokens, mixins
@@ -293,7 +292,7 @@ Each project defines its tokens (thread color, background, text colors, display 
 - **404:** "lost the thread", a tangled thread and a link back to the overview.
 
 ### 9.6 Performance
-- p5 and any 3D code are loaded only on the landing page (code splitting).
+- The installation and any 3D code are loaded only on the landing page (code splitting).
 - Images are optimized and lazy-loaded.
 - Animations use transforms/opacity and respect reduced motion.
 
@@ -309,17 +308,17 @@ npm run lint
 ```
 
 ### Prototype status
-- **Landing threads (`src/installation/`):** spun threads in the five project colors on three depth layers, with draw-in, yarn texture (core + two twisted strands + fuzz), pluck on pointer sweep and drag-and-release. Physics: Verlet string with tension on the displacement from the rest shape and a weak spring back.
-- **Dive (`src/pages/Landing/`):** 400vh scroll section with a sticky viewport; scrubbed with GSAP ScrollTrigger (reverses on scroll up). Layers scale at different rates, back layers fade first, background shifts from `bg/inverse` to `bg/default`, canvas blurs at the end. The title and scroll hint sit on a feathered backdrop blur.
+- **Landing threads (`src/installation/`):** straight spun threads (6–10 per project color) on three depth layers, with draw-in, yarn texture (core + two twisted strands + fuzz), pluck on pointer sweep and drag-and-release. Physics: Verlet string with tension on the displacement from the rest shape and a weak spring back.
+- **Dive (`src/pages/Landing/`):** 400vh scroll section with a sticky viewport; scrubbed with GSAP ScrollTrigger (reverses on scroll up). Layers scale at different rates, threads stay fully visible and drop out quickly one by one, front to back by depth, background shifts from `bg/inverse` to `bg/default`, canvas blurs at the end. The overview overlaps the last viewport of the dive and appears in place when it ends (no scrolling up), then its content draws in and the bundles fall. No backdrop blur behind the title and hint (tried, removed).
 - **Overview:** placeholder only, to test the arrival; the yarn bundles fall in once.
 - Tuning knobs live at the top of `threads.ts` (tension, spring, damping, draw duration, layer weights).
-- Open: p5 2.x adds ~400 KB gzipped to the landing chunk while drawing already goes through the plain canvas API; replacing p5 with a small canvas loop is an option. The GitHub Pages `404.html` redirect for clean URLs still needs adding before deploying.
+- Open: the GitHub Pages `404.html` redirect for clean URLs still needs adding before deploying.
 
 ## 10. Workflow
 
 1. **Spec** (this README)
 2. **Design** in Figma (page "concepting" for exploration; a separate final-design page later with real texts and images): concepts → key pages → prototype of the installation, dive, yarn picker and one case study
-3. **Prototype early in code:** small p5/GSAP prototypes for the landing threads and pluck physics, the dive, the yarn texture and the unroll, to tune the feel before the final design is finished
+3. **Prototype early in code:** small canvas/GSAP prototypes for the landing threads and pluck physics, the dive, the yarn texture and the unroll, to tune the feel before the final design is finished
 4. **Final design** on the Figma page "design" (sections: Landing, Overview, Case studies, About, Extras), built only from component instances, with real content
 5. **Build**, section by section, starting with the shell and one full case study
 6. **Content**: projects added one by one as they are ready
@@ -381,3 +380,9 @@ npm run lint
 | 2026-09-26 | Design system: Geist + Geist Mono, warm gray shell, perfect fourth type scale, placeholder project hues (red, amber, teal, blue, violet). |
 | 2026-09-26 | ~~Vertical scrolling only.~~ Superseded below. |
 | 2026-09-25 | ~~Contact: LinkedIn + GitHub only, separate page.~~ Superseded 2026-09-26. |
+| 2026-09-26 | Dropped p5.js: the landing draws with plain Canvas 2D and a rAF loop (easier to maintain, ~400 KB gzipped less). Thread physics tightened to feel like a guitar string: stiffer, faster ring, quick settle, grip slips past ~70 px. |
+| 2026-09-26 | Landing threads are straight lines (edge to edge) instead of curves; about 20% more of them. During the dive they fade front to back by depth, so the farthest threads vanish last. |
+| 2026-09-26 | Landing text blurs lighter (12 px, less tint) and fade in just after their text instead of being there from the start. The overview appears in place at the end of the dive instead of scrolling up. |
+| 2026-09-26 | Trying the landing without any backdrop blur behind the title and hint. |
+| 2026-09-26 | Dive fade: threads no longer fade gradually with scrolling. Each stays fully visible, then vanishes quickly when the camera is close (front ~35% → back ~90% of the dive). |
+| 2026-09-26 | Threads stretch 20% further before slipping (84 px). Denser fuzz: hairs every ~5 px on the front layer and ~12 px on the middle, light and dark, with the odd longer stray. |

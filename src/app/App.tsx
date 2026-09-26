@@ -1,7 +1,7 @@
 import { lazy, Suspense } from 'react';
 import { BrowserRouter, Route, Routes } from 'react-router';
 
-// Pages are code-split; p5 only loads with the landing page.
+// Pages are code-split; the landing installation only loads with the landing page.
 const Landing = lazy(() => import('../pages/Landing/Landing'));
 const NotFound = lazy(() => import('../pages/NotFound/NotFound'));
 

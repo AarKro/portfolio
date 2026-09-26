@@ -1,12 +1,11 @@
-import type p5 from 'p5';
-
 /**
  * Landing installation: spun threads.
  *
  * Each thread is a chain of points between two pinned ends, running edge to
- * edge along a random cubic curve. Physics is a simple Verlet string:
- * tension to the neighbours (lets waves travel, the "guitar string" feel)
- * plus a weak spring back to the rest shape. Threads live on three 2D layers;
+ * edge in a straight line. Physics is a simple Verlet string, tuned
+ * to feel like a guitar string: high tension to the neighbours (fast waves, a
+ * quick twang) plus a spring back to the rest shape, with enough damping that
+ * it rings briefly and settles. Threads live on three 2D layers;
  * back layers are thinner and dimmer, which fakes depth, and during the dive
  * each layer scales at its own rate (parallax).
  */
@@ -43,15 +42,19 @@ interface Point {
 }
 
 interface Fiber {
-  i: number;
+  /** position along the thread as a fractional point index */
+  s: number;
   side: 1 | -1;
   angle: number;
   len: number;
+  dark: boolean;
 }
 
 export interface Thread {
   palette: number;
   layer: 0 | 1 | 2;
+  /** 0 = farthest back … 1 = frontmost; orders drawing and the fade-out during the dive. */
+  depth: number;
   weight: number;
   alpha: number;
   phase: number;
@@ -61,17 +64,22 @@ export interface Thread {
 }
 
 const SEGMENTS = 72;
+// px of thread per hair, per layer (the back layer has none)
+const HAIR_SPACING = [Infinity, 12, 5];
 const LAYERS = [
   { weight: 1.4, alpha: 0.38 },
   { weight: 2.6, alpha: 0.7 },
   { weight: 4.2, alpha: 1 },
 ];
 
-// Physics tuning
-const TENSION = 0.32; // neighbour pull; higher = stiffer, faster waves
-const SPRING = 0.006; // pull back to rest shape
-const DAMPING = 0.982; // energy kept per frame
-const MAX_PUSH = 26; // px per pluck
+// Physics tuning. The simulation runs at a fixed rate, independent of the
+// display's refresh rate (60 vs 120 Hz), so these values are per step.
+export const STEP_MS = 1000 / 360;
+const TENSION = 0.8; // neighbour pull; higher = stiffer, faster waves (must stay below 1)
+const SPRING = 0.004; // pull back to rest shape
+const DAMPING = 0.9915; // energy kept per step (rings for about a second)
+const MAX_PUSH = 16; // px per pluck
+const SLIP = 84; // px a held thread stretches before it slips out of the grip
 
 // Draw-in
 export const DRAW_DURATION = 1500;
@@ -88,51 +96,47 @@ export function mulberry32(seed: number) {
   };
 }
 
-const bezier = (t: number, a: number, b: number, c: number, d: number) => {
-  const u = 1 - t;
-  return u * u * u * a + 3 * u * u * t * b + 3 * u * t * t * c + t * t * t * d;
-};
-
 export function createThreads(w: number, h: number, seed = 7): Thread[] {
   const rand = mulberry32(seed);
   const threads: Thread[] = [];
   for (let c = 0; c < PALETTES.length; c++) {
-    const count = 5 + Math.floor(rand() * 4); // 5–8 per project
+    const count = Math.round((5 + Math.floor(rand() * 4)) * 1.2); // 6–10 per project
     for (let k = 0; k < count; k++) {
       const r = rand();
       const layer = (r < 0.4 ? 0 : r < 0.75 ? 1 : 2) as 0 | 1 | 2;
       const vertical = rand() < 0.3;
-      let p0: [number, number], p1: [number, number], p2: [number, number], p3: [number, number];
-      if (vertical) {
-        p0 = [rand() * w, -60];
-        p3 = [rand() * w, h + 60];
-        p1 = [rand() * w * 1.6 - w * 0.3, h * 0.3];
-        p2 = [rand() * w * 1.6 - w * 0.3, h * 0.7];
-      } else {
-        p0 = [-60, rand() * h];
-        p3 = [w + 60, rand() * h];
-        p1 = [w * 0.3, rand() * h * 1.6 - h * 0.3];
-        p2 = [w * 0.7, rand() * h * 1.6 - h * 0.3];
-      }
+      // end points just outside two opposite edges
+      const [x0, y0, x1, y1] = vertical
+        ? [rand() * w, -60, rand() * w, h + 60]
+        : [-60, rand() * h, w + 60, rand() * h];
       const points: Point[] = [];
       for (let i = 0; i <= SEGMENTS; i++) {
         const t = i / SEGMENTS;
-        const x = bezier(t, p0[0], p1[0], p2[0], p3[0]);
-        const y = bezier(t, p0[1], p1[1], p2[1], p3[1]);
+        const x = x0 + (x1 - x0) * t;
+        const y = y0 + (y1 - y0) * t;
         points.push({ x, y, px: x, py: y, rx: x, ry: y });
       }
       const fibers: Fiber[] = [];
       if (layer > 0) {
-        // fuzz: short fibers that lean along the thread, irregularly spaced
-        for (let i = 1; i < SEGMENTS; i++) {
-          if (rand() > (layer === 2 ? 0.55 : 0.2)) continue;
+        // fuzz: short hairs that lean along the thread, randomly spaced, the odd longer stray
+        const count = Math.round(Math.hypot(x1 - x0, y1 - y0) / HAIR_SPACING[layer]);
+        for (let f = 0; f < count; f++) {
           const side = rand() < 0.5 ? 1 : -1;
-          fibers.push({ i, side, angle: side * (0.7 + rand() * 0.6), len: 1 + rand() * (layer === 2 ? 3.5 : 2) });
+          const stray = layer === 2 && rand() < 0.08;
+          fibers.push({
+            s: 1 + rand() * (SEGMENTS - 2),
+            side,
+            angle: side * (0.5 + rand() * 0.8),
+            len: stray ? 6 + rand() * 5 : layer === 2 ? 1.5 + rand() * 3.5 : 1 + rand() * 2,
+            dark: rand() < 0.4,
+          });
         }
+        fibers.sort((a, b) => a.s - b.s);
       }
       threads.push({
         palette: c,
         layer,
+        depth: (layer + rand()) / 3,
         weight: LAYERS[layer].weight * (0.85 + rand() * 0.3),
         alpha: LAYERS[layer].alpha,
         phase: rand() * Math.PI * 2,
@@ -143,7 +147,7 @@ export function createThreads(w: number, h: number, seed = 7): Thread[] {
     }
   }
   // back to front
-  return threads.sort((a, b) => a.layer - b.layer);
+  return threads.sort((a, b) => a.depth - b.depth);
 }
 
 export const drawInEnd = (threads: Thread[]) => Math.max(...threads.map((t) => t.delay)) + DRAW_DURATION;
@@ -154,7 +158,7 @@ let dy = new Float64Array(0);
 
 /**
  * One physics step for all threads. End points stay pinned.
- * Forces act on the displacement from the rest shape (so the spun curve itself
+ * Forces act on the displacement from the rest shape (so the laid-out line itself
  * is the equilibrium), and every point updates from the previous frame's state.
  */
 export function step(threads: Thread[]) {
@@ -194,8 +198,8 @@ const distToSegment = (px: number, py: number, x0: number, y0: number, x1: numbe
 };
 
 /**
- * Pluck: when the pointer sweeps across a thread, push the nearest point in
- * the direction of the movement. Tension turns the kink into a travelling wave.
+ * Pluck: when the pointer sweeps across a thread, displace the nearest points
+ * in the direction of the movement and let go from rest, like a plucked string.
  */
 export function pluck(threads: Thread[], x0: number, y0: number, x1: number, y1: number) {
   const mx = Math.max(-MAX_PUSH, Math.min(MAX_PUSH, (x1 - x0) * 0.6));
@@ -221,8 +225,11 @@ export function pluck(threads: Thread[], x0: number, y0: number, x1: number, y1:
         const i = best + k;
         if (i < 1 || i > t.points.length - 2) continue;
         const f = 0.5 + 0.5 * Math.cos((k / (spread + 1)) * Math.PI);
-        t.points[i].x += mx * f;
-        t.points[i].y += my * f;
+        const p = t.points[i];
+        p.x += mx * f;
+        p.y += my * f;
+        p.px += mx * f;
+        p.py += my * f;
       }
     }
   }
@@ -231,6 +238,8 @@ export function pluck(threads: Thread[], x0: number, y0: number, x1: number, y1:
 export interface Grab {
   thread: Thread;
   index: number;
+  x: number;
+  y: number;
 }
 
 /** Find the front-most thread point near the pointer. */
@@ -240,24 +249,29 @@ export function grab(threads: Thread[], x: number, y: number): Grab | null {
     if (t.layer === 0) continue;
     for (let i = 2; i < t.points.length - 2; i++) {
       const p = t.points[i];
-      if (Math.hypot(p.x - x, p.y - y) < 12 + t.weight * 2) return { thread: t, index: i };
+      if (Math.hypot(p.x - x, p.y - y) < 12 + t.weight * 2) return { thread: t, index: i, x: p.x, y: p.y };
     }
   }
   return null;
 }
 
-/** Hold the grabbed point at the pointer, but only let it stretch so far. */
+/**
+ * Move the grip to the pointer. Returns false once the thread is pulled past
+ * SLIP: it slips out of the grip and snaps back.
+ */
 export function drag(g: Grab, x: number, y: number) {
   const p = g.thread.points[g.index];
-  const dx = x - p.rx;
-  const dy = y - p.ry;
-  const d = Math.hypot(dx, dy);
-  const max = 140;
-  const k = d > max ? max / d : 1;
-  p.x = p.rx + dx * k;
-  p.y = p.ry + dy * k;
-  p.px = p.x;
-  p.py = p.y;
+  if (Math.hypot(x - p.rx, y - p.ry) > SLIP) return false;
+  g.x = x;
+  g.y = y;
+  return true;
+}
+
+/** Hold the grabbed point still at the grip (called every physics step). */
+export function hold(g: Grab) {
+  const p = g.thread.points[g.index];
+  p.x = p.px = g.x;
+  p.y = p.py = g.y;
 }
 
 const easeOutCubic = (t: number) => 1 - Math.pow(1 - t, 3);
@@ -267,11 +281,21 @@ export const smooth = (a: number, b: number, t: number) => {
   return x * x * (3 - 2 * x);
 };
 
-/** Per-layer camera for the dive: scale factor and opacity. */
-export function layerCamera(layer: number, dive: number) {
+// Dive progress at which a thread is gone: the frontmost thread first, the farthest last.
+const VANISH_FRONT = 0.35;
+const VANISH_BACK = 0.9;
+const VANISH_LENGTH = 0.03; // short: a thread stays fully visible, then drops out quickly
+
+/**
+ * Camera for the dive: the scale comes from the layer (parallax). A thread
+ * stays fully visible until the camera gets close to it, then vanishes fast.
+ * With these values every thread goes when it has grown to roughly 2–4× its size.
+ */
+export function diveCamera(t: Thread, dive: number) {
   const e = Math.pow(dive, 1.6);
-  const scale = 1 + e * (1.4 + layer * 3.6);
-  const fade = 1 - smooth(0.3 + layer * 0.14, 0.72 + layer * 0.1, dive);
+  const scale = 1 + e * (1.4 + t.layer * 3.6);
+  const end = VANISH_BACK - t.depth * (VANISH_BACK - VANISH_FRONT);
+  const fade = 1 - smooth(end - VANISH_LENGTH, end, dive);
   return { scale, fade };
 }
 
@@ -297,17 +321,22 @@ function strokeSmooth(ctx: CanvasRenderingContext2D, xs: Float64Array, ys: Float
 let bx = new Float64Array(0);
 let by = new Float64Array(0);
 
-export function drawThreads(p: p5, threads: Thread[], { elapsed, dive, texture }: DrawOptions) {
-  const ctx = p.drawingContext as CanvasRenderingContext2D;
-  const cx = p.width / 2;
-  const cy = p.height / 2;
+export function drawThreads(
+  ctx: CanvasRenderingContext2D,
+  width: number,
+  height: number,
+  threads: Thread[],
+  { elapsed, dive, texture }: DrawOptions,
+) {
+  const cx = width / 2;
+  const cy = height / 2;
   ctx.lineCap = 'round';
   ctx.lineJoin = 'round';
 
   for (const t of threads) {
     const reveal = easeOutCubic(clamp01((elapsed - t.delay) / DRAW_DURATION));
     if (reveal <= 0) continue;
-    const { scale, fade } = layerCamera(t.layer, dive);
+    const { scale, fade } = diveCamera(t, dive);
     const alpha = t.alpha * fade;
     if (alpha <= 0.01) continue;
 
@@ -355,29 +384,34 @@ export function drawThreads(p: p5, threads: Thread[], { elapsed, dive, texture }
         ctx.lineWidth = w * wf;
         strokeSmooth(ctx, bx, by, n);
       }
-      // fuzz
-      ctx.strokeStyle = rgba(pal.light, alpha * 0.3);
-      ctx.lineWidth = 0.6;
-      ctx.beginPath();
-      for (const f of t.fibers) {
-        if (f.i >= n - 1) break;
-        const a = pts[f.i - 1];
-        const b = pts[f.i + 1];
-        const tx = b.x - a.x;
-        const ty = b.y - a.y;
-        const len = Math.hypot(tx, ty) || 1;
-        const nx = (-ty / len) * f.side;
-        const ny = (tx / len) * f.side;
-        const ca = Math.cos(f.angle);
-        const sa = Math.sin(f.angle);
-        const dx = nx * ca - ny * sa;
-        const dy = nx * sa + ny * ca;
-        const sx = pts[f.i].x + nx * w * 0.4;
-        const sy = pts[f.i].y + ny * w * 0.4;
-        ctx.moveTo(sx, sy);
-        ctx.lineTo(sx + dx * f.len, sy + dy * f.len);
+      // fuzz: light and dark hairs, one path each
+      ctx.lineWidth = t.layer === 2 ? 0.7 : 0.6;
+      for (const dark of [false, true]) {
+        ctx.strokeStyle = rgba(dark ? pal.dark : pal.light, alpha * (dark ? 0.45 : 0.55));
+        ctx.beginPath();
+        for (const f of t.fibers) {
+          if (f.s >= n - 1) break;
+          if (f.dark !== dark) continue;
+          const i = Math.floor(f.s);
+          const u = f.s - i;
+          const a = pts[i];
+          const b = pts[i + 1];
+          const tx = b.x - a.x;
+          const ty = b.y - a.y;
+          const len = Math.hypot(tx, ty) || 1;
+          const nx = (-ty / len) * f.side;
+          const ny = (tx / len) * f.side;
+          const ca = Math.cos(f.angle);
+          const sa = Math.sin(f.angle);
+          const dx = nx * ca - ny * sa;
+          const dy = nx * sa + ny * ca;
+          const sx = a.x + tx * u + nx * w * 0.4;
+          const sy = a.y + ty * u + ny * w * 0.4;
+          ctx.moveTo(sx, sy);
+          ctx.lineTo(sx + dx * f.len, sy + dy * f.len);
+        }
+        ctx.stroke();
       }
-      ctx.stroke();
     }
     ctx.restore();
   }

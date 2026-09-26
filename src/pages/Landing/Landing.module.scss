@@ -32,30 +32,6 @@
   color: var(--color-gray-50); // text/inverse on the charcoal landing
 }
 
-// Feathered backdrop blur with a slight charcoal tint (readability over the threads).
-%blur-zone {
-  position: absolute;
-  backdrop-filter: blur(28px);
-  -webkit-backdrop-filter: blur(28px);
-  background: rgb(28 25 23 / 0.45);
-  mask-image: radial-gradient(closest-side, #000 55%, transparent 100%);
-  -webkit-mask-image: radial-gradient(closest-side, #000 55%, transparent 100%);
-}
-
-.blurTitle {
-  @extend %blur-zone;
-  width: min(1300px, 92vw);
-  height: min(620px, 70vh);
-}
-
-.blurHint {
-  @extend %blur-zone;
-  bottom: 0;
-  width: 520px;
-  height: 200px;
-  transform: translateY(40%);
-}
-
 .title {
   position: relative;
   display: flex;
@@ -113,9 +89,15 @@
 
 // ---- Placeholder overview
 .overview {
+  position: relative;
   min-height: 100vh;
   padding: var(--space-40) var(--space-20);
   background: var(--bg-default);
+}
+
+// Overlaps the last viewport of the dive so it appears in place when the dive ends.
+.arrive {
+  margin-top: -100vh;
 }
 
 .label {

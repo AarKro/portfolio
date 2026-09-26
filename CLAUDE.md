@@ -24,7 +24,7 @@ Build and lint must pass before committing.
 
 ## Stack
 
-Vite · React 19 · TypeScript · React Router (clean URLs, base `/portfolio/`, override with `BASE_PATH`) · SCSS modules · GSAP + ScrollTrigger · Lenis · p5.js (landing only, code-split) · i18next · Geist / Geist Mono via `@fontsource-variable`.
+Vite · React 19 · TypeScript · React Router (clean URLs, base `/portfolio/`, override with `BASE_PATH`) · SCSS modules · GSAP + ScrollTrigger · Lenis · plain Canvas 2D for the landing installation (no drawing library) · i18next · Geist / Geist Mono via `@fontsource-variable`.
 
 Planned but not added yet: MDX for case studies (one file per project in `src/projects/<slug>/`).
 
@@ -36,7 +36,7 @@ src/
   pages/Landing/           landing + dive (prototype); placeholder overview
   pages/NotFound/          404 ("lost the thread")
   installation/threads.ts  thread model: generation, physics, pluck/grab, drawing, dive camera
-  installation/ThreadsCanvas.tsx  p5 instance-mode wrapper
+  installation/ThreadsCanvas.tsx  canvas + rAF loop, pointer input, fixed-step physics
   lib/motion.ts            Lenis + ScrollTrigger setup, scrollToTarget
   lib/reducedMotion.ts     prefers-reduced-motion hook
   styles/tokens.scss       design tokens (mirror of the Figma variables)
@@ -97,13 +97,14 @@ Semantic variable collection: `VariableCollectionId:3:71`.
 
 ## Current state and next steps
 
-- Done: concept, design system, concept designs for all pages, transitions, landing prototype (threads, yarn texture, pluck/drag physics, draw-in, blur behind the title, scroll-driven dive, reduced motion).
+- Done: concept, design system, concept designs for all pages, transitions, landing prototype (threads, yarn texture, guitar-string pluck/drag physics, draw-in, blur behind the title, scroll-driven dive, reduced motion).
 - Next prototype: the yarn **unroll** from overview into a case study (ball jumps, thread unravels from it, lands in the lower half, then leads the thread through the horizontal track). See README §6.2.
-- Open: the 5 main projects and their colors (the hues are placeholders), which small things go to Loose ends, whether to replace p5 with a plain canvas loop (it adds ~400 KB gzipped; drawing already uses the canvas API), GitHub Pages `404.html` redirect for clean URLs, mobile.
+- Open: the 5 main projects and their colors (the hues are placeholders), which small things go to Loose ends, GitHub Pages `404.html` redirect for clean URLs, mobile.
 
 ## Gotchas
 
-- **p5 2.x:** set `noFill()` inside each `push()`; `curveVertex` is renamed. The threads draw through `p.drawingContext` (quadratic midpoint curves) for smoothness and speed.
+- **Threads draw with quadratic midpoint curves** on the Canvas 2D context, for smoothness and speed.
+- **Physics runs at a fixed 360 Hz step** (`STEP_MS`), decoupled from the display refresh (MacBooks run at 120 Hz). Tuning constants are per step; `TENSION` must stay below 1 or the string blows up.
 - **Thread physics:** forces must act on the displacement from the rest shape, and every point updates from the previous frame's state. Tension on absolute positions pulls the curves straight and diverges.
 - **ESLint** is pinned to 9: `eslint-plugin-jsx-a11y` doesn't support ESLint 10 yet.
 - `vite.config.ts` uses an absolute base (`/portfolio/`); the relative `./` from v1 breaks nested routes.

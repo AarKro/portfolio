@@ -30,7 +30,7 @@ export default function Landing() {
     if (!ready || reduced) return;
     const tl = gsap.timeline();
     tl.fromTo(titleRef.current, { autoAlpha: 0, y: 28 }, { autoAlpha: 1, y: 0, duration: 1.2, ease: 'power3.out' });
-    tl.fromTo(hintRef.current, { autoAlpha: 0, y: 12 }, { autoAlpha: 1, y: 0, duration: 0.8, ease: 'power2.out' }, '-=0.3');
+    tl.fromTo(hintRef.current, { autoAlpha: 0, y: 12 }, { autoAlpha: 1, y: 0, duration: 0.8, ease: 'power2.out' }, 0.9);
     return () => {
       tl.kill();
     };
@@ -55,16 +55,32 @@ export default function Landing() {
         ease: 'none',
         scrollTrigger: { trigger: diveSectionRef.current, start: 'top top', end: '12% top', scrub: true },
       });
-      // yarn bundles fall onto the overview (plays once)
+      // Arrival: the overview overlaps the last viewport of the dive, hidden,
+      // and appears in place when the dive ends instead of scrolling up.
+      // Showing it reverses when scrolling back into the dive.
+      const overview = overviewRef.current;
+      gsap.set(overview, { autoAlpha: 0 });
+      ScrollTrigger.create({
+        trigger: overview,
+        start: 'top 5%',
+        onEnter: () => gsap.to(overview, { autoAlpha: 1, duration: 0.4, ease: 'power1.out' }),
+        onLeaveBack: () => gsap.to(overview, { autoAlpha: 0, duration: 0.3, ease: 'power1.in' }),
+      });
+      // content draws in, then the yarn bundles fall (plays once)
+      const text = overview?.querySelectorAll('[data-reveal]');
       const bundles = bundlesRef.current?.children;
-      if (bundles) {
+      if (text && bundles) {
+        gsap.set(text, { autoAlpha: 0, y: 24 });
         gsap.set(bundles, { y: -600, rotation: -120, autoAlpha: 0 });
         ScrollTrigger.create({
-          trigger: overviewRef.current,
-          start: 'top 85%',
+          trigger: overview,
+          start: 'top 5%',
           once: true,
           onEnter: () => {
-            gsap.to(bundles, { y: 0, rotation: 0, autoAlpha: 1, duration: 1.3, ease: 'bounce.out', stagger: 0.14 });
+            gsap
+              .timeline()
+              .to(text, { autoAlpha: 1, y: 0, duration: 0.9, ease: 'power3.out', stagger: 0.12 }, 0.2)
+              .to(bundles, { y: 0, rotation: 0, autoAlpha: 1, duration: 1.3, ease: 'bounce.out', stagger: 0.14 }, 0.5);
           },
         });
       }
@@ -80,7 +96,6 @@ export default function Landing() {
           <p className="visually-hidden">{t('landing.canvasLabel')}</p>
 
           <div ref={overlayRef} className={styles.overlay}>
-            <div className={styles.blurTitle} aria-hidden="true" />
             <div ref={titleRef} className={reduced ? styles.title : `${styles.title} ${styles.hidden}`}>
               <h1 id="landing-title" className={styles.name}>
                 {t('landing.name')}
@@ -88,7 +103,6 @@ export default function Landing() {
               <p className={styles.subtitle}>{t('landing.subtitle')}</p>
             </div>
 
-            <div className={styles.blurHint} aria-hidden="true" />
             <button
               ref={hintRef}
               type="button"
@@ -105,12 +119,16 @@ export default function Landing() {
       </section>
 
       {/* Placeholder overview, only to test the arrival of the dive */}
-      <section ref={overviewRef} id="work" className={styles.overview} aria-labelledby="overview-title">
-        <p className={styles.label}>{t('overview.label')}</p>
-        <h2 id="overview-title" className={styles.overviewTitle}>
+      <section ref={overviewRef} id="work" className={reduced ? styles.overview : `${styles.overview} ${styles.arrive}`} aria-labelledby="overview-title">
+        <p className={styles.label} data-reveal>
+          {t('overview.label')}
+        </p>
+        <h2 id="overview-title" className={styles.overviewTitle} data-reveal>
           {t('overview.title')}
         </h2>
-        <p className={styles.intro}>{t('overview.intro')}</p>
+        <p className={styles.intro} data-reveal>
+          {t('overview.intro')}
+        </p>
         <ul ref={bundlesRef} className={styles.bundles} aria-hidden="true">
           {PROJECTS.map((n) => (
             <li key={n} className={styles.bundle} style={{ ['--c' as string]: `var(--thread-project-${n})` }} />
