@@ -59,7 +59,7 @@ src/
 File: `https://www.figma.com/design/oWTu1dWLpHbVq78b4ufUHh/Portfolio` (fileKey `oWTu1dWLpHbVq78b4ufUHh`). Needs the Figma MCP server in Claude Code.
 
 Pages:
-- **cover** (`0:1`): file thumbnail.
+- **cover** (`0:1`): file thumbnail (cover frame `30:2`).
 - **design system** (`1:4`): style guide section and the Components section. **All main components live here**; every other page uses only instances.
 - **concepting** (`1:3`): exploration. Sections: Landing (v2 chosen, blur), Overview (v2 chosen), Overview proposals, Case study (horizontal strip), About, Transitions (dive + unroll keyframes), Extras (favicon, share image, 404), Loose ends.
 - **design** (`31:815`): final design, empty sections to fill with real content.
@@ -67,6 +67,33 @@ Pages:
 Variables: `Primitives` (hidden palette), `Semantic` (modes: shell, project-1…5), `Typography`, `Dimensions`. Text styles: Display XL/L/M, Heading 1–4, Body L/M/M Strong, Caption, Label/Mono.
 
 Components: Tag, Text link (Default/Hover/Focus), Social link (Default/Hover/Focus), Icon/LinkedIn, Icon/GitHub (placeholders; use official icons in code), Peg, Stage marker, Yarn bundle (Default/Focus; color via theme mode), Nav (Case study/Overview), Stage progress (Current = Intro … Outcome), Scrap. They map to React components of the same names.
+
+Node IDs (for `use_figma` / `get_design_context`; they only change if a node is deleted and recreated):
+
+| Main component (design system page, Components section `25:2`) | ID |
+|---|---|
+| Tag | `25:12` |
+| Text link (set) | `31:50` |
+| Social link (set) | `31:61` |
+| Icon/LinkedIn · Icon/GitHub | `25:26` · `25:28` |
+| Peg | `25:35` |
+| Stage marker | `25:36` |
+| Yarn bundle (set) | `31:70` |
+| Nav (set) · Page=Case study · Page=Overview | `25:120` · `25:95` · `25:107` |
+| Stage progress (set) | `25:277` |
+| Scrap | `33:58` |
+
+| Chosen concept frame (concepting page) | ID |
+|---|---|
+| Landing v2 (blur) | `9:59` |
+| Overview v2 · first row | `13:2` · `13:7` |
+| Case study strip (project-1 mode) | `17:3` |
+| About | `22:3` |
+| Transitions section (dive + unroll) | `23:2` |
+| Extras section (favicon, share image, 404) | `31:697` |
+| Loose ends | `34:493` |
+
+Semantic variable collection: `VariableCollectionId:3:71`.
 
 ## Current state and next steps
 
