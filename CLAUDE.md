@@ -1,0 +1,82 @@
+# Portfolio v2 — "The Red Thread"
+
+Aaron Kromer's new portfolio: product design from UX and UI to code and deployment, told as process stories. This `v2` branch is a fresh start; `main` still holds the current CRT-TV site and is what GitHub Pages deploys.
+
+**`README.md` is the spec and contract.** Every decision, its reasoning and the open questions live there, with a decision log at the bottom. Read it before changing anything conceptual, and update it (plus a decision-log line) whenever a decision changes.
+
+## Working with Aaron
+
+- **Don't assume, ask.** For anything with more than one reasonable answer (design, naming, scope, UX), offer 2–4 concrete options with a recommendation and let him choose. Small, reversible implementation details are fine to decide; say what you decided.
+- He's a frontend developer (React, TypeScript, Figma), so talk to him as a peer. Keep answers direct.
+- English copy, first person, honest and not salesy. Use metric units.
+- Desktop first (designed at 1728 × 1117, MacBook Pro 16"), mobile second (simplified, still undefined).
+
+## Commands
+
+```bash
+npm install
+npm run dev      # http://localhost:5173/portfolio/
+npm run build    # tsc -b + vite build
+npm run lint     # ESLint 9 + jsx-a11y
+```
+
+Build and lint must pass before committing.
+
+## Stack
+
+Vite · React 19 · TypeScript · React Router (clean URLs, base `/portfolio/`, override with `BASE_PATH`) · SCSS modules · GSAP + ScrollTrigger · Lenis · p5.js (landing only, code-split) · i18next · Geist / Geist Mono via `@fontsource-variable`.
+
+Planned but not added yet: MDX for case studies (one file per project in `src/projects/<slug>/`).
+
+## Structure
+
+```
+src/
+  app/App.tsx              routes (lazy pages)
+  pages/Landing/           landing + dive (prototype); placeholder overview
+  pages/NotFound/          404 ("lost the thread")
+  installation/threads.ts  thread model: generation, physics, pluck/grab, drawing, dive camera
+  installation/ThreadsCanvas.tsx  p5 instance-mode wrapper
+  lib/motion.ts            Lenis + ScrollTrigger setup, scrollToTarget
+  lib/reducedMotion.ts     prefers-reduced-motion hook
+  styles/tokens.scss       design tokens (mirror of the Figma variables)
+  styles/_type.scss        text-style mixins (mirror of the Figma text styles)
+  styles/global.scss       reset, focus ring, Lenis classes
+  locales/en.json          all UI text
+```
+
+## Conventions
+
+- **Tokens only.** Colors, spacing, radii and type come from `tokens.scss` / `_type.scss`, never raw values. Names match the Figma code syntax: Figma `text/primary` → `var(--text-primary)`.
+- **Theme modes.** Shell is the default. Projects use `data-theme="project-1"` … `"project-5"`, which remaps the semantic tokens (bg, text, border, accent, focus, `--thread-current`). The landing uses `bg/inverse` (charcoal).
+- **Text in locale files.** No hard-coded UI strings; German comes later.
+- **Accessibility (WCAG 2.2 AA):** visible `:focus-visible` (2 px dashed `--focus-ring`), keyboard access to everything interactive, canvases `aria-hidden` with a text alternative, contrast checked per theme mode.
+- **Motion:** every animation needs a reduced-motion version (static, no pinning, no dive). Movement through space is scrubbed and reverses on scroll back (dive, case study thread); content reveals play once (draw-in, text/image reveals, yarn bundles falling). Lenis must not break native scrolling or the keyboard.
+- **Hover:** links draw in a 1.5 px underline left to right; yarn bundles wobble and their tail twitches.
+
+## Figma
+
+File: `https://www.figma.com/design/oWTu1dWLpHbVq78b4ufUHh/Portfolio` (fileKey `oWTu1dWLpHbVq78b4ufUHh`). Needs the Figma MCP server in Claude Code.
+
+Pages:
+- **cover** (`0:1`): file thumbnail.
+- **design system** (`1:4`): style guide section and the Components section. **All main components live here**; every other page uses only instances.
+- **concepting** (`1:3`): exploration. Sections: Landing (v2 chosen, blur), Overview (v2 chosen), Overview proposals, Case study (horizontal strip), About, Transitions (dive + unroll keyframes), Extras (favicon, share image, 404), Loose ends.
+- **design** (`31:815`): final design, empty sections to fill with real content.
+
+Variables: `Primitives` (hidden palette), `Semantic` (modes: shell, project-1…5), `Typography`, `Dimensions`. Text styles: Display XL/L/M, Heading 1–4, Body L/M/M Strong, Caption, Label/Mono.
+
+Components: Tag, Text link (Default/Hover/Focus), Social link (Default/Hover/Focus), Icon/LinkedIn, Icon/GitHub (placeholders; use official icons in code), Peg, Stage marker, Yarn bundle (Default/Focus; color via theme mode), Nav (Case study/Overview), Stage progress (Current = Intro … Outcome), Scrap. They map to React components of the same names.
+
+## Current state and next steps
+
+- Done: concept, design system, concept designs for all pages, transitions, landing prototype (threads, yarn texture, pluck/drag physics, draw-in, blur behind the title, scroll-driven dive, reduced motion).
+- Next prototype: the yarn **unroll** from overview into a case study (ball jumps, thread unravels from it, lands in the lower half, then leads the thread through the horizontal track). See README §6.2.
+- Open: the 5 main projects and their colors (the hues are placeholders), which small things go to Loose ends, whether to replace p5 with a plain canvas loop (it adds ~400 KB gzipped; drawing already uses the canvas API), GitHub Pages `404.html` redirect for clean URLs, mobile.
+
+## Gotchas
+
+- **p5 2.x:** set `noFill()` inside each `push()`; `curveVertex` is renamed. The threads draw through `p.drawingContext` (quadratic midpoint curves) for smoothness and speed.
+- **Thread physics:** forces must act on the displacement from the rest shape, and every point updates from the previous frame's state. Tension on absolute positions pulls the curves straight and diverges.
+- **ESLint** is pinned to 9: `eslint-plugin-jsx-a11y` doesn't support ESLint 10 yet.
+- `vite.config.ts` uses an absolute base (`/portfolio/`); the relative `./` from v1 breaks nested routes.
