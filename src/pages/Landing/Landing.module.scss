@@ -1,0 +1,161 @@
+@use '../../styles/type';
+
+.page {
+  background: var(--bg-default);
+}
+
+// The dive happens while this tall section scrolls past a sticky viewport.
+.dive {
+  position: relative;
+  height: 400vh;
+}
+
+.diveStatic {
+  position: relative;
+  height: 100vh;
+}
+
+.sticky {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow: hidden;
+  background: var(--color-gray-900);
+}
+
+.overlay {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  color: var(--color-gray-50); // text/inverse on the charcoal landing
+}
+
+// Feathered backdrop blur with a slight charcoal tint (readability over the threads).
+%blur-zone {
+  position: absolute;
+  backdrop-filter: blur(28px);
+  -webkit-backdrop-filter: blur(28px);
+  background: rgb(28 25 23 / 0.45);
+  mask-image: radial-gradient(closest-side, #000 55%, transparent 100%);
+  -webkit-mask-image: radial-gradient(closest-side, #000 55%, transparent 100%);
+}
+
+.blurTitle {
+  @extend %blur-zone;
+  width: min(1300px, 92vw);
+  height: min(620px, 70vh);
+}
+
+.blurHint {
+  @extend %blur-zone;
+  bottom: 0;
+  width: 520px;
+  height: 200px;
+  transform: translateY(40%);
+}
+
+.title {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-6);
+  text-align: center;
+}
+
+.name {
+  @include type.display-xl;
+}
+
+.subtitle {
+  @include type.heading-3;
+}
+
+.hidden {
+  visibility: hidden;
+  opacity: 0;
+}
+
+.hint {
+  position: absolute;
+  bottom: var(--space-12);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-4);
+  pointer-events: auto;
+  @include type.text(var(--font-size-base), var(--font-weight-medium), 1.3, 0.06em, var(--font-family-mono));
+  text-transform: uppercase;
+  --focus-ring: var(--color-gray-50);
+}
+
+.chevron {
+  animation: bob 1.8s ease-in-out infinite;
+}
+
+@keyframes bob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(6px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chevron {
+    animation: none;
+  }
+}
+
+// ---- Placeholder overview
+.overview {
+  min-height: 100vh;
+  padding: var(--space-40) var(--space-20);
+  background: var(--bg-default);
+}
+
+.label {
+  @include type.label-mono;
+  color: var(--text-tertiary);
+}
+
+.overviewTitle {
+  @include type.display-l;
+  margin-top: var(--space-6);
+}
+
+.intro {
+  @include type.body-l;
+  color: var(--text-secondary);
+  max-width: 760px;
+  margin-top: var(--space-6);
+}
+
+.bundles {
+  display: flex;
+  gap: var(--space-16);
+  list-style: none;
+  padding: 0;
+  margin: var(--space-24) 0 0;
+}
+
+// Stand-in for the yarn bundle: colored ball with wound strands.
+.bundle {
+  width: 180px;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background:
+    repeating-linear-gradient(35deg, rgb(0 0 0 / 0.14) 0 2px, transparent 2px 16px),
+    repeating-linear-gradient(-50deg, rgb(0 0 0 / 0.1) 0 2px, transparent 2px 22px),
+    var(--c);
+}
+
+.note {
+  @include type.label-mono;
+  color: var(--text-tertiary);
+  margin-top: var(--space-24);
+}

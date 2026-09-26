@@ -1,0 +1,25 @@
+// Text styles, mirroring the Figma text styles.
+@mixin text($size, $weight, $lh, $ls: 0, $family: var(--font-family-sans)) {
+  font-family: $family;
+  font-size: $size;
+  font-weight: $weight;
+  line-height: $lh;
+  letter-spacing: $ls;
+}
+
+// Display sizes scale down fluidly below the 1728 px design width.
+@mixin display-xl { @include text(clamp(64px, 9.26vw, var(--font-size-7xl)), var(--font-weight-bold), 0.95, -0.04em); }
+@mixin display-l { @include text(clamp(56px, 6.94vw, var(--font-size-6xl)), var(--font-weight-bold), 1, -0.04em); }
+@mixin display-m { @include text(clamp(48px, 5.2vw, var(--font-size-5xl)), var(--font-weight-bold), 1.05, -0.03em); }
+@mixin heading-1 { @include text(var(--font-size-4xl), var(--font-weight-bold), 1.1, -0.03em); }
+@mixin heading-2 { @include text(var(--font-size-3xl), var(--font-weight-semibold), 1.1, -0.02em); }
+@mixin heading-3 { @include text(clamp(24px, 2.2vw, var(--font-size-2xl)), var(--font-weight-semibold), 1.2, -0.02em); }
+@mixin heading-4 { @include text(var(--font-size-xl), var(--font-weight-semibold), 1.25, -0.01em); }
+@mixin body-l { @include text(var(--font-size-lg), var(--font-weight-regular), 1.5); }
+@mixin body-m { @include text(var(--font-size-base), var(--font-weight-regular), 1.5); }
+@mixin body-m-strong { @include text(var(--font-size-base), var(--font-weight-medium), 1.5); }
+@mixin caption { @include text(var(--font-size-xs), var(--font-weight-medium), 1.4, 0.01em); }
+@mixin label-mono {
+  @include text(var(--font-size-xs), var(--font-weight-medium), 1.3, 0.06em, var(--font-family-mono));
+  text-transform: uppercase;
+}

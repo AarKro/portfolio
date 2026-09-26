@@ -1,0 +1,21 @@
+{
+  "meta": {
+    "title": "Aaron Kromer · I design and build things"
+  },
+  "landing": {
+    "name": "Aaron Kromer",
+    "subtitle": "I design and build things :)",
+    "scrollHint": "scroll to untangle",
+    "canvasLabel": "Five colored threads, one per project, spun across the screen."
+  },
+  "overview": {
+    "label": "Selected work · 05",
+    "title": "five threads",
+    "intro": "Each project is a thread from first question to shipped product. Pick one and follow it through the process."
+  },
+  "notFound": {
+    "title": "lost the thread",
+    "body": "This page doesn’t exist, or it wandered off.",
+    "back": "back to the start →"
+  }
+}
