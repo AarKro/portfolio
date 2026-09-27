@@ -11,11 +11,50 @@
   "overview": {
     "label": "Selected work · 05",
     "title": "five threads",
-    "intro": "Each project is a thread from first question to shipped product. Pick one and follow it through the process."
+    "intro": "Each project is a thread from first question to shipped product. Pick one and follow it through the process.",
+    "follow": "Follow the thread: {{name}}"
   },
   "notFound": {
     "title": "lost the thread",
     "body": "This page doesn’t exist, or it wandered off.",
     "back": "back to the start →"
+  },
+  "nav": {
+    "back": "back to overview",
+    "name": "Aaron Kromer",
+    "looseEnds": "loose ends",
+    "about": "about",
+    "label": "Main"
+  },
+  "caseStudy": {
+    "label": "Case study · {{n}} / 05",
+    "title": "Project {{n}}",
+    "oneLiner": "One sentence on what this project is and why it mattered.",
+    "tools": [
+      "Research",
+      "Figma",
+      "React",
+      "TypeScript"
+    ],
+    "toolsLabel": "Tools",
+    "scrollHint": "scroll to follow the thread →",
+    "imageLabel": "hero image",
+    "stages": [
+      {
+        "label": "01 · Context",
+        "title": "Where it started",
+        "body": "Two or three sentences setting the scene: who it was for, what existed before, and what my role was."
+      },
+      {
+        "label": "02 · Problem",
+        "title": "How might we make this simpler?",
+        "body": "The core problem in one sentence, and why it was worth solving."
+      },
+      {
+        "label": "03 · Outcome",
+        "title": "What changed",
+        "body": "A key number or two, and what I would do differently next time."
+      }
+    ]
   }
 }

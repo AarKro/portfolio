@@ -1,0 +1,17 @@
+// The case-study thread as SVG: a core stroke plus a dashed twist on top (Figma: "Thread" + "Twist").
+.core {
+  fill: none;
+  stroke: var(--thread-current);
+  stroke-width: 4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.twist {
+  fill: none;
+  stroke: var(--thread-twist);
+  stroke-width: 1.5;
+  stroke-dasharray: 5 7;
+  stroke-linecap: round;
+  opacity: 0.7;
+}

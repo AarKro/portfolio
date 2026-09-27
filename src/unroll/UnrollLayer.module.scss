@@ -1,0 +1,30 @@
+// Fixed layer above the routes while the unroll runs.
+.layer {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  pointer-events: none;
+}
+
+// Project-tinted background; fades in during the jump and hides the route change.
+.bg {
+  position: absolute;
+  inset: 0;
+  background: var(--bg-default);
+  opacity: 0;
+}
+
+.svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.ball {
+  position: absolute;
+  top: 0;
+  left: 0;
+  will-change: transform;
+}

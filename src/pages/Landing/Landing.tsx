@@ -1,8 +1,11 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, type MouseEvent } from 'react';
+import { Link, useLocation } from 'react-router';
 import { useTranslation } from 'react-i18next';
+import YarnBundle from '../../components/YarnBundle/YarnBundle';
 import ThreadsCanvas from '../../installation/ThreadsCanvas';
 import { gsap, ScrollTrigger, scrollToTarget, startSmoothScroll } from '../../lib/motion';
 import { useReducedMotion } from '../../lib/reducedMotion';
+import { useUnroll } from '../../unroll/context';
 import styles from './Landing.module.scss';
 
 const PROJECTS = [1, 2, 3, 4, 5];
@@ -11,6 +14,10 @@ export default function Landing() {
   const { t } = useTranslation();
   const reduced = useReducedMotion();
   const [ready, setReady] = useState(false);
+  const unroll = useUnroll();
+  // coming back from a case study ("back to overview"): land on the overview, settled
+  const location = useLocation();
+  const backToOverview = useRef(location.hash === '#work');
 
   const diveRef = useRef(0);
   const diveSectionRef = useRef<HTMLElement>(null);
@@ -69,7 +76,7 @@ export default function Landing() {
       // content draws in, then the yarn bundles fall (plays once)
       const text = overview?.querySelectorAll('[data-reveal]');
       const bundles = bundlesRef.current?.children;
-      if (text && bundles) {
+      if (text && bundles && !backToOverview.current) {
         gsap.set(text, { autoAlpha: 0, y: 24 });
         gsap.set(bundles, { y: -600, rotation: -120, autoAlpha: 0 });
         ScrollTrigger.create({
@@ -87,6 +94,31 @@ export default function Landing() {
     });
     return () => ctx.revert();
   }, [reduced]);
+
+  // choosing a project: the ball jumps and unrolls into the case study (plain navigation with reduced motion or modifier keys)
+  const follow = (e: MouseEvent<HTMLAnchorElement>, n: number) => {
+    if (reduced || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+    e.preventDefault();
+    unroll.start(n, e.currentTarget, `/work/project-${n}`);
+  };
+
+  // unroll focus: the chosen ball is handed to the overlay, the rest of the overview fades
+  useEffect(() => {
+    const overview = overviewRef.current;
+    if (unroll.project === null || !overview) return;
+    const chosen = overview.querySelector(`[data-project="${unroll.project}"]`);
+    const others = [
+      ...overview.querySelectorAll('[data-reveal]'),
+      ...[...(bundlesRef.current?.children ?? [])].filter((li) => !li.contains(chosen)),
+    ];
+    gsap.set(chosen, { autoAlpha: 0 });
+    gsap.to(others, { autoAlpha: 0.12, duration: 0.35, ease: 'power1.out' });
+  }, [unroll.project]);
+
+  // back from a case study: jump straight to the overview
+  useEffect(() => {
+    if (backToOverview.current && overviewRef.current) scrollToTarget(overviewRef.current, { immediate: true });
+  }, []);
 
   return (
     <main className={styles.page}>
@@ -129,9 +161,20 @@ export default function Landing() {
         <p className={styles.intro} data-reveal>
           {t('overview.intro')}
         </p>
-        <ul ref={bundlesRef} className={styles.bundles} aria-hidden="true">
+        <ul ref={bundlesRef} className={styles.bundles}>
           {PROJECTS.map((n) => (
-            <li key={n} className={styles.bundle} style={{ ['--c' as string]: `var(--thread-project-${n})` }} />
+            <li key={n} className={styles.bundle}>
+              <Link
+                to={`/work/project-${n}`}
+                className={styles.bundleLink}
+                data-theme={`project-${n}`}
+                data-project={n}
+                aria-label={t('overview.follow', { name: t('caseStudy.title', { n }) })}
+                onClick={(e) => follow(e, n)}
+              >
+                <YarnBundle />
+              </Link>
+            </li>
           ))}
         </ul>
         <p className={styles.note}>Prototype · the real overview comes next.</p>

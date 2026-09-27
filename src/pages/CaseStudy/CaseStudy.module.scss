@@ -1,0 +1,197 @@
+@use '../../styles/type';
+
+.page {
+  background: var(--bg-default);
+  color: var(--text-primary);
+}
+
+// Pinned viewport; the track inside moves sideways while you scroll.
+.pin {
+  position: relative;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.track {
+  position: relative;
+  display: flex;
+  width: max-content;
+  height: 100%;
+}
+
+.intro {
+  position: relative;
+  flex: 0 0 100vw;
+  display: flex;
+  align-items: center;
+  padding: 0 var(--space-32) 0 var(--space-24);
+}
+
+// Placeholder for the hero image (Figma: fades into the background behind the title).
+.image {
+  position: absolute;
+  top: 18.6%;
+  left: 40.5%;
+  width: 54.9%;
+  height: 62.7%;
+  border-radius: var(--radius-md);
+  background: linear-gradient(to right, transparent, var(--bg-subtle) 55%);
+  padding: var(--space-5);
+
+  span {
+    @include type.label-mono;
+    color: var(--text-tertiary);
+    opacity: 0.4;
+  }
+}
+
+.introContent {
+  position: relative;
+  max-width: 834px;
+  margin-top: -8vh;
+}
+
+.label {
+  @include type.label-mono;
+  color: var(--accent-text);
+}
+
+.title {
+  @include type.display-l;
+  margin-top: var(--space-6);
+
+  &:focus-visible {
+    outline-offset: 8px;
+  }
+}
+
+.oneLiner {
+  @include type.body-l;
+  color: var(--text-secondary);
+  margin-top: var(--space-6);
+}
+
+// Stand-in for the Figma "Tag" component.
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  list-style: none;
+  padding: 0;
+  margin: var(--space-8) 0 0;
+
+  li {
+    @include type.label-mono;
+    color: var(--accent-text);
+    border: 1.5px solid var(--border-strong);
+    border-radius: var(--radius-full);
+    padding: var(--space-2) var(--space-3);
+  }
+}
+
+.hint {
+  @include type.label-mono;
+  position: absolute;
+  left: var(--space-24);
+  bottom: 16.5vh;
+  color: var(--accent-text);
+}
+
+.stage {
+  flex: 0 0 70vw;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 0 var(--space-24) 12vh;
+  max-width: 70vw;
+}
+
+.stageTitle {
+  @include type.heading-2;
+  margin-top: var(--space-6);
+  max-width: 640px;
+}
+
+.body {
+  @include type.body-l;
+  color: var(--text-secondary);
+  margin-top: var(--space-6);
+  max-width: 640px;
+}
+
+.end {
+  flex: 0 0 40vw;
+}
+
+// The thread spans the whole track and moves with it.
+.thread {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100vh;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.marker {
+  transition: opacity 0.3s ease-out;
+
+  circle {
+    fill: var(--bg-default);
+    stroke: var(--border-strong);
+    stroke-width: 1.5;
+  }
+
+  text {
+    @include type.label-mono;
+    fill: var(--text-primary);
+    text-anchor: middle;
+  }
+}
+
+// The ball stays in the viewport, ahead of the thread.
+.ball {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 150px; // BALL_SIZE in thread/geometry.ts
+  height: 150px;
+  transform-origin: 50% 50%;
+  will-change: transform;
+  pointer-events: none;
+}
+
+.hidden {
+  visibility: hidden;
+}
+
+// Reduced motion: stages stack vertically, no pinning; the ball and thread rest on the intro.
+.stacked {
+  .pin {
+    height: auto;
+    overflow: visible;
+  }
+
+  .track {
+    flex-direction: column;
+    width: 100%;
+    height: auto;
+  }
+
+  .intro {
+    flex: none; // flex-basis 100vw would become the height in a column
+    height: 100vh;
+  }
+
+  .stage {
+    flex: none;
+    max-width: none;
+    padding: var(--space-24);
+  }
+
+  .end,
+  .marker {
+    display: none;
+  }
+}

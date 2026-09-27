@@ -32,13 +32,17 @@ Planned but not added yet: MDX for case studies (one file per project in `src/pr
 
 ```
 src/
-  app/App.tsx              routes (lazy pages)
-  pages/Landing/           landing + dive (prototype); placeholder overview
+  app/App.tsx              routes (lazy pages), wrapped in UnrollProvider
+  pages/Landing/           landing + dive (prototype); placeholder overview (bundles link to case studies)
+  pages/CaseStudy/         placeholder case study /work/project-n: pinned horizontal track, ball leads the thread
   pages/NotFound/          404 ("lost the thread")
   installation/threads.ts  thread model: generation, physics, pluck/grab, drawing, dive camera
   installation/ThreadsCanvas.tsx  canvas + rAF loop, pointer input, fixed-step physics
   lib/motion.ts            Lenis + ScrollTrigger setup, scrollToTarget
   lib/reducedMotion.ts     prefers-reduced-motion hook
+  unroll/                  unroll overlay (above the routes, survives navigation) + context/phases
+  thread/geometry.ts       shared thread line, ball positions, path helpers (overlay and case study must match)
+  components/              YarnBundle (SVG ball), Nav (placeholder)
   styles/tokens.scss       design tokens (mirror of the Figma variables)
   styles/_type.scss        text-style mixins (mirror of the Figma text styles)
   styles/global.scss       reset, focus ring, Lenis classes
@@ -97,8 +101,8 @@ Semantic variable collection: `VariableCollectionId:3:71`.
 
 ## Current state and next steps
 
-- Done: concept, design system, concept designs for all pages, transitions, landing prototype (threads, yarn texture, guitar-string pluck/drag physics, draw-in, blur behind the title, scroll-driven dive, reduced motion).
-- Next prototype: the yarn **unroll** from overview into a case study (ball jumps, thread unravels from it, lands in the lower half, then leads the thread through the horizontal track). See README §6.2.
+- Done: concept, design system, concept designs for all pages, transitions, landing prototype (threads, yarn texture, guitar-string pluck/drag physics, draw-in, scroll-driven dive, reduced motion), unroll prototype (ball jumps from the overview, thread unravels, lands on a placeholder case study, then leads the thread through a pinned horizontal track).
+- Next: tune the unroll feel; real overview (Figma Overview v2) and case study panels; Nav component.
 - Open: the 5 main projects and their colors (the hues are placeholders), which small things go to Loose ends, GitHub Pages `404.html` redirect for clean URLs, mobile.
 
 ## Gotchas
@@ -107,4 +111,6 @@ Semantic variable collection: `VariableCollectionId:3:71`.
 - **Physics runs at a fixed 360 Hz step** (`STEP_MS`), decoupled from the display refresh (MacBooks run at 120 Hz). Tuning constants are per step; `TENSION` must stay below 1 or the string blows up.
 - **Thread physics:** forces must act on the displacement from the rest shape, and every point updates from the previous frame's state. Tension on absolute positions pulls the curves straight and diverges.
 - **ESLint** is pinned to 9: `eslint-plugin-jsx-a11y` doesn't support ESLint 10 yet.
+- **Unroll handoff:** the overlay (`UnrollProvider`) draws the ball and thread until the case study takes over; both use `thread/geometry.ts` with `viewport()`, so the handoff is pixel-identical. Change the line or ball positions there, never in one place only.
+- **ScrollTrigger pinning moves the pinned node in the DOM** (pin-spacer) on every refresh, which drops focus. The case study restores focus on `refreshInit`/`refresh`; do the same for any other pinned section.
 - `vite.config.ts` uses an absolute base (`/portfolio/`); the relative `./` from v1 breaks nested routes.

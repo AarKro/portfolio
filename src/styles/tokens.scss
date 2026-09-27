@@ -42,6 +42,7 @@ $project-hues: ("red", "amber", "teal", "blue", "violet");
   --accent-on-accent: var(--color-white);
   --focus-ring: var(--color-gray-900);
   --thread-current: var(--color-gray-900);
+  --thread-twist: var(--color-gray-600);
   @for $i from 1 through list.length($project-hues) {
     --thread-project-#{$i}: var(--color-#{list.nth($project-hues, $i)}-500);
   }
@@ -95,5 +96,6 @@ $project-hues: ("red", "amber", "teal", "blue", "violet");
     --accent-on-accent: var(--color-#{$h}-950);
     --focus-ring: var(--color-#{$h}-700);
     --thread-current: var(--color-#{$h}-500);
+    --thread-twist: var(--color-#{$h}-700);
   }
 }

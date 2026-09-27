@@ -1,0 +1,17 @@
+.ball {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.body {
+  fill: var(--thread-current);
+}
+
+.strands path {
+  fill: none;
+  stroke: var(--thread-twist);
+  stroke-width: 1;
+  opacity: 0.55;
+}

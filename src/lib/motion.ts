@@ -25,14 +25,14 @@ export function startSmoothScroll(reducedMotion: boolean): () => void {
   };
 }
 
-/** Scroll to an element or position, smoothly if Lenis is running. */
-export function scrollToTarget(target: HTMLElement | number) {
+/** Scroll to an element or position, smoothly if Lenis is running (or instantly with `immediate`). */
+export function scrollToTarget(target: HTMLElement | number, { immediate = false } = {}) {
   if (lenis) {
-    lenis.scrollTo(target, { duration: 2.4 });
+    lenis.scrollTo(target, immediate ? { immediate: true, force: true } : { duration: 2.4 });
     return;
   }
   const top = typeof target === 'number' ? target : target.getBoundingClientRect().top + window.scrollY;
-  window.scrollTo({ top });
+  window.scrollTo({ top, behavior: 'instant' });
 }
 
 export { gsap, ScrollTrigger };
