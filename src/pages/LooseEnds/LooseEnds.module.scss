@@ -1,0 +1,81 @@
+@use '../../styles/type';
+@use '../../styles/layout' as *;
+
+// Figma "Loose ends": scraps lying on a table with a faint technical grid.
+// The table is a grid that reflows; each scrap keeps its tilt and drop.
+.page {
+  background: var(--bg-default);
+  color: var(--text-primary);
+}
+
+.frame {
+  max-width: 1728px;
+  margin: 0 auto;
+  padding: max(120px, #{u(200)}) $gutter max(80px, #{u(128)});
+}
+
+.intro {
+  max-width: 620px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.label {
+  @include type.label-mono;
+  color: var(--text-tertiary);
+}
+
+.title {
+  @include type.display-l;
+}
+
+.lede {
+  @include type.body-l;
+  color: var(--text-secondary);
+}
+
+.table {
+  position: relative;
+  margin-top: max(64px, #{u(112)});
+}
+
+.grid {
+  position: absolute;
+  inset: -40px 0 -40px 0;
+  width: 100%;
+  height: calc(100% + 80px);
+  pointer-events: none;
+
+  path {
+    fill: none;
+    stroke: var(--border-default);
+    stroke-width: 1;
+  }
+}
+
+.scraps {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(320px, 100%), 1fr));
+  gap: var(--space-16) var(--space-10);
+  justify-items: center;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+
+  > li {
+    // lower some scraps a little, as if dropped on the table
+    margin-top: calc(var(--drop) * 1px);
+  }
+
+  @media (max-width: $narrow) {
+    > li {
+      margin-top: 0;
+    }
+  }
+}
+
+.back {
+  margin-top: max(80px, #{u(160)});
+}
