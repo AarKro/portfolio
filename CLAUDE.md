@@ -33,8 +33,13 @@ Planned but not added yet: MDX for case studies (one file per project in `src/pr
 ```
 src/
   app/App.tsx              routes (lazy pages), wrapped in UnrollProvider
-  pages/Landing/           landing + dive (prototype); placeholder overview (bundles link to case studies)
+  pages/Landing/           landing + dive; renders the overview below the dive
+  pages/Overview/          overview (Figma Overview v2): project rows as technical drawings, loose-ends teaser
+  projects/projects.ts     placeholder project + loose-ends data (one place to edit until MDX)
+  content/about.ts         about page stations and learnings (placeholders)
   pages/CaseStudy/         placeholder case study /work/project-n: pinned horizontal track, ball leads the thread
+  pages/About/             about: intro + portrait, braided career thread, learnings clothesline, let's talk
+  pages/LooseEnds/         loose ends: scraps on a table
   pages/NotFound/          404 ("lost the thread")
   installation/threads.ts  thread model: generation, physics, pluck/grab, drawing, dive camera
   installation/ThreadsCanvas.tsx  canvas + rAF loop, pointer input, fixed-step physics
@@ -43,7 +48,7 @@ src/
   unroll/                  unroll overlay (above the routes, survives navigation) + context/phases
   thread/geometry.ts       shared thread line, ball positions, attachToBall, path helpers (overlay and case study must match)
   thread/yarn.ts, YarnThread.tsx, YarnBall.tsx   yarn look (twist, hairs; also used by the landing canvas via Path2D) and the ball
-  components/              YarnBundle (SVG wound ball), Nav (placeholder)
+  components/              YarnBundle, Nav, Tag, TextLink, SocialLink, Scrap
   styles/tokens.scss       design tokens (mirror of the Figma variables)
   styles/_type.scss        text-style mixins (mirror of the Figma text styles)
   styles/global.scss       reset, focus ring, Lenis classes
@@ -52,6 +57,7 @@ src/
 
 ## Conventions
 
+- **Layout units.** Pages are designed at 1728 px. Composed layouts (the overview rows) write their geometry in design px with `u()` from `styles/_layout.scss` (`--u` = 1 design px, shrinks with the viewport); type keeps its own sizes. Below `$compose` (1200) they stack; below `$narrow` (720) one column. Other pages flow (grid/flex) and use `u()` only for spacing. Nothing may scroll sideways (`main` clips overflow).
 - **Tokens only.** Colors, spacing, radii and type come from `tokens.scss` / `_type.scss`, never raw values. Names match the Figma code syntax: Figma `text/primary` → `var(--text-primary)`.
 - **Theme modes.** Shell is the default. Projects use `data-theme="project-1"` … `"project-5"`, which remaps the semantic tokens (bg, text, border, accent, focus, `--thread-current`, `--thread-twist`, `--thread-light`). The landing uses `bg/inverse` (charcoal).
 - **Text in locale files.** No hard-coded UI strings; German comes later.
@@ -103,7 +109,8 @@ Semantic variable collection: `VariableCollectionId:3:71`.
 ## Current state and next steps
 
 - Done: concept, design system, concept designs for all pages, transitions, landing prototype (threads, yarn texture, guitar-string pluck/drag physics, draw-in, scroll-driven dive, reduced motion), unroll prototype (ball jumps from the overview, thread unravels, lands on a placeholder case study, then leads the thread through a pinned horizontal track).
-- Next: tune the unroll feel; real overview (Figma Overview v2) and case study panels; Nav component.
+- Done since: overview, about and loose-ends pages from Figma (placeholder content), Nav/Tag/TextLink/SocialLink/Scrap components.
+- Next: real case study panels (stages, clothesline, stage progress, MDX); official LinkedIn/GitHub icons; Figma sync (thread/twist + thread/light variables, dive frames).
 - Open: the 5 main projects and their colors (the hues are placeholders), which small things go to Loose ends, GitHub Pages `404.html` redirect for clean URLs, mobile.
 
 ## Gotchas
@@ -113,5 +120,6 @@ Semantic variable collection: `VariableCollectionId:3:71`.
 - **Thread physics:** forces must act on the displacement from the rest shape, and every point updates from the previous frame's state. Tension on absolute positions pulls the curves straight and diverges.
 - **ESLint** is pinned to 9: `eslint-plugin-jsx-a11y` doesn't support ESLint 10 yet.
 - **Unroll handoff:** the overlay (`UnrollProvider`) draws the ball and thread until the case study takes over; both use `thread/geometry.ts` with `viewport()`, so the handoff is pixel-identical. Change the line or ball positions there, never in one place only.
+- **The dive is one way.** Past its end, `Landing` sets `collapsed` and hides the dive section (the overview becomes the top of the page, scroll position is kept); "back to start" un-collapses, jumps to the dive's end and scrolls to 0 with Lenis locked. `/#work` starts collapsed.
 - **ScrollTrigger pinning moves the pinned node in the DOM** (pin-spacer) on every refresh, which drops focus. The case study restores focus on `refreshInit`/`refresh`; do the same for any other pinned section.
 - `vite.config.ts` uses an absolute base (`/portfolio/`); the relative `./` from v1 breaks nested routes.
