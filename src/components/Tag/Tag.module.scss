@@ -1,0 +1,18 @@
+@use '../../styles/type';
+
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.tag {
+  @include type.label-mono;
+  color: var(--text-secondary);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-full);
+  padding: var(--space-2) 14px; // Figma: 8 × 14
+}

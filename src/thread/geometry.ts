@@ -110,3 +110,15 @@ export function lerpAngle(a: number, b: number, t: number) {
   const d = Math.atan2(Math.sin(b - a), Math.cos(b - a));
   return a + d * t;
 }
+
+/** Points along a cubic Bézier, for YarnPath. */
+export function cubicPoints(p0: Pt, p1: Pt, p2: Pt, p3: Pt, n = 16): Pt[] {
+  return Array.from({ length: n + 1 }, (_, i) => {
+    const t = i / n;
+    const u = 1 - t;
+    return {
+      x: u * u * u * p0.x + 3 * u * u * t * p1.x + 3 * u * t * t * p2.x + t * t * t * p3.x,
+      y: u * u * u * p0.y + 3 * u * u * t * p1.y + 3 * u * t * t * p2.y + t * t * t * p3.y,
+    };
+  });
+}

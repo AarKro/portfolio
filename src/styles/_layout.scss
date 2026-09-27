@@ -1,0 +1,16 @@
+// Layout helpers.
+//
+// Composed layouts (the overview rows) are drawn at the 1728 px design width.
+// Their geometry is written in design px with u(): at narrower viewports it
+// scales with the viewport (--u shrinks below 1px); type keeps its own sizes.
+// Below $compose, composed layouts switch to a stacked flow.
+
+@function u($n) {
+  @return calc(#{$n} * var(--u));
+}
+
+$compose: 1200px; // composed layouts from here up
+$narrow: 720px; // phone-ish widths
+
+// side padding for pages: 120 px at the design width, never below 20 px
+$gutter: max(20px, calc(120 * var(--u)));

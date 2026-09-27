@@ -12,7 +12,15 @@
     "label": "Selected work · 05",
     "title": "five threads",
     "intro": "Each project is a thread from first question to shipped product. Pick one and follow it through the process.",
-    "follow": "Follow the thread: {{name}}"
+    "follow": "Follow the thread: {{name}}",
+    "followLink": "follow this thread →",
+    "index": "{{n}} / {{total}}",
+    "factsLabel": "Project facts",
+    "year": "Year",
+    "role": "Role",
+    "duration": "Duration",
+    "diameter": "Ø 240",
+    "toolsLabel": "Tools"
   },
   "notFound": {
     "title": "lost the thread",
@@ -24,18 +32,13 @@
     "name": "Aaron Kromer",
     "looseEnds": "loose ends",
     "about": "about",
-    "label": "Main"
+    "label": "Main",
+    "backToStart": "back to start",
+    "linkedin": "LinkedIn (opens in a new tab)",
+    "github": "GitHub (opens in a new tab)"
   },
   "caseStudy": {
-    "label": "Case study · {{n}} / 05",
-    "title": "Project {{n}}",
-    "oneLiner": "One sentence on what this project is and why it mattered.",
-    "tools": [
-      "Research",
-      "Figma",
-      "React",
-      "TypeScript"
-    ],
+    "label": "Case study · {{n}} / {{total}}",
     "toolsLabel": "Tools",
     "scrollHint": "scroll to follow the thread →",
     "imageLabel": "hero image",
@@ -56,5 +59,30 @@
         "body": "A key number or two, and what I would do differently next time."
       }
     ]
+  },
+  "looseEnds": {
+    "title": "…and some loose ends",
+    "lede": "Smaller things I made for fun.",
+    "seeAll": "see all loose ends →",
+    "tagsLabel": "Tags",
+    "label": "Playground · {{count}}",
+    "pageTitle": "loose ends",
+    "pageLede": "Small things I made because they were fun. No process story, just the thing and a link.",
+    "back": "back to the five threads →"
+  },
+  "about": {
+    "label": "About",
+    "title": "hi, I’m Aaron",
+    "intro": "I design and build digital products, from the first question to the shipped code. A few sentences about how I work, what I care about and what I’m doing right now.",
+    "portrait": "portrait",
+    "portraitCaption": "me, probably thinking about kerning",
+    "threadTitle": "my thread",
+    "threadLede": "Five colors, one thread: every project on this site started somewhere along here.",
+    "learnedTitle": "what I learned",
+    "learning": "learning {{n}}",
+    "egg": "set in geist. also, I design type →",
+    "talkTitle": "let’s talk",
+    "talkBody": "The easiest way to reach me is LinkedIn. Happy to talk about projects, ideas, or design and code in general.",
+    "sayHi": "say hi on LinkedIn ↗"
   }
 }

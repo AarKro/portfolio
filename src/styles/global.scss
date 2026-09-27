@@ -9,6 +9,8 @@
 
 html {
   -webkit-text-size-adjust: 100%;
+  // 1 design px of the 1728 px layout (see _layout.scss)
+  --u: min(1px, calc(100vw / 1728));
 }
 
 body {
@@ -17,6 +19,12 @@ body {
   color: var(--text-primary);
   @include type.body-m;
   -webkit-font-smoothing: antialiased;
+}
+
+// Loose threads and tilted cards may poke past the edge: clip them, never
+// scroll sideways. (On main, not body: body's overflow would move to the viewport.)
+main {
+  overflow-x: clip;
 }
 
 h1,

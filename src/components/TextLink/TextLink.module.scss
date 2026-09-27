@@ -1,0 +1,25 @@
+@use '../../styles/type';
+
+.link {
+  @include type.body-m-strong;
+  display: inline-block;
+  padding: var(--space-1) 6px; // Figma: 4 × 6
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  text-decoration: none;
+  // underline drawn with a background so it can grow from the left
+  background-image: linear-gradient(currentColor, currentColor);
+  background-repeat: no-repeat;
+  background-position: 6px calc(100% - 3px);
+  background-size: 0 1.5px;
+  transition: background-size 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+
+  &:hover,
+  &:focus-visible {
+    background-size: calc(100% - 12px) 1.5px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
+}

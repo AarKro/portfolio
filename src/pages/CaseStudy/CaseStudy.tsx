@@ -8,6 +8,8 @@ import { BALL_INTRO_X, BALL_SIZE, BALL_TRACK_X, attachToBall, threadPoints, thre
 import YarnBall, { type YarnBallHandle } from '../../thread/YarnBall';
 import YarnThread, { type YarnThreadHandle } from '../../thread/YarnThread';
 import { useUnroll } from '../../unroll/context';
+import { Tags } from '../../components/Tag/Tag';
+import { PROJECTS, projectBySlug, type Project } from '../../projects/projects';
 import NotFound from '../NotFound/NotFound';
 import styles from './CaseStudy.module.scss';
 
@@ -30,11 +32,12 @@ const smooth = (a: number, b: number, t: number) => {
  */
 export default function CaseStudy() {
   const { slug } = useParams();
-  const n = Number(/^project-([1-5])$/.exec(slug ?? '')?.[1]);
-  return n ? <CaseStudyPage key={n} n={n} /> : <NotFound />;
+  const project = projectBySlug(slug);
+  return project ? <CaseStudyPage key={project.slug} project={project} /> : <NotFound />;
 }
 
-function CaseStudyPage({ n }: { n: number }) {
+function CaseStudyPage({ project }: { project: Project }) {
+  const { n } = project;
   const { t } = useTranslation();
   const reduced = useReducedMotion();
   const { phase } = useUnroll();
@@ -54,7 +57,6 @@ function CaseStudyPage({ n }: { n: number }) {
   const revealed = useRef(false);
 
   const stages = t('caseStudy.stages', { returnObjects: true }) as Stage[];
-  const tools = t('caseStudy.tools', { returnObjects: true }) as string[];
 
   // start at the top
   useLayoutEffect(() => {
@@ -165,7 +167,7 @@ function CaseStudyPage({ n }: { n: number }) {
 
   return (
     <main data-theme={`project-${n}`} className={reduced ? `${styles.page} ${styles.stacked}` : styles.page}>
-      <Nav ref={navRef} />
+      <Nav ref={navRef} page="caseStudy" />
 
       <section ref={pinRef} className={styles.pin} aria-labelledby="case-title">
         <div ref={trackRef} className={styles.track}>
@@ -175,19 +177,17 @@ function CaseStudyPage({ n }: { n: number }) {
             </div>
             <div className={styles.introContent}>
               <p className={styles.label} data-reveal>
-                {t('caseStudy.label', { n: pad(n) })}
+                {t('caseStudy.label', { n: pad(n), total: pad(PROJECTS.length) })}
               </p>
               <h1 id="case-title" ref={titleRef} tabIndex={-1} className={styles.title} data-reveal>
-                {t('caseStudy.title', { n })}
+                {project.name}
               </h1>
               <p className={styles.oneLiner} data-reveal>
-                {t('caseStudy.oneLiner')}
+                {project.oneLiner}
               </p>
-              <ul className={styles.tags} aria-label={t('caseStudy.toolsLabel')} data-reveal>
-                {tools.map((tool) => (
-                  <li key={tool}>{tool}</li>
-                ))}
-              </ul>
+              <div data-reveal>
+                <Tags items={project.tools} label={t('caseStudy.toolsLabel')} className={styles.tags} />
+              </div>
             </div>
             <p className={styles.hint} data-reveal>
               {t('caseStudy.scrollHint')}

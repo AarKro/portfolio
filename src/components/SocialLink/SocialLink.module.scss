@@ -1,0 +1,40 @@
+@use '../../styles/type';
+
+.link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-1) 6px;
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  text-decoration: none;
+}
+
+.icon {
+  @include type.label-mono;
+  text-transform: none;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border: 1.5px solid var(--text-primary);
+  border-radius: 6px;
+}
+
+.label {
+  @include type.text(var(--font-size-lg), var(--font-weight-medium), 1.5);
+  background-image: linear-gradient(currentColor, currentColor);
+  background-repeat: no-repeat;
+  background-position: 0 calc(100% - 2px);
+  background-size: 0 1.5px;
+  transition: background-size 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+
+  .link:hover &,
+  .link:focus-visible & {
+    background-size: 100% 1.5px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
+}
