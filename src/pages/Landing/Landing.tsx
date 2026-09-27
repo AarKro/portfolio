@@ -9,6 +9,9 @@ import { useUnroll } from '../../unroll/context';
 import styles from './Landing.module.scss';
 
 const PROJECTS = [1, 2, 3, 4, 5];
+// share of the dive you scroll yourself before it plays through on its own
+const SNAP_THRESHOLD = 0.04;
+const SNAP_DURATION = 2.6; // seconds
 
 export default function Landing() {
   const { t } = useTranslation();
@@ -47,6 +50,14 @@ export default function Landing() {
   useEffect(() => {
     if (reduced) return;
     const ctx = gsap.context(() => {
+      // Snap: once you've scrolled a little way into the dive, it plays itself to
+      // the end (the overview); scrolling back up from the overview plays it back
+      // to the start. Input is locked while it runs.
+      let auto = false;
+      const snap = (target: HTMLElement | number) => {
+        auto = true;
+        scrollToTarget(target, { duration: SNAP_DURATION, lock: true, onComplete: () => (auto = false) });
+      };
       ScrollTrigger.create({
         trigger: diveSectionRef.current,
         start: 'top top',
@@ -54,6 +65,9 @@ export default function Landing() {
         scrub: true,
         onUpdate: (self) => {
           diveRef.current = self.progress;
+          if (auto || !overviewRef.current) return;
+          if (self.direction === 1 && self.progress > SNAP_THRESHOLD && self.progress < 1 - SNAP_THRESHOLD) snap(overviewRef.current);
+          else if (self.direction === -1 && self.progress < 1 - SNAP_THRESHOLD && self.progress > SNAP_THRESHOLD) snap(0);
         },
       });
       gsap.to(overlayRef.current, {

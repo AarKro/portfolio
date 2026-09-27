@@ -1,3 +1,5 @@
+import { smoothSample, yarnDecor } from '../thread/yarn';
+
 /**
  * Landing installation: spun threads.
  *
@@ -5,7 +7,8 @@
  * edge in a straight line. Physics is a simple Verlet string, tuned
  * to feel like a guitar string: high tension to the neighbours (fast waves, a
  * quick twang) plus a spring back to the rest shape, with enough damping that
- * it rings briefly and settles. Threads live on three 2D layers;
+ * it rings briefly and settles. The yarn look (twist marks, hairs,
+ * highlight) is shared with the case-study thread. Threads live on three 2D layers;
  * back layers are thinner and dimmer, which fakes depth, and during the dive
  * each layer scales at its own rate (parallax).
  */
@@ -41,13 +44,12 @@ interface Point {
   ry: number;
 }
 
-interface Fiber {
-  /** position along the thread as a fractional point index */
-  s: number;
-  side: 1 | -1;
-  angle: number;
-  len: number;
-  dark: boolean;
+interface Decor {
+  /** shape signature the decoration was built for */
+  key: string;
+  ply: Path2D;
+  hairsLight: Path2D;
+  hairsDark: Path2D;
 }
 
 export interface Thread {
@@ -57,15 +59,18 @@ export interface Thread {
   depth: number;
   weight: number;
   alpha: number;
-  phase: number;
   delay: number;
   points: Point[];
-  fibers: Fiber[];
+  /** unit normal of the laid-out line, pointing up (for the highlight) */
+  nx: number;
+  ny: number;
+  /** yarn decoration, rebuilt only when the thread's shape changes */
+  decor: Decor | null;
 }
 
 const SEGMENTS = 72;
-// px of thread per hair, per layer (the back layer has none)
-const HAIR_SPACING = [Infinity, 12, 5];
+// share of hair positions that get a hair, per layer (the back layer has no texture)
+const HAIR_CHANCE = [0, 0.18, 0.4];
 const LAYERS = [
   { weight: 1.4, alpha: 0.38 },
   { weight: 2.6, alpha: 0.7 },
@@ -116,33 +121,21 @@ export function createThreads(w: number, h: number, seed = 7): Thread[] {
         const y = y0 + (y1 - y0) * t;
         points.push({ x, y, px: x, py: y, rx: x, ry: y });
       }
-      const fibers: Fiber[] = [];
-      if (layer > 0) {
-        // fuzz: short hairs that lean along the thread, randomly spaced, the odd longer stray
-        const count = Math.round(Math.hypot(x1 - x0, y1 - y0) / HAIR_SPACING[layer]);
-        for (let f = 0; f < count; f++) {
-          const side = rand() < 0.5 ? 1 : -1;
-          const stray = layer === 2 && rand() < 0.08;
-          fibers.push({
-            s: 1 + rand() * (SEGMENTS - 2),
-            side,
-            angle: side * (0.5 + rand() * 0.8),
-            len: stray ? 6 + rand() * 5 : layer === 2 ? 1.5 + rand() * 3.5 : 1 + rand() * 2,
-            dark: rand() < 0.4,
-          });
-        }
-        fibers.sort((a, b) => a.s - b.s);
-      }
+      const len = Math.hypot(x1 - x0, y1 - y0);
+      let nx = -(y1 - y0) / len;
+      let ny = (x1 - x0) / len;
+      if (ny > 0) [nx, ny] = [-nx, -ny];
       threads.push({
         palette: c,
         layer,
         depth: (layer + rand()) / 3,
         weight: LAYERS[layer].weight * (0.85 + rand() * 0.3),
         alpha: LAYERS[layer].alpha,
-        phase: rand() * Math.PI * 2,
         delay: layer * 260 + rand() * 900, // back layers draw first
         points,
-        fibers,
+        nx,
+        ny,
+        decor: null,
       });
     }
   }
@@ -321,6 +314,22 @@ function strokeSmooth(ctx: CanvasRenderingContext2D, xs: Float64Array, ys: Float
 let bx = new Float64Array(0);
 let by = new Float64Array(0);
 
+/**
+ * Yarn decoration for the first n points of a thread. Building it costs more
+ * than drawing it, so it's cached and rebuilt only when the shape changes
+ * (plucked, dragged, drawing in); a thread at rest reuses its paths.
+ */
+function decorFor(t: Thread, n: number): Decor {
+  let sig = 0;
+  for (let i = 0; i < n; i++) sig += t.points[i].x * 1.3 + t.points[i].y * 0.7;
+  const key = `${n}:${sig.toFixed(1)}`;
+  if (t.decor?.key === key) return t.decor;
+  const dense = smoothSample(t.points.slice(0, n));
+  const d = yarnDecor(dense, { width: t.weight, hairChance: HAIR_CHANCE[t.layer] });
+  t.decor = { key, ply: new Path2D(d.ply), hairsLight: new Path2D(d.hairsLight), hairsDark: new Path2D(d.hairsDark) };
+  return t.decor;
+}
+
 export function drawThreads(
   ctx: CanvasRenderingContext2D,
   width: number,
@@ -364,54 +373,24 @@ export function drawThreads(
     strokeSmooth(ctx, bx, by, n);
 
     if (texture && t.layer > 0) {
-      // twisted strands winding around the core (the yarn "twist")
-      const strands: Array<[Rgb, number, number, number]> = [
-        [pal.dark, 0.34, 0.75, 0],
-        [pal.light, 0.22, 0.5, Math.PI],
-      ];
-      for (const [col, wf, af, off] of strands) {
-        for (let i = 0; i < n; i++) {
-          const a = pts[Math.max(0, i - 1)];
-          const b = pts[Math.min(pts.length - 1, i + 1)];
-          const tx = b.x - a.x;
-          const ty = b.y - a.y;
-          const len = Math.hypot(tx, ty) || 1;
-          const o = Math.sin(i * 1.7 + t.phase + off) * w * 0.3;
-          bx[i] = pts[i].x + (-ty / len) * o;
-          by[i] = pts[i].y + (tx / len) * o;
-        }
-        ctx.strokeStyle = rgba(col, alpha * af);
-        ctx.lineWidth = w * wf;
-        strokeSmooth(ctx, bx, by, n);
-      }
-      // fuzz: light and dark hairs, one path each
+      // highlight along the top edge
+      ctx.save();
+      ctx.translate(t.nx * w * 0.22, t.ny * w * 0.22);
+      ctx.strokeStyle = rgba(pal.light, alpha * 0.4);
+      ctx.lineWidth = Math.max(0.6, w * 0.25);
+      strokeSmooth(ctx, bx, by, n);
+      ctx.restore();
+
+      // twist marks and hairs (shared with the case-study thread)
+      const d = decorFor(t, n);
+      ctx.strokeStyle = rgba(pal.dark, alpha * 0.55);
+      ctx.lineWidth = Math.max(0.8, w * 0.28);
+      ctx.stroke(d.ply);
       ctx.lineWidth = t.layer === 2 ? 0.7 : 0.6;
-      for (const dark of [false, true]) {
-        ctx.strokeStyle = rgba(dark ? pal.dark : pal.light, alpha * (dark ? 0.45 : 0.55));
-        ctx.beginPath();
-        for (const f of t.fibers) {
-          if (f.s >= n - 1) break;
-          if (f.dark !== dark) continue;
-          const i = Math.floor(f.s);
-          const u = f.s - i;
-          const a = pts[i];
-          const b = pts[i + 1];
-          const tx = b.x - a.x;
-          const ty = b.y - a.y;
-          const len = Math.hypot(tx, ty) || 1;
-          const nx = (-ty / len) * f.side;
-          const ny = (tx / len) * f.side;
-          const ca = Math.cos(f.angle);
-          const sa = Math.sin(f.angle);
-          const dx = nx * ca - ny * sa;
-          const dy = nx * sa + ny * ca;
-          const sx = a.x + tx * u + nx * w * 0.4;
-          const sy = a.y + ty * u + ny * w * 0.4;
-          ctx.moveTo(sx, sy);
-          ctx.lineTo(sx + dx * f.len, sy + dy * f.len);
-        }
-        ctx.stroke();
-      }
+      ctx.strokeStyle = rgba(pal.light, alpha * 0.6);
+      ctx.stroke(d.hairsLight);
+      ctx.strokeStyle = rgba(pal.dark, alpha * 0.45);
+      ctx.stroke(d.hairsDark);
     }
     ctx.restore();
   }

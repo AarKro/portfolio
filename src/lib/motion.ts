@@ -25,14 +25,30 @@ export function startSmoothScroll(reducedMotion: boolean): () => void {
   };
 }
 
+interface ScrollOptions {
+  /** jump without animating */
+  immediate?: boolean;
+  /** seconds */
+  duration?: number;
+  /** ignore user scroll input until it's done (wheel, touch, keys) */
+  lock?: boolean;
+  onComplete?: () => void;
+}
+
+const easeInOutCubic = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
+
 /** Scroll to an element or position, smoothly if Lenis is running (or instantly with `immediate`). */
-export function scrollToTarget(target: HTMLElement | number, { immediate = false } = {}) {
+export function scrollToTarget(target: HTMLElement | number, { immediate = false, duration = 2.4, lock = false, onComplete }: ScrollOptions = {}) {
   if (lenis) {
-    lenis.scrollTo(target, immediate ? { immediate: true, force: true } : { duration: 2.4 });
+    lenis.scrollTo(
+      target,
+      immediate ? { immediate: true, force: true, onComplete } : { duration, lock, force: true, easing: easeInOutCubic, onComplete },
+    );
     return;
   }
   const top = typeof target === 'number' ? target : target.getBoundingClientRect().top + window.scrollY;
   window.scrollTo({ top, behavior: 'instant' });
+  onComplete?.();
 }
 
 export { gsap, ScrollTrigger };

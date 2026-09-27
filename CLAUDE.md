@@ -41,8 +41,9 @@ src/
   lib/motion.ts            Lenis + ScrollTrigger setup, scrollToTarget
   lib/reducedMotion.ts     prefers-reduced-motion hook
   unroll/                  unroll overlay (above the routes, survives navigation) + context/phases
-  thread/geometry.ts       shared thread line, ball positions, path helpers (overlay and case study must match)
-  components/              YarnBundle (SVG ball), Nav (placeholder)
+  thread/geometry.ts       shared thread line, ball positions, attachToBall, path helpers (overlay and case study must match)
+  thread/yarn.ts, YarnThread.tsx, YarnBall.tsx   yarn look (twist, hairs; also used by the landing canvas via Path2D) and the ball
+  components/              YarnBundle (SVG wound ball), Nav (placeholder)
   styles/tokens.scss       design tokens (mirror of the Figma variables)
   styles/_type.scss        text-style mixins (mirror of the Figma text styles)
   styles/global.scss       reset, focus ring, Lenis classes
@@ -52,7 +53,7 @@ src/
 ## Conventions
 
 - **Tokens only.** Colors, spacing, radii and type come from `tokens.scss` / `_type.scss`, never raw values. Names match the Figma code syntax: Figma `text/primary` → `var(--text-primary)`.
-- **Theme modes.** Shell is the default. Projects use `data-theme="project-1"` … `"project-5"`, which remaps the semantic tokens (bg, text, border, accent, focus, `--thread-current`). The landing uses `bg/inverse` (charcoal).
+- **Theme modes.** Shell is the default. Projects use `data-theme="project-1"` … `"project-5"`, which remaps the semantic tokens (bg, text, border, accent, focus, `--thread-current`, `--thread-twist`, `--thread-light`). The landing uses `bg/inverse` (charcoal).
 - **Text in locale files.** No hard-coded UI strings; German comes later.
 - **Accessibility (WCAG 2.2 AA):** visible `:focus-visible` (2 px dashed `--focus-ring`), keyboard access to everything interactive, canvases `aria-hidden` with a text alternative, contrast checked per theme mode.
 - **Motion:** every animation needs a reduced-motion version (static, no pinning, no dive). Movement through space is scrubbed and reverses on scroll back (dive, case study thread); content reveals play once (draw-in, text/image reveals, yarn bundles falling). Lenis must not break native scrolling or the keyboard.

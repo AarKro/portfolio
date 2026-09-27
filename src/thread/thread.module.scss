@@ -1,17 +1,50 @@
-// The case-study thread as SVG: a core stroke plus a dashed twist on top (Figma: "Thread" + "Twist").
-.core {
+// The case-study thread as SVG, layered to read as yarn:
+// shadow on the page, core, highlight along the top, twist marks, hairs.
+%stroke {
   fill: none;
-  stroke: var(--thread-current);
-  stroke-width: 4;
   stroke-linecap: round;
   stroke-linejoin: round;
 }
 
-.twist {
-  fill: none;
+.shadow {
+  @extend %stroke;
   stroke: var(--thread-twist);
-  stroke-width: 1.5;
-  stroke-dasharray: 5 7;
-  stroke-linecap: round;
-  opacity: 0.7;
+  stroke-width: 4;
+  opacity: 0.22;
+  transform: translateY(2px);
+}
+
+.core {
+  @extend %stroke;
+  stroke: var(--thread-current);
+  stroke-width: 4; // THREAD_WIDTH in yarn.ts
+}
+
+.highlight {
+  @extend %stroke;
+  stroke: var(--thread-light);
+  stroke-width: 1;
+  opacity: 0.45;
+  transform: translateY(-0.9px);
+}
+
+.ply {
+  @extend %stroke;
+  stroke: var(--thread-twist);
+  stroke-width: 1.1;
+  opacity: 0.55;
+}
+
+.hairsLight {
+  @extend %stroke;
+  stroke: var(--thread-light);
+  stroke-width: 0.6;
+  opacity: 0.8;
+}
+
+.hairsDark {
+  @extend %stroke;
+  stroke: var(--thread-twist);
+  stroke-width: 0.6;
+  opacity: 0.5;
 }

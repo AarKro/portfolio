@@ -43,6 +43,7 @@ $project-hues: ("red", "amber", "teal", "blue", "violet");
   --focus-ring: var(--color-gray-900);
   --thread-current: var(--color-gray-900);
   --thread-twist: var(--color-gray-600);
+  --thread-light: var(--color-gray-300);
   @for $i from 1 through list.length($project-hues) {
     --thread-project-#{$i}: var(--color-#{list.nth($project-hues, $i)}-500);
   }
@@ -97,5 +98,6 @@ $project-hues: ("red", "amber", "teal", "blue", "violet");
     --focus-ring: var(--color-#{$h}-700);
     --thread-current: var(--color-#{$h}-500);
     --thread-twist: var(--color-#{$h}-700);
+    --thread-light: var(--color-#{$h}-300);
   }
 }

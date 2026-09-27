@@ -155,9 +155,6 @@
   position: absolute;
   top: 0;
   left: 0;
-  width: 150px; // BALL_SIZE in thread/geometry.ts
-  height: 150px;
-  transform-origin: 50% 50%;
   will-change: transform;
   pointer-events: none;
 }

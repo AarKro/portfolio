@@ -1,9 +1,9 @@
 import { useCallback, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router';
-import YarnBundle from '../components/YarnBundle/YarnBundle';
 import { gsap } from '../lib/motion';
-import { BALL_SIZE, introBall, resample, smoothPath, threadPoints, viewport, type Pt } from '../thread/geometry';
-import thread from '../thread/thread.module.scss';
+import { BALL_SIZE, attachToBall, introBall, lerpAngle, onBall, resample, threadPoints, tuck, viewport, type Pt } from '../thread/geometry';
+import YarnBall, { type YarnBallHandle } from '../thread/YarnBall';
+import YarnThread, { type YarnThreadHandle } from '../thread/YarnThread';
 import { UnrollContext, type UnrollPhase } from './context';
 import styles from './UnrollLayer.module.scss';
 
@@ -57,16 +57,14 @@ export default function UnrollProvider({ children }: { children: ReactNode }) {
 function UnrollLayer({ run, onPhase, onDone }: { run: Run; onPhase: (p: UnrollPhase) => void; onDone: () => void }) {
   const navigate = useNavigate();
   const bgRef = useRef<HTMLDivElement>(null);
-  const ballRef = useRef<HTMLDivElement>(null);
-  const coreRef = useRef<SVGPathElement>(null);
-  const twistRef = useRef<SVGPathElement>(null);
+  const ballRef = useRef<YarnBallHandle>(null);
+  const threadRef = useRef<YarnThreadHandle>(null);
 
   useLayoutEffect(() => {
     const bg = bgRef.current;
     const ballEl = ballRef.current;
-    const core = coreRef.current;
-    const twist = twistRef.current;
-    if (!bg || !ballEl || !core || !twist) return;
+    const threadEl = threadRef.current;
+    if (!bg || !ballEl || !threadEl) return;
 
     const { w, h } = viewport();
     const { rect } = run;
@@ -75,18 +73,38 @@ function UnrollLayer({ run, onPhase, onDone }: { run: Run; onPhase: (p: UnrollPh
     // arc control point: well above both ends
     const C = { x: (S.x + E.x) / 2, y: Math.min(S.y, E.y) - h * 0.35 };
     const ball = { x: S.x, y: S.y, size: rect.width, rot: 0 };
-    const trail: Pt[] = [{ ...S }];
+    // The thread behind the ball. While jumping it's laid down from where it
+    // peels off the ball (not from the centre), so it trails smoothly; it starts
+    // where the ball sat on the overview. Then it morphs into the case study line.
+    // In the air the thread trails from the back of the ball (opposite to its travel);
+    // after landing that point eases into where the thread peels off on the ground.
+    let back = Math.atan2(S.y - C.y, S.x - C.x); // opposite to the launch direction
+    let blend = 0;
+    const trail: Pt[] = [onBall(S, rect.width / 2, back)];
+    let body: Pt[] = trail;
+    const prev = { x: S.x, y: S.y };
 
-    const draw = (pts: Pt[]) => {
-      const d = smoothPath(pts);
-      core.setAttribute('d', d);
-      twist.setAttribute('d', d);
+    const render = (flying = false) => {
+      const r = ball.size / 2;
+      if (flying) {
+        const vx = ball.x - prev.x;
+        const vy = ball.y - prev.y;
+        if (Math.hypot(vx, vy) > 0.5) back = Math.atan2(-vy, -vx);
+        prev.x = ball.x;
+        prev.y = ball.y;
+        const [surface, inside] = tuck(ball, r, back);
+        trail.push(surface);
+        threadEl.draw([...trail, inside]);
+        ballEl.place(ball);
+        return;
+      }
+      const { pts, angle } = attachToBall(body, ball, r);
+      // replace the tucked end with one at the blended angle
+      pts.splice(-2, 2, ...tuck(ball, r, lerpAngle(back, angle, blend)));
+      threadEl.draw(pts);
+      ballEl.place(ball);
     };
-    const place = () => {
-      ballEl.style.width = ballEl.style.height = `${ball.size}px`;
-      ballEl.style.transform = `translate(${ball.x - ball.size / 2}px, ${ball.y - ball.size / 2}px) rotate(${ball.rot}deg)`;
-    };
-    place();
+    render();
 
     const jump = { u: 0 };
     const settle = { k: 0 };
@@ -111,17 +129,15 @@ function UnrollLayer({ run, onPhase, onDone }: { run: Run; onPhase: (p: UnrollPh
           ball.y = v * v * S.y + 2 * v * u * C.y + u * u * E.y;
           ball.size = rect.width + (BALL_SIZE - rect.width) * u;
           ball.rot = 720 * u; // whole turns, so it matches the case study ball at rest
-          trail.push({ x: ball.x, y: ball.y });
-          draw(trail);
-          place();
+          render(true);
         },
       },
       JUMP_START,
     );
     tl.call(() => navigate(run.to), [], NAVIGATE);
     // small hop on landing
-    tl.to(ball, { y: E.y - 14, duration: 0.14, ease: 'power1.out', onUpdate: place }, LAND);
-    tl.to(ball, { y: E.y, duration: 0.3, ease: 'bounce.out', onUpdate: place });
+    tl.to(ball, { y: E.y - 14, duration: 0.14, ease: 'power1.out', onUpdate: () => render() }, LAND);
+    tl.to(ball, { y: E.y, duration: 0.3, ease: 'bounce.out', onUpdate: () => render() });
     // the thread settles into the line the case study continues from
     tl.call(
       () => {
@@ -140,7 +156,9 @@ function UnrollLayer({ run, onPhase, onDone }: { run: Run; onPhase: (p: UnrollPh
         ease: 'power3.out',
         onUpdate: () => {
           const k = settle.k;
-          draw(from.map((p, i) => ({ x: p.x + (target[i].x - p.x) * k, y: p.y + (target[i].y - p.y) * k })));
+          body = from.map((p, i) => ({ x: p.x + (target[i].x - p.x) * k, y: p.y + (target[i].y - p.y) * k }));
+          blend = k;
+          render();
         },
       },
       LAND,
@@ -157,12 +175,9 @@ function UnrollLayer({ run, onPhase, onDone }: { run: Run; onPhase: (p: UnrollPh
     <div className={styles.layer} data-theme={`project-${run.project}`} aria-hidden="true">
       <div ref={bgRef} className={styles.bg} />
       <svg className={styles.svg}>
-        <path ref={coreRef} className={thread.core} />
-        <path ref={twistRef} className={thread.twist} />
+        <YarnThread ref={threadRef} />
       </svg>
-      <div ref={ballRef} className={styles.ball}>
-        <YarnBundle />
-      </div>
+      <YarnBall ref={ballRef} className={styles.ball} baseSize={BALL_SIZE} />
     </div>
   );
 }

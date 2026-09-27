@@ -68,3 +68,45 @@ export function resample(pts: Pt[], n: number): Pt[] {
 
 /** Viewport size without the scrollbar; the overlay and the case study must agree on it. */
 export const viewport = () => ({ w: document.documentElement.clientWidth, h: window.innerHeight });
+
+/** How far round from the tangent point the thread enters the ball (radians): a bit up its back side. */
+const EXIT_OFFSET = 0.7;
+
+/**
+ * Connect a thread to a ball (centre c, radius r) the way real yarn does:
+ * drop the points under and inside the ball, then enter it a little way up
+ * its back side (past the tangent point where it would touch), then tuck in.
+ * Returns the new points and the entry angle (radians, screen coordinates, y down).
+ */
+export function attachToBall(pts: Pt[], c: Pt, r: number): { pts: Pt[]; angle: number } {
+  let end = pts.length;
+  while (end > 1 && Math.hypot(pts[end - 1].x - c.x, pts[end - 1].y - c.y) < r * 1.25) end--;
+  const body = pts.slice(0, end);
+  // aim from a point a little further back, so small kinks near the ball don't swing the angle
+  let i = body.length - 1;
+  while (i > 0 && Math.hypot(body[i].x - c.x, body[i].y - c.y) < r * 1.5) i--;
+  const p = body[i];
+  const d = Math.hypot(p.x - c.x, p.y - c.y);
+  const phi = Math.atan2(p.y - c.y, p.x - c.x);
+  const angle = (d > r ? phi - Math.acos(r / d) : phi) + EXIT_OFFSET;
+  return { pts: [...body, ...tuck(c, r, angle)], angle };
+}
+
+/**
+ * The thread's end: from the surface point where it peels off, a little way
+ * up into the ball (hidden behind it), so it reads as coming out of the yarn
+ * rather than touching its edge.
+ */
+export const tuck = (c: Pt, r: number, angle: number): Pt[] => [
+  { x: c.x + Math.cos(angle) * r, y: c.y + Math.sin(angle) * r },
+  { x: c.x + Math.cos(angle + 0.6) * r * 0.55, y: c.y + Math.sin(angle + 0.6) * r * 0.55 },
+];
+
+/** Point on a ball's surface at an angle (radians, y down). */
+export const onBall = (c: Pt, r: number, angle: number): Pt => ({ x: c.x + Math.cos(angle) * r, y: c.y + Math.sin(angle) * r });
+
+/** Interpolate between two angles the short way round. */
+export function lerpAngle(a: number, b: number, t: number) {
+  const d = Math.atan2(Math.sin(b - a), Math.cos(b - a));
+  return a + d * t;
+}

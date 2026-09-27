@@ -2,11 +2,11 @@ import { useEffect, useLayoutEffect, useRef } from 'react';
 import { useParams } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import Nav from '../../components/Nav/Nav';
-import YarnBundle from '../../components/YarnBundle/YarnBundle';
 import { gsap, ScrollTrigger, startSmoothScroll } from '../../lib/motion';
 import { useReducedMotion } from '../../lib/reducedMotion';
-import { BALL_INTRO_X, BALL_SIZE, BALL_TRACK_X, smoothPath, threadPoints, threadY, viewport } from '../../thread/geometry';
-import thread from '../../thread/thread.module.scss';
+import { BALL_INTRO_X, BALL_SIZE, BALL_TRACK_X, attachToBall, threadPoints, threadY, viewport } from '../../thread/geometry';
+import YarnBall, { type YarnBallHandle } from '../../thread/YarnBall';
+import YarnThread, { type YarnThreadHandle } from '../../thread/YarnThread';
 import { useUnroll } from '../../unroll/context';
 import NotFound from '../NotFound/NotFound';
 import styles from './CaseStudy.module.scss';
@@ -47,9 +47,8 @@ function CaseStudyPage({ n }: { n: number }) {
   const trackRef = useRef<HTMLDivElement>(null);
   const introRef = useRef<HTMLDivElement>(null);
   const titleRef = useRef<HTMLHeadingElement>(null);
-  const ballRef = useRef<HTMLDivElement>(null);
-  const coreRef = useRef<SVGPathElement>(null);
-  const twistRef = useRef<SVGPathElement>(null);
+  const ballRef = useRef<YarnBallHandle>(null);
+  const threadRef = useRef<YarnThreadHandle>(null);
   const stageRefs = useRef<(HTMLElement | null)[]>([]);
   const markerRefs = useRef<(SVGGElement | null)[]>([]);
   const revealed = useRef(false);
@@ -69,9 +68,8 @@ function CaseStudyPage({ n }: { n: number }) {
     const track = trackRef.current;
     const pin = pinRef.current;
     const ball = ballRef.current;
-    const core = coreRef.current;
-    const twist = twistRef.current;
-    if (!track || !pin || !ball || !core || !twist) return;
+    const yarn = threadRef.current;
+    if (!track || !pin || !ball || !yarn) return;
 
     const r0 = BALL_SIZE / 2;
     const update = (p: number) => {
@@ -82,11 +80,11 @@ function CaseStudyPage({ n }: { n: number }) {
       const r = r0 * Math.pow(1 - p, 0.8); // used up by the end
       const cy = threadY(x, h) - r; // resting on the thread
       const rot = ((x - w * BALL_INTRO_X) / r0) * (180 / Math.PI); // rolling
-      ball.style.transform = `translate(${vx - r0}px, ${cy - r0}px) rotate(${rot}deg) scale(${r / r0})`;
 
-      const d = smoothPath(threadPoints(x, h));
-      core.setAttribute('d', d);
-      twist.setAttribute('d', d);
+      // thread in track coordinates, ending where it peels off the ball; decoration only where visible
+      const { pts } = attachToBall(threadPoints(x, h), { x, y: cy }, r);
+      yarn.draw(pts, offset - 40, offset + w + 40);
+      ball.place({ x: vx, y: cy, size: r * 2, rot });
 
       // stage markers sit on the thread and appear once it reaches them
       markerRefs.current.forEach((g, i) => {
@@ -213,8 +211,7 @@ function CaseStudyPage({ n }: { n: number }) {
           <div className={styles.end} aria-hidden="true" />
 
           <svg className={handoff ? `${styles.thread} ${styles.hidden}` : styles.thread} aria-hidden="true">
-            <path ref={coreRef} className={thread.core} />
-            <path ref={twistRef} className={thread.twist} />
+            <YarnThread ref={threadRef} />
             {stages.map((s, i) => (
               <g
                 key={s.label}
@@ -230,9 +227,7 @@ function CaseStudyPage({ n }: { n: number }) {
           </svg>
         </div>
 
-        <div ref={ballRef} className={handoff ? `${styles.ball} ${styles.hidden}` : styles.ball} aria-hidden="true">
-          <YarnBundle />
-        </div>
+        <YarnBall ref={ballRef} className={handoff ? `${styles.ball} ${styles.hidden}` : styles.ball} baseSize={BALL_SIZE} />
       </section>
     </main>
   );

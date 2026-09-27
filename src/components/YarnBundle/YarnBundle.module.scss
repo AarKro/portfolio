@@ -9,9 +9,35 @@
   fill: var(--thread-current);
 }
 
-.strands path {
+.dark,
+.light {
   fill: none;
+}
+
+.dark {
   stroke: var(--thread-twist);
+  stroke-width: 1.4;
+  opacity: 0.5;
+}
+
+.light {
+  stroke: var(--thread-light);
   stroke-width: 1;
   opacity: 0.55;
+}
+
+// soft light from the top left, darker toward the bottom right
+.shadeLight {
+  stop-color: var(--thread-light);
+  stop-opacity: 0.35;
+}
+
+.shadeMid {
+  stop-color: var(--thread-current);
+  stop-opacity: 0;
+}
+
+.shadeDark {
+  stop-color: var(--thread-twist);
+  stop-opacity: 0.45;
 }
