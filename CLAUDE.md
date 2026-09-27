@@ -110,7 +110,7 @@ Semantic variable collection: `VariableCollectionId:3:71`.
 
 - Done: concept, design system, concept designs for all pages, transitions, landing prototype (threads, yarn texture, guitar-string pluck/drag physics, draw-in, scroll-driven dive, reduced motion), unroll prototype (ball jumps from the overview, thread unravels, lands on a placeholder case study, then leads the thread through a pinned horizontal track).
 - Done since: overview, about and loose-ends pages from Figma (placeholder content), Nav/Tag/TextLink/SocialLink/Scrap components.
-- Next: real case study panels (stages, clothesline, stage progress, MDX); official LinkedIn/GitHub icons; Figma sync (thread/twist + thread/light variables, dive frames).
+- Next: Aaron gathers assets, then the case studies are designed in Figma first; after that they're built in code (stages, clothesline, stage progress, MDX, responsive track) and polished. In Figma the case studies are a content structure to write things down in, not a one-to-one spec; no Figma sync of tokens/frames planned. Also open: official LinkedIn/GitHub icons.
 - Open: the 5 main projects and their colors (the hues are placeholders), which small things go to Loose ends, GitHub Pages `404.html` redirect for clean URLs, mobile.
 
 ## Gotchas

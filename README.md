@@ -399,3 +399,4 @@ npm run lint
 | 2026-09-27 | Dive snap removed. The dive is one way: past its end the intro leaves the page and the overview becomes the top; only "back to start" goes back (plays the dive in reverse). |
 | 2026-09-27 | Responsive pass: overview rows scale with the viewport from 1200 px up and stack below; About and Loose ends reflow (grid/flex). No sideways scrolling at any width. Nav hides as soon as you scroll down and returns on scroll up. Mobile design is still open; the stacked layouts are a working fallback. |
 | 2026-09-27 | Nav gets a soft backdrop (page colour + blur, fading out towards its bottom edge) against overlap with scrolling content. |
+| 2026-09-27 | Case studies: gather assets, design them in Figma first, then build and polish in code. |
