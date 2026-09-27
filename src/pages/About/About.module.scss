@@ -1,0 +1,395 @@
+@use '../../styles/type';
+@use '../../styles/layout' as *;
+
+// Figma "About" (1728 wide), as flowing sections: spacing follows the design at
+// 1728 and shrinks with u(); columns stack on narrow screens.
+.page {
+  background: var(--bg-default);
+  color: var(--text-primary);
+}
+
+.frame {
+  max-width: 1728px;
+  margin: 0 auto;
+  padding: max(120px, #{u(200)}) $gutter max(72px, #{u(72)});
+}
+
+.label {
+  @include type.label-mono;
+  color: var(--text-tertiary);
+}
+
+.lede {
+  @include type.body-l;
+  color: var(--text-secondary);
+}
+
+.heading {
+  @include type.heading-1;
+}
+
+// ---- intro + portrait
+.introRow {
+  display: grid;
+  grid-template-columns: minmax(0, 720px) minmax(0, 520px);
+  justify-content: space-between;
+  gap: var(--space-16);
+
+  @media (max-width: 1000px) {
+    grid-template-columns: minmax(0, 720px);
+    gap: var(--space-20);
+  }
+}
+
+.intro {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  margin-top: u(60);
+}
+
+.title {
+  @include type.display-l;
+}
+
+// portrait placeholder with crop marks and a caption on a leader
+.portrait {
+  position: relative;
+  width: 100%;
+  max-width: 520px;
+  aspect-ratio: 520 / 640;
+  margin: 0 0 var(--space-20);
+
+  > span {
+    position: absolute;
+    width: 26px;
+    height: 26px;
+    border: 0 solid var(--border-strong);
+  }
+
+  .cropTL {
+    left: -8px;
+    top: -8px;
+    border-top-width: 1.5px;
+    border-left-width: 1.5px;
+  }
+  .cropTR {
+    right: -8px;
+    top: -8px;
+    border-top-width: 1.5px;
+    border-right-width: 1.5px;
+  }
+  .cropBL {
+    left: -8px;
+    bottom: -8px;
+    border-bottom-width: 1.5px;
+    border-left-width: 1.5px;
+  }
+  .cropBR {
+    right: -8px;
+    bottom: -8px;
+    border-bottom-width: 1.5px;
+    border-right-width: 1.5px;
+  }
+}
+
+.photo {
+  width: 100%;
+  height: 100%;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-default);
+  padding: var(--space-5);
+
+  span {
+    @include type.label-mono;
+    color: var(--text-tertiary);
+  }
+}
+
+.captionLeader {
+  position: absolute;
+  right: -41px;
+  bottom: -60px;
+  overflow: visible;
+
+  path {
+    fill: none;
+    stroke: var(--border-strong);
+    stroke-width: 1.5;
+  }
+}
+
+.caption {
+  @include type.label-mono;
+  position: absolute;
+  right: -48px;
+  top: calc(100% + 76px);
+  white-space: nowrap;
+  color: var(--text-tertiary);
+
+  @media (max-width: $narrow) {
+    right: 0;
+  }
+}
+
+// ---- my thread
+.threadSection {
+  margin-top: max(96px, #{u(200)});
+}
+
+.sectionHeader {
+  max-width: 640px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+// Year | braid column | station. The braid SVG stretches to the column.
+.timeline {
+  --year: clamp(64px, 18vw, 300px);
+  --col: clamp(96px, 16vw, 240px);
+  position: relative;
+  margin-top: var(--space-10);
+
+  @media (max-width: $narrow) {
+    --year: 0px;
+  }
+}
+
+.braid {
+  position: absolute;
+  top: 0;
+  left: var(--year);
+  width: var(--col);
+  height: 100%;
+  overflow: visible;
+}
+
+.strand {
+  fill: none;
+  stroke: var(--thread-current);
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+
+.braid .strand {
+  stroke-dasharray: 1;
+}
+
+.stations {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+
+  // each station is anchored at its knot's height
+  > li {
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 0;
+  }
+}
+
+.year {
+  @include type.heading-4;
+  position: absolute;
+  right: calc(100% - var(--year) + 16px);
+  top: -17.5px;
+  white-space: nowrap;
+
+  @media (max-width: $narrow) {
+    @include type.label-mono;
+    right: auto;
+    left: calc(var(--col) + 20px);
+    top: -44px;
+    color: var(--text-tertiary);
+  }
+}
+
+// leaders from the year to the knot and from the knot to the station
+.leaders {
+  position: absolute;
+  left: var(--year);
+  width: var(--col);
+  top: -0.75px;
+  height: 1.5px;
+
+  &::before,
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    height: 1.5px;
+    background: var(--border-default);
+  }
+
+  &::before {
+    left: 0;
+    width: max(0px, calc(var(--col) * var(--knot) - 18px));
+  }
+
+  &::after {
+    left: calc(var(--col) * var(--knot) + 18px);
+    right: -20px;
+  }
+}
+
+.knot {
+  position: absolute;
+  left: calc(var(--year) + var(--col) * var(--knot) - 10px);
+  top: -10px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--surface-default);
+  border: 1.5px solid var(--text-primary);
+}
+
+.station {
+  position: absolute;
+  left: calc(var(--year) + var(--col) + 20px);
+  right: 0;
+  max-width: 560px;
+  top: -22px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.stationTitle {
+  @include type.heading-4;
+}
+
+.stationLine {
+  @include type.body-m;
+  color: var(--text-secondary);
+}
+
+// ---- what I learned: cards on a braided clothesline
+.learnedSection {
+  margin-top: max(96px, #{u(140)});
+}
+
+.line {
+  position: relative;
+  margin-top: max(64px, #{u(110)});
+}
+
+.clothesline {
+  position: absolute;
+  top: 0;
+  left: -40px;
+  width: calc(100% + 80px);
+  height: 60px;
+  overflow: visible;
+
+  @media (max-width: $narrow) {
+    display: none;
+  }
+}
+
+.learnings {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-10) var(--space-16);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+
+  > li {
+    position: relative;
+    padding-top: 18px;
+  }
+
+  @media (max-width: $narrow) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.card {
+  max-width: 400px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-8) 28px;
+  background: var(--surface-default);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+}
+
+.cardLabel {
+  @include type.label-mono;
+  color: var(--text-tertiary);
+}
+
+.cardText {
+  @include type.heading-4;
+}
+
+.peg {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  translate: -50% 0;
+  width: 12px;
+  height: 30px;
+  background: var(--surface-default);
+  border: 1.5px solid var(--border-strong);
+  border-radius: 3px;
+}
+
+// ---- easter egg + closing
+.end {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 620px);
+  gap: var(--space-16);
+  margin-top: max(96px, #{u(120)});
+
+  @media (max-width: 1000px) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.egg {
+  @include type.label-mono;
+  position: relative;
+  align-self: start;
+  margin-top: var(--space-10);
+  padding-top: 10px;
+  color: var(--text-tertiary);
+
+  // the rule above it
+  &::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 300px;
+    max-width: 100%;
+    height: 1.5px;
+    background: var(--border-strong);
+  }
+
+  a {
+    color: var(--text-primary);
+  }
+
+  @media (max-width: 1000px) {
+    order: 2;
+  }
+}
+
+.closing {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-5);
+}
+
+.talkTitle {
+  @include type.display-m;
+}
