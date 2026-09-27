@@ -1,0 +1,570 @@
+@use '../../styles/type';
+@use '../../styles/layout' as *;
+
+// Figma "Overview v2" (1728 wide). Each project row is a technical drawing:
+// from $compose up it's composed as in Figma, its geometry in design px via
+// u() so it scales with the viewport (type keeps its sizes). Below $compose
+// the drawing (the plate) scales to the screen width and the content and
+// image follow in normal flow.
+
+.overview {
+  position: relative;
+  background: var(--bg-default);
+  color: var(--text-primary);
+}
+
+.frame {
+  position: relative;
+  max-width: 1728px;
+  margin: 0 auto;
+  padding-top: max(120px, #{u(160)}); // below the nav, as in Figma
+}
+
+// ---- intro
+.intro {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  padding: 0 max(20px, #{u(80)}) var(--space-10);
+}
+
+.label {
+  @include type.label-mono;
+  color: var(--text-tertiary);
+}
+
+.title {
+  @include type.display-l;
+}
+
+.lede {
+  @include type.body-l;
+  color: var(--text-secondary);
+  max-width: 760px;
+}
+
+// ---- rows
+.rows {
+  position: relative;
+  margin-top: var(--space-10);
+}
+
+// dashed thread connecting the balls (composed layout only)
+.connector {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: u(560);
+  height: auto;
+  pointer-events: none;
+
+  path {
+    fill: none;
+    stroke: var(--border-strong);
+    stroke-width: 1.5;
+    stroke-dasharray: 3 6;
+    vector-effect: non-scaling-stroke;
+  }
+
+  @media (max-width: ($compose - 1px)) {
+    display: none;
+  }
+}
+
+.list {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: u(40);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.row {
+  position: relative;
+  height: u(900);
+}
+
+// ---- the plate: the left drawing, 560 × 900 design px
+.plate {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: u(560);
+  height: u(900);
+}
+
+.drawing {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.factsLines {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.draw,
+.dashed {
+  fill: none;
+  stroke: var(--border-strong);
+  stroke-width: 1.5;
+}
+
+.draw {
+  stroke-dasharray: 1;
+}
+
+.dashed {
+  stroke-dasharray: 2 5;
+}
+
+.dot {
+  fill: var(--text-primary);
+}
+
+.index {
+  @include type.label-mono;
+  position: absolute;
+  left: u(80);
+  top: u(100);
+  color: var(--text-tertiary);
+}
+
+.facts {
+  position: absolute;
+  left: u(80);
+  top: u(152);
+  display: flex;
+  flex-direction: column;
+  gap: u(14);
+  margin: 0;
+
+  div {
+    display: flex;
+    gap: 1.2em;
+  }
+
+  dt,
+  dd {
+    @include type.label-mono;
+    margin: 0;
+    color: var(--text-secondary);
+  }
+}
+
+.diameter {
+  @include type.label-mono;
+  position: absolute;
+  left: u(280);
+  top: u(610);
+  translate: -50% 0;
+  color: var(--text-tertiary);
+}
+
+// the ball: Ø 240, centred on the rings
+.bundle {
+  position: absolute;
+  left: u(160);
+  top: u(330);
+  width: u(240);
+  height: u(240);
+  border-radius: 50%;
+
+  &:focus-visible {
+    border-radius: 50%;
+    outline-offset: 12px;
+  }
+}
+
+.ball {
+  transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.tail {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  transform-origin: 79% 92%; // where the tail leaves the ball
+}
+
+// hover: the ball rolls a little and its tail twitches
+.bundle:hover {
+  .ball {
+    transform: rotate(18deg);
+  }
+
+  .tail {
+    animation: twitch 0.6s ease-in-out;
+  }
+}
+
+@keyframes twitch {
+  30% {
+    transform: rotate(6deg);
+  }
+  60% {
+    transform: rotate(-4deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ball {
+    transition: none;
+  }
+
+  .bundle:hover {
+    .ball {
+      transform: none;
+    }
+
+    .tail {
+      animation: none;
+    }
+  }
+}
+
+// ---- hero image (placeholder shapes in the project's colours)
+.image,
+.imageNotes {
+  position: absolute;
+  left: u(700);
+  right: u(80);
+  top: u(100);
+  height: u(700);
+}
+
+.image {
+  overflow: hidden;
+  border-radius: var(--radius-md);
+  background: var(--bg-subtle);
+
+  span {
+    position: absolute;
+    border-radius: 6px;
+  }
+}
+
+// positions as fractions of the 948 × 700 image
+.shapeA {
+  left: 8.44%;
+  top: 11.43%;
+  width: 54.85%;
+  height: 42.86%;
+  background: var(--surface-default);
+}
+.shapeB {
+  left: 12.66%;
+  top: 17.14%;
+  width: 31.65%;
+  height: 3.43%;
+  background: var(--thread-light);
+}
+.shapeC {
+  left: 12.66%;
+  top: 23.43%;
+  width: 44.3%;
+  height: 1.71%;
+  background: var(--border-default);
+}
+.shapeD {
+  left: 12.66%;
+  top: 26.86%;
+  width: 40.08%;
+  height: 1.71%;
+  background: var(--border-default);
+}
+.shapeE {
+  left: 12.66%;
+  top: 34.29%;
+  width: 16.88%;
+  height: 6.29%;
+  background: var(--thread-current);
+}
+.shapeF {
+  left: 67.51%;
+  top: 11.43%;
+  width: 25.32%;
+  height: 77.14%;
+  background: var(--thread-light);
+}
+.shapeG {
+  left: 8.44%;
+  top: 60%;
+  width: 54.85%;
+  height: 28.57%;
+  background: var(--border-default);
+}
+.shapeH {
+  left: 71.73%;
+  top: 17.14%;
+  width: 16.88%;
+  height: 22.86%;
+  background: var(--thread-twist);
+}
+
+// annotations around the image (not clipped)
+.imageNotes {
+  pointer-events: none;
+
+  > span {
+    position: absolute;
+  }
+}
+
+// crop marks: 26 px arms, 8 px outside the corners
+%crop {
+  width: u(26);
+  height: u(26);
+  border: 0 solid var(--border-strong);
+}
+.cropTL {
+  @extend %crop;
+  left: u(-8);
+  top: u(-8);
+  border-top-width: 1.5px;
+  border-left-width: 1.5px;
+}
+.cropTR {
+  @extend %crop;
+  right: u(-8);
+  top: u(-8);
+  border-top-width: 1.5px;
+  border-right-width: 1.5px;
+}
+.cropBL {
+  @extend %crop;
+  left: u(-8);
+  bottom: u(-8);
+  border-bottom-width: 1.5px;
+  border-left-width: 1.5px;
+}
+.cropBR {
+  @extend %crop;
+  right: u(-8);
+  bottom: u(-8);
+  border-bottom-width: 1.5px;
+  border-right-width: 1.5px;
+}
+
+// dimension line 40 px above the image, caption centred on it
+.dimension {
+  left: 0;
+  right: 0;
+  top: u(-46);
+  height: 12px;
+  border-left: 1.5px solid var(--border-strong);
+  border-right: 1.5px solid var(--border-strong);
+  display: grid;
+  place-items: center;
+
+  &::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 5.25px;
+    height: 1.5px;
+    background: var(--border-strong);
+  }
+
+  span {
+    @include type.label-mono;
+    position: relative;
+    padding: 0 var(--space-2);
+    background: var(--bg-default);
+    color: var(--text-tertiary);
+    white-space: nowrap;
+  }
+}
+
+// numbered callout on the image, leader out past its right edge
+.callout {
+  @include type.label-mono;
+  left: 78.69%;
+  top: 26.57%;
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  border: 1.5px solid var(--text-primary);
+  border-radius: 50%;
+  background: var(--surface-default);
+  color: var(--text-primary);
+}
+
+.calloutLeader {
+  left: calc(78.69% + 28px);
+  right: u(-40);
+  top: calc(26.57% + 13.25px);
+  height: 1.5px;
+  background: var(--border-strong);
+}
+
+// the image's left part fades into the background behind the text
+.fade {
+  position: absolute;
+  left: u(680);
+  top: u(80);
+  width: u(620);
+  height: u(740);
+  background: var(--bg-default);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  mask-image: linear-gradient(to right, #000 60%, transparent);
+  -webkit-mask-image: linear-gradient(to right, #000 60%, transparent);
+  pointer-events: none;
+}
+
+// ---- content
+.content {
+  position: absolute;
+  left: u(620);
+  top: u(300);
+  width: 520px;
+  max-width: u(560);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 28px;
+}
+
+.name {
+  @include type.display-m;
+  white-space: nowrap;
+}
+
+.summary {
+  @include type.body-l;
+  color: var(--text-secondary);
+}
+
+// ---- stacked rows (below $compose): plate, content, image in flow
+@media (max-width: ($compose - 1px)) {
+  .list {
+    gap: var(--space-24);
+  }
+
+  // drawing and content side by side, the image below
+  .row {
+    // the plate's design px fit its column here
+    --u: min(0.8px, calc((100vw - 40px) / 560));
+    height: auto;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    column-gap: var(--space-8);
+    padding: 0 $gutter;
+  }
+
+  .plate {
+    grid-area: 1 / 1;
+    position: relative;
+    height: u(860);
+    margin-left: u(-60);
+  }
+
+  .content {
+    grid-area: 1 / 2;
+    position: relative;
+    left: auto;
+    top: auto;
+    width: auto;
+    max-width: 640px;
+  }
+
+  .image {
+    grid-area: 2 / 1 / 3 / -1;
+  }
+
+  .name {
+    white-space: normal;
+  }
+
+  .image {
+    position: relative;
+    left: auto;
+    right: auto;
+    top: auto;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 948 / 700;
+    margin-top: var(--space-12);
+  }
+
+  .imageNotes,
+  .fade {
+    display: none;
+  }
+}
+
+// phones: one column, drawing → content → image
+@media (max-width: $narrow) {
+  .row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .content {
+    grid-area: 2 / 1;
+  }
+
+  .image {
+    grid-area: 3 / 1;
+  }
+}
+
+// ---- loose-ends teaser
+.teaser {
+  position: relative;
+  margin-top: max(96px, #{u(160)});
+  padding: 0 $gutter max(96px, #{u(120)});
+}
+
+.teaserTitle {
+  @include type.heading-1;
+}
+
+.teaserLede {
+  @include type.body-l;
+  margin-top: var(--space-5);
+  color: var(--text-secondary);
+}
+
+.scraps {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(320px, 100%), 1fr));
+  gap: var(--space-16) var(--space-10);
+  justify-items: center;
+  list-style: none;
+  margin: max(64px, #{u(114)}) 0 0;
+  padding: 0;
+
+  // the middle scrap sits a little lower, as in Figma
+  > li:nth-child(2) {
+    margin-top: 60px;
+  }
+
+  @media (max-width: $narrow) {
+    > li:nth-child(2) {
+      margin-top: 0;
+    }
+  }
+}
+
+.teaserLink {
+  display: table;
+  margin: max(48px, #{u(66)}) 0 0 auto;
+}

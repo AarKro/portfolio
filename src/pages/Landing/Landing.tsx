@@ -1,17 +1,14 @@
-import { useCallback, useEffect, useRef, useState, type MouseEvent } from 'react';
-import { Link, useLocation } from 'react-router';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, type MouseEvent } from 'react';
+import { useLocation } from 'react-router';
 import { useTranslation } from 'react-i18next';
-import YarnBundle from '../../components/YarnBundle/YarnBundle';
 import ThreadsCanvas from '../../installation/ThreadsCanvas';
 import { gsap, ScrollTrigger, scrollToTarget, startSmoothScroll } from '../../lib/motion';
 import { useReducedMotion } from '../../lib/reducedMotion';
 import { useUnroll } from '../../unroll/context';
+import Overview from '../Overview/Overview';
 import styles from './Landing.module.scss';
 
-const PROJECTS = [1, 2, 3, 4, 5];
-// share of the dive you scroll yourself before it plays through on its own
-const SNAP_THRESHOLD = 0.04;
-const SNAP_DURATION = 2.6; // seconds
+const REWIND_DURATION = 2.6; // seconds, "back to start" through the dive
 
 export default function Landing() {
   const { t } = useTranslation();
@@ -20,7 +17,7 @@ export default function Landing() {
   const unroll = useUnroll();
   // coming back from a case study ("back to overview"): land on the overview, settled
   const location = useLocation();
-  const backToOverview = useRef(location.hash === '#work');
+  const [backToOverview] = useState(() => location.hash === '#work');
 
   const diveRef = useRef(0);
   const diveSectionRef = useRef<HTMLElement>(null);
@@ -28,7 +25,13 @@ export default function Landing() {
   const titleRef = useRef<HTMLDivElement>(null);
   const hintRef = useRef<HTMLButtonElement>(null);
   const overviewRef = useRef<HTMLElement>(null);
-  const bundlesRef = useRef<HTMLUListElement>(null);
+  // the overview is on screen (arrived at the end of the dive)
+  const [arrived, setArrived] = useState(backToOverview);
+  // Past the end of the dive the intro is taken out of the page, so you can't
+  // scroll back into it; "back to start" brings it back and plays the dive in reverse.
+  const [collapsed, setCollapsed] = useState(backToOverview);
+  const overshoot = useRef(0); // how far past the overview's top you were when it collapsed
+  const rewind = useRef(false);
 
   const onReady = useCallback(() => setReady(true), []);
 
@@ -46,18 +49,20 @@ export default function Landing() {
     };
   }, [ready, reduced]);
 
-  // dive: scrubbed, reverses when scrolling back up
+  // keep the view in place when the intro is taken out of or put back into the page
+  useLayoutEffect(() => {
+    const overview = overviewRef.current;
+    if (reduced || !overview) return;
+    if (collapsed) scrollToTarget(Math.max(0, overshoot.current), { immediate: true });
+    else if (rewind.current) scrollToTarget(overview.offsetTop, { immediate: true });
+    ScrollTrigger.refresh();
+  }, [collapsed, reduced]);
+
+  // dive: scrubbed while you scroll down through it
   useEffect(() => {
-    if (reduced) return;
+    if (reduced || collapsed) return;
     const ctx = gsap.context(() => {
-      // Snap: once you've scrolled a little way into the dive, it plays itself to
-      // the end (the overview); scrolling back up from the overview plays it back
-      // to the start. Input is locked while it runs.
-      let auto = false;
-      const snap = (target: HTMLElement | number) => {
-        auto = true;
-        scrollToTarget(target, { duration: SNAP_DURATION, lock: true, onComplete: () => (auto = false) });
-      };
+      const overview = overviewRef.current;
       ScrollTrigger.create({
         trigger: diveSectionRef.current,
         start: 'top top',
@@ -65,9 +70,12 @@ export default function Landing() {
         scrub: true,
         onUpdate: (self) => {
           diveRef.current = self.progress;
-          if (auto || !overviewRef.current) return;
-          if (self.direction === 1 && self.progress > SNAP_THRESHOLD && self.progress < 1 - SNAP_THRESHOLD) snap(overviewRef.current);
-          else if (self.direction === -1 && self.progress < 1 - SNAP_THRESHOLD && self.progress > SNAP_THRESHOLD) snap(0);
+        },
+        // scrolled past the end: take the intro out of the page
+        onLeave: () => {
+          if (rewind.current || !overview) return;
+          overshoot.current = window.scrollY - overview.offsetTop;
+          setCollapsed(true);
         },
       });
       gsap.to(overlayRef.current, {
@@ -78,65 +86,68 @@ export default function Landing() {
       });
       // Arrival: the overview overlaps the last viewport of the dive, hidden,
       // and appears in place when the dive ends instead of scrolling up.
-      // Showing it reverses when scrolling back into the dive.
-      const overview = overviewRef.current;
-      gsap.set(overview, { autoAlpha: 0 });
+      const start = () => (overview ? overview.offsetTop - window.innerHeight * 0.05 : 0);
+      gsap.set(overview, { autoAlpha: window.scrollY >= start() ? 1 : 0 });
       ScrollTrigger.create({
         trigger: overview,
         start: 'top 5%',
-        onEnter: () => gsap.to(overview, { autoAlpha: 1, duration: 0.4, ease: 'power1.out' }),
-        onLeaveBack: () => gsap.to(overview, { autoAlpha: 0, duration: 0.3, ease: 'power1.in' }),
+        onEnter: () => {
+          gsap.to(overview, { autoAlpha: 1, duration: 0.4, ease: 'power1.out' });
+          setArrived(true);
+        },
+        onLeaveBack: () => {
+          gsap.to(overview, { autoAlpha: 0, duration: 0.3, ease: 'power1.in' });
+          setArrived(false);
+        },
       });
-      // content draws in, then the yarn bundles fall (plays once)
-      const text = overview?.querySelectorAll('[data-reveal]');
-      const bundles = bundlesRef.current?.children;
-      if (text && bundles && !backToOverview.current) {
-        gsap.set(text, { autoAlpha: 0, y: 24 });
-        gsap.set(bundles, { y: -600, rotation: -120, autoAlpha: 0 });
-        ScrollTrigger.create({
-          trigger: overview,
-          start: 'top 5%',
-          once: true,
-          onEnter: () => {
-            gsap
-              .timeline()
-              .to(text, { autoAlpha: 1, y: 0, duration: 0.9, ease: 'power3.out', stagger: 0.12 }, 0.2)
-              .to(bundles, { y: 0, rotation: 0, autoAlpha: 1, duration: 1.3, ease: 'bounce.out', stagger: 0.14 }, 0.5);
-          },
-        });
-      }
     });
+    // "back to start": play the dive back up to the intro (input locked)
+    if (rewind.current) {
+      scrollToTarget(0, { duration: REWIND_DURATION, lock: true, onComplete: () => (rewind.current = false) });
+    }
     return () => ctx.revert();
-  }, [reduced]);
+  }, [reduced, collapsed]);
+
+  const backToStart = () => {
+    if (reduced) {
+      scrollToTarget(0);
+      return;
+    }
+    rewind.current = true;
+    overshoot.current = 0;
+    setCollapsed(false);
+  };
 
   // choosing a project: the ball jumps and unrolls into the case study (plain navigation with reduced motion or modifier keys)
-  const follow = (e: MouseEvent<HTMLAnchorElement>, n: number) => {
+  const follow = (e: MouseEvent<HTMLElement>, n: number) => {
     if (reduced || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+    const ball = overviewRef.current?.querySelector(`[data-project="${n}"]`);
+    if (!ball) return;
     e.preventDefault();
-    unroll.start(n, e.currentTarget, `/work/project-${n}`);
+    unroll.start(n, ball, `/work/project-${n}`);
   };
 
   // unroll focus: the chosen ball is handed to the overlay, the rest of the overview fades
   useEffect(() => {
     const overview = overviewRef.current;
     if (unroll.project === null || !overview) return;
-    const chosen = overview.querySelector(`[data-project="${unroll.project}"]`);
-    const others = [
-      ...overview.querySelectorAll('[data-reveal]'),
-      ...[...(bundlesRef.current?.children ?? [])].filter((li) => !li.contains(chosen)),
-    ];
-    gsap.set(chosen, { autoAlpha: 0 });
-    gsap.to(others, { autoAlpha: 0.12, duration: 0.35, ease: 'power1.out' });
+    gsap.set(overview.querySelector(`[data-project="${unroll.project}"]`), { autoAlpha: 0 });
+    gsap.to(overview, { opacity: 0.12, duration: 0.35, ease: 'power1.out' });
   }, [unroll.project]);
 
-  // back from a case study: jump straight to the overview
+  // back from a case study (reduced motion: the page isn't collapsed): jump straight to the overview
   useEffect(() => {
-    if (backToOverview.current && overviewRef.current) scrollToTarget(overviewRef.current, { immediate: true });
-  }, []);
+    if (backToOverview && reduced && overviewRef.current) scrollToTarget(overviewRef.current, { immediate: true });
+  }, [backToOverview, reduced]);
 
   return (
     <main className={styles.page}>
-      <section ref={diveSectionRef} className={reduced ? styles.diveStatic : styles.dive} aria-labelledby="landing-title">
+      <section
+        ref={diveSectionRef}
+        className={reduced ? styles.diveStatic : styles.dive}
+        aria-labelledby="landing-title"
+        hidden={collapsed && !reduced}
+      >
         <div className={styles.sticky}>
           <ThreadsCanvas diveRef={diveRef} reducedMotion={reduced} onReady={onReady} />
           <p className="visually-hidden">{t('landing.canvasLabel')}</p>
@@ -153,7 +164,15 @@ export default function Landing() {
               ref={hintRef}
               type="button"
               className={reduced ? styles.hint : `${styles.hint} ${styles.hidden}`}
-              onClick={() => overviewRef.current && scrollToTarget(overviewRef.current)}
+              onClick={() =>
+                overviewRef.current &&
+                scrollToTarget(overviewRef.current, {
+                  onComplete: () => {
+                    overshoot.current = 0;
+                    setCollapsed(true);
+                  },
+                })
+              }
             >
               <span>{t('landing.scrollHint')}</span>
               <svg className={styles.chevron} width="24" height="14" viewBox="0 0 24 14" aria-hidden="true">
@@ -164,35 +183,14 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* Placeholder overview, only to test the arrival of the dive */}
-      <section ref={overviewRef} id="work" className={reduced ? styles.overview : `${styles.overview} ${styles.arrive}`} aria-labelledby="overview-title">
-        <p className={styles.label} data-reveal>
-          {t('overview.label')}
-        </p>
-        <h2 id="overview-title" className={styles.overviewTitle} data-reveal>
-          {t('overview.title')}
-        </h2>
-        <p className={styles.intro} data-reveal>
-          {t('overview.intro')}
-        </p>
-        <ul ref={bundlesRef} className={styles.bundles}>
-          {PROJECTS.map((n) => (
-            <li key={n} className={styles.bundle}>
-              <Link
-                to={`/work/project-${n}`}
-                className={styles.bundleLink}
-                data-theme={`project-${n}`}
-                data-project={n}
-                aria-label={t('overview.follow', { name: t('caseStudy.title', { n }) })}
-                onClick={(e) => follow(e, n)}
-              >
-                <YarnBundle />
-              </Link>
-            </li>
-          ))}
-        </ul>
-        <p className={styles.note}>Prototype · the real overview comes next.</p>
-      </section>
+      <Overview
+        ref={overviewRef}
+        className={reduced || collapsed ? undefined : styles.arrive}
+        active={arrived || reduced}
+        settled={reduced || backToOverview}
+        onFollow={follow}
+        onBackToStart={backToStart}
+      />
     </main>
   );
 }

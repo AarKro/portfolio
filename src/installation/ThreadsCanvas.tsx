@@ -98,6 +98,16 @@ export default function ThreadsCanvas({ diveRef, reducedMotion, onReady }: Props
       const dive = diveRef.current ?? 0;
       const elapsed = reducedMotion ? Infinity : now - start;
 
+      if (!ready && elapsed >= readyAt) {
+        ready = true;
+        onReadyRef.current();
+      }
+      // hidden (the intro is taken out of the page past the dive): skip the work
+      if (canvas.offsetParent === null) {
+        prev = now;
+        return;
+      }
+
       // pointer interaction (only before the dive starts)
       if (interactive() && pointer) {
         if (held) {
@@ -129,10 +139,6 @@ export default function ThreadsCanvas({ diveRef, reducedMotion, onReady }: Props
       const blur = smooth(0.55, 1, dive) * 8;
       canvas.style.filter = blur > 0.1 ? `blur(${blur.toFixed(1)}px)` : '';
 
-      if (!ready && elapsed >= readyAt) {
-        ready = true;
-        onReadyRef.current();
-      }
     };
 
     resize();
